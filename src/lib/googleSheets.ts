@@ -84,13 +84,18 @@ const REVISION_HEADER_MAP: Record<string, string> = {
  */
 const mapHeaders = <T>(row: Record<string, string>, headerMap: Record<string, string>): T => {
   const mapped: Record<string, string> = {};
-  const trimmedRow: Record<string, string> = {};
+  const normalizedRow: Record<string, string> = {};
+  
+  // Normalize row keys to lowercase and trim
   for (const key of Object.keys(row)) {
-    trimmedRow[key.trim()] = row[key];
+    normalizedRow[key.trim().toLowerCase()] = row[key];
   }
+  
   for (const [sheetHeader, appKey] of Object.entries(headerMap)) {
-    let value = (trimmedRow[sheetHeader] ?? "").trim();
-    // Normalize IDs and priority numbers by removing .0 suffix
+    // Map using normalized (lowercase) sheet headers
+    let value = (normalizedRow[sheetHeader.trim().toLowerCase()] ?? "").trim();
+    
+    // Normalize numeric IDs and priority numbers by removing .0 suffix
     if (appKey === "no" || appKey === "priority") {
       value = value.replace(".0", "");
     }
