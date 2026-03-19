@@ -211,7 +211,7 @@ export const updateUser = async (userNo: string, data: Partial<User>) => {
     await fetch(APPS_SCRIPT_URL, {
       method: "POST",
       mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "text/plain" },
       body: JSON.stringify({
         action: "update",
         sheetName: "Users",
