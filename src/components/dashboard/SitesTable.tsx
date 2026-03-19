@@ -1,11 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Site } from "@/types/site";
 import { useSites } from "@/hooks/useSites";
 import { updateSite } from "@/lib/googleSheets";
 import { useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Download, Filter, Cloud } from "lucide-react";
+import { Search, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Eye, MoreHorizontal, Download, Filter, Cloud, AlertTriangle } from "lucide-react";
 import SiteDetailModal from "./SiteDetailModal";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -24,10 +24,10 @@ const SitesTable = () => {
   const [regionFilter, setRegionFilter] = useState("");
   const [selectedSite, setSelectedSite] = useState<Site | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [hasScriptUrl, setHasScriptUrl] = useState(() => !!localStorage.getItem("google_apps_script_url"));
 
   const { data: remoteSitesData, isLoading, isError } = useSites();
   const queryClient = useQueryClient();
-  
   const normalizeId = (id: string) => id?.replace(".0", "").trim() || "";
 
   // Local storage persistence for edits
@@ -46,6 +46,11 @@ const SitesTable = () => {
       return {};
     }
   });
+
+  useEffect(() => {
+    // Re-check script URL on mount and whenever localOverrides changes (could happen after settings save)
+    setHasScriptUrl(!!localStorage.getItem("google_apps_script_url"));
+  }, [localOverrides]);
 
   const handleSaveSite = async (updatedSite: Site) => {
     const siteId = normalizeId(updatedSite.no);
@@ -237,6 +242,11 @@ const SitesTable = () => {
           {isSyncing && (
             <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 mr-2 animate-pulse gap-1.5 px-3">
               <Cloud size={12} className="animate-bounce" /> Cloud Saving...
+            </Badge>
+          )}
+          {!hasScriptUrl && (
+            <Badge variant="outline" className="bg-destructive/5 text-destructive border-destructive/20 mr-2 flex items-center gap-1.5 px-3 font-bold">
+              <AlertTriangle size={12} /> Sync Not Configured
             </Badge>
           )}
           {Object.keys(localOverrides).length > 0 && (
