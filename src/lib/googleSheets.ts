@@ -224,7 +224,8 @@ export const updateUser = async (userNo: string, data: Partial<User>) => {
 export const getSites = () => fetchSheetData<Site>(SITES_SHEET_URL, SITES_HEADER_MAP);
 export const getUsers = async () => {
   const users = await fetchSheetData<User>(USERS_SHEET_URL, USERS_HEADER_MAP);
-  return users.filter(u => u.no && /^\d+$/.test(u.no.trim()));
+  // Return all users that have at least a name or numeric ID to see what data is coming through
+  return users.filter(u => u.no || u.userName);
 };
 
 export const getEscalations = async (): Promise<EscalationEntry[]> => {
