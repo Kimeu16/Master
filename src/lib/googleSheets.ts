@@ -152,10 +152,10 @@ export const fetchSheetData = async <T>(url: string, headerMap?: Record<string, 
  * Updates a site in the Google Sheet using a web app proxy (Apps Script).
  */
 export const updateSite = async (siteNo: string, data: Partial<Site>) => {
-  const APPS_SCRIPT_URL = localStorage.getItem("google_apps_script_url");
+  const APPS_SCRIPT_URL = localStorage.getItem("google_apps_script_url") || import.meta.env.VITE_GOOGLE_APPS_SCRIPT_URL;
   
   if (!APPS_SCRIPT_URL) {
-    console.warn("Cloud Sync disabled: google_apps_script_url not found in localStorage.");
+    console.warn("Cloud Sync disabled: google_apps_script_url not found in localStorage or environment variables.");
     return;
   }
 
