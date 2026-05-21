@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Sidebar from "@/components/dashboard/Sidebar";
 import DashboardView from "@/components/dashboard/DashboardView";
@@ -8,13 +8,41 @@ import EscalationView from "@/components/dashboard/EscalationView";
 import ChecklistsView from "@/components/dashboard/ChecklistsView";
 import SecurityView from "@/components/dashboard/SecurityView";
 import SettingsView from "@/components/dashboard/SettingsView";
-import { Activity, Bell, Menu, Search, ShieldCheck } from "lucide-react";
+import { Activity, Bell, Menu, Search, ShieldCheck, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Index = () => {
   const [activeView, setActiveView] = useState("dashboard");
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isNavCollapsed, setNavCollapsed] = useState(false);
+
+  // Core Theme State & Logic
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("theme");
+      if (stored) return stored;
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    return "light";
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.add("theme-transition");
+    
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+
+    const timer = setTimeout(() => {
+      root.classList.remove("theme-transition");
+    }, 450);
+
+    localStorage.setItem("theme", theme);
+    return () => clearTimeout(timer);
+  }, [theme]);
 
   const viewMeta: Record<string, { title: string; description: string }> = {
     dashboard: {
@@ -120,7 +148,7 @@ const Index = () => {
           isNavCollapsed ? "lg:ml-[100px]" : "lg:ml-[280px]"
         )}
       >
-        <header className="sticky top-0 z-30 border-b border-slate-200/60 bg-white/70 px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-30 border-b border-slate-200/60 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/60 px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex items-start gap-4">
               <button
@@ -152,17 +180,17 @@ const Index = () => {
 
             <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-end">
               {/* Dynamic Interactive search input */}
-              <div className="hidden min-w-[280px] items-center rounded-lg border border-slate-200 bg-white/80 px-3.5 py-2 shadow-sm transition-all duration-300 focus-within:border-primary/50 focus-within:bg-white focus-within:ring-4 focus-within:ring-primary/10 lg:flex">
-                <Search size={16} className="text-muted-foreground" />
+              <div className="hidden min-w-[280px] items-center rounded-lg border border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/40 px-3.5 py-2 shadow-sm transition-all duration-300 focus-within:border-primary/50 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:ring-4 focus-within:ring-primary/10 lg:flex">
+                <Search size={16} className="text-muted-foreground dark:text-slate-400" />
                 <input
                   type="text"
                   placeholder="Search console..."
-                  className="ml-3 w-full border-none bg-transparent text-xs font-semibold outline-none placeholder:text-muted-foreground/60 focus:ring-0"
+                  className="ml-3 w-full border-none bg-transparent text-xs font-semibold text-foreground outline-none placeholder:text-muted-foreground/60 focus:ring-0"
                 />
               </div>
 
               {/* Status banner with dynamic gradient track */}
-              <div className="hidden items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50/50 px-3.5 py-2 text-xs font-bold text-emerald-800 shadow-sm md:flex">
+              <div className="hidden items-center gap-2 rounded-lg border border-emerald-100 dark:border-emerald-950/30 bg-emerald-50/50 dark:bg-emerald-950/10 px-3.5 py-2 text-xs font-bold text-emerald-800 dark:text-emerald-400 shadow-sm md:flex">
                 <span className="relative flex h-2 w-2">
                   <span className="pulse-glow absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
@@ -170,14 +198,38 @@ const Index = () => {
                 99.1% Network SLA
               </div>
 
+              {/* Theme Toggle Button */}
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="icon-button relative overflow-hidden"
+                aria-label="Toggle theme"
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={theme}
+                    initial={{ y: -20, rotate: 90, opacity: 0 }}
+                    animate={{ y: 0, rotate: 0, opacity: 1 }}
+                    exit={{ y: 20, rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: "easeInOut" }}
+                    className="flex items-center justify-center"
+                  >
+                    {theme === "dark" ? (
+                      <Sun size={17} className="text-amber-450" />
+                    ) : (
+                      <Moon size={17} className="text-slate-700" />
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </button>
+
               {/* Notification bubble */}
-              <button className="icon-button relative hover:border-primary/20 hover:text-primary" aria-label="Notifications">
+              <button className="icon-button relative hover:border-primary/20 hover:text-primary dark:hover:text-primary-foreground" aria-label="Notifications">
                 <Bell size={17} />
-                <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-destructive ring-2 ring-white animate-pulse" />
+                <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-destructive ring-2 ring-white dark:ring-slate-900 animate-pulse" />
               </button>
 
               {/* User Manager tag */}
-              <button className="flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white p-1.5 pr-3.5 shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md">
+              <button className="flex items-center gap-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 pr-3.5 shadow-sm transition-all duration-200 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-md">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-tr from-primary to-indigo-600 text-xs font-black text-white shadow-md shadow-primary/10">
                   AD
                 </div>

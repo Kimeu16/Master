@@ -1,10 +1,249 @@
 import { useState, useEffect } from "react";
 import { Site } from "@/types/site";
-import { X, Radio, Edit3, Check, RotateCcw, Shield, Zap, Sun, Users, ClipboardList, Info, MapPin } from "lucide-react";
+import { X, Radio, Edit3, Check, RotateCcw, Shield, Zap, Sun, Users, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+
+/* ── POWER FLOW SCHEMATIC SVG COMPONENT ──────────────────────────────── */
+const PowerFlowSchematic = ({ site, mode }: { site: Site; mode: "power" | "solar" }) => {
+  const src = site.powerSource?.toLowerCase() || "";
+  const comments = site.comments?.toLowerCase() || "";
+  const priority = site.priority?.replace(".0", "");
+  const isFaulty = comments.includes("not working") || comments.includes("faulty") || priority === "1";
+
+  const hasGrid    = src.includes("grid");
+  const hasSolar   = src.includes("solar") || src.includes("pv");
+  const hasGenset  = src.includes("gen");
+  const hasBattery = !!site.batteryCapacity && site.batteryCapacity !== "N/A";
+
+  /* helpers */
+  const flowClass = (active: boolean) =>
+    active ? "flow-line-active" : undefined;
+  const warnClass = isFaulty ? "flow-line-warning" : undefined;
+
+  /* colours */
+  const gridColor   = hasGrid   ? "#6366f1" : "#94a3b8";
+  const solarColor  = hasSolar  ? "#f59e0b" : "#94a3b8";
+  const genColor    = hasGenset ? "#10b981" : "#94a3b8";
+  const rectColor   = "#3b82f6";
+  const battColor   = hasBattery ? "#8b5cf6" : "#94a3b8";
+  const faultColor  = "#ef4444";
+
+  return (
+    <div className="mb-6 rounded-2xl border border-slate-100/80 bg-gradient-to-br from-slate-50/80 to-white/40 p-4 shadow-sm dark:border-slate-800/60 dark:from-slate-900/60 dark:to-slate-950/40">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+          {mode === "power" ? "Power Infrastructure Flow" : "DC & Solar Energy Flow"}
+        </span>
+        {isFaulty && (
+          <div className="flex items-center gap-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 text-[9px] font-black text-rose-600 dark:text-rose-400">
+            <AlertTriangle size={10} />
+            FAULT DETECTED
+          </div>
+        )}
+      </div>
+
+      <svg
+        viewBox="0 0 520 200"
+        className="w-full max-h-[180px]"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-label="Power flow schematic diagram"
+      >
+        <defs>
+          <filter id="glow-indigo">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+            <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          <filter id="glow-amber">
+            <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
+            <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          <filter id="glow-emerald">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+            <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+
+        {/* ── GRID SOURCE NODE ── */}
+        {hasGrid && (
+          <g>
+            <rect x="8" y="30" width="68" height="48" rx="8" fill={hasGrid ? "#eef2ff" : "#f8fafc"} stroke={gridColor} strokeWidth="1.5" />
+            <text x="42" y="51" textAnchor="middle" fontSize="9" fontWeight="800" fill={gridColor} fontFamily="system-ui">GRID</text>
+            <text x="42" y="66" textAnchor="middle" fontSize="7" fill="#94a3b8" fontFamily="system-ui">MAINS</text>
+            {/* lightning bolt */}
+            <path d="M37 56 l4-8 l2 5 l4-8" stroke={gridColor} strokeWidth="1.5" fill="none" strokeLinecap="round" />
+
+            {/* connector line → rectifier */}
+            <line
+              x1="76" y1="54" x2="196" y2="90"
+              stroke={hasGrid ? (isFaulty ? faultColor : gridColor) : "#e2e8f0"}
+              strokeWidth={hasGrid ? "2" : "1"}
+              strokeOpacity={hasGrid ? 1 : 0.4}
+              className={hasGrid ? (isFaulty ? warnClass : flowClass(true)) : undefined}
+            />
+          </g>
+        )}
+
+        {/* ── SOLAR SOURCE NODE ── */}
+        {hasSolar && (
+          <g>
+            <rect x="8" y="100" width="68" height="48" rx="8" fill="#fffbeb" stroke={solarColor} strokeWidth="1.5" />
+            <text x="42" y="120" textAnchor="middle" fontSize="9" fontWeight="800" fill={solarColor} fontFamily="system-ui">SOLAR</text>
+            <text x="42" y="134" textAnchor="middle" fontSize="7" fill="#94a3b8" fontFamily="system-ui">{site.solarCapacity || "PV"}</text>
+            {/* sun rays */}
+            <circle cx="42" cy="127" r="4" stroke={solarColor} strokeWidth="1.2" fill="none" />
+            <line x1="42" y1="119" x2="42" y2="117" stroke={solarColor} strokeWidth="1.2" />
+            <line x1="42" y1="135" x2="42" y2="137" stroke={solarColor} strokeWidth="1.2" />
+            <line x1="34" y1="127" x2="32" y2="127" stroke={solarColor} strokeWidth="1.2" />
+            <line x1="50" y1="127" x2="52" y2="127" stroke={solarColor} strokeWidth="1.2" />
+
+            {/* connector → rectifier */}
+            <line
+              x1="76" y1="124" x2="196" y2="105"
+              stroke={hasSolar ? (isFaulty ? faultColor : solarColor) : "#e2e8f0"}
+              strokeWidth={hasSolar ? "2" : "1"}
+              strokeOpacity={hasSolar ? 1 : 0.4}
+              className={hasSolar ? (isFaulty ? warnClass : flowClass(true)) : undefined}
+            />
+          </g>
+        )}
+
+        {/* ── GENSET SOURCE NODE ── */}
+        {hasGenset && (
+          <g transform={hasSolar && hasGrid ? "translate(0,152)" : hasSolar || hasGrid ? "translate(0,152)" : "translate(0,70)"}>
+            <rect x="8" y="-22" width="68" height="48" rx="8" fill="#ecfdf5" stroke={genColor} strokeWidth="1.5" />
+            <text x="42" y="-2" textAnchor="middle" fontSize="9" fontWeight="800" fill={genColor} fontFamily="system-ui">GENSET</text>
+            <text x="42" y="12" textAnchor="middle" fontSize="7" fill="#94a3b8" fontFamily="system-ui">{site.generatorType?.slice(0,8) || "DG"}</text>
+            {/* engine icon */}
+            <rect x="32" y="3" width="20" height="10" rx="2" stroke={genColor} strokeWidth="1.2" fill="none" />
+            <line x1="42" y1="3" x2="42" y2="-1" stroke={genColor} strokeWidth="1.2" />
+
+            {/* connector → rectifier */}
+            <line
+              x1="76" y1="4"
+              x2="188" y2={hasSolar && hasGrid ? "-43" : hasSolar || hasGrid ? "-43" : "-66"}
+              stroke={hasGenset ? (isFaulty ? faultColor : genColor) : "#e2e8f0"}
+              strokeWidth={hasGenset ? "2" : "1"}
+              strokeOpacity={hasGenset ? 1 : 0.4}
+              className={hasGenset ? (isFaulty ? warnClass : flowClass(true)) : undefined}
+            />
+          </g>
+        )}
+
+        {/* ── RECTIFIER / SHELTER HUB ── */}
+        <g filter="url(#glow-indigo)">
+          <rect x="196" y="72" width="92" height="56" rx="10" fill="#eff6ff" stroke={rectColor} strokeWidth="2"
+            className={isFaulty ? undefined : ""}
+          />
+          <text x="242" y="97" textAnchor="middle" fontSize="9" fontWeight="900" fill={rectColor} fontFamily="system-ui">RECTIFIER</text>
+          <text x="242" y="111" textAnchor="middle" fontSize="7" fill="#64748b" fontFamily="system-ui">{site.rectifierType?.slice(0,12) || "Hub"}</text>
+          <text x="242" y="122" textAnchor="middle" fontSize="7" fill="#94a3b8" fontFamily="system-ui">{site.rectifierCapacity ? site.rectifierCapacity + " A" : ""}</text>
+        </g>
+
+        {/* ── RECTIFIER → LOAD arrow ── */}
+        <line
+          x1="288" y1="100" x2="340" y2="100"
+          stroke={isFaulty ? faultColor : rectColor}
+          strokeWidth="2.5"
+          className={isFaulty ? warnClass : flowClass(true)}
+        />
+
+        {/* ── SITE LOAD CONSUMER ── */}
+        <g>
+          <rect x="340" y="72" width="80" height="56" rx="10" fill="#f0fdf4" stroke="#22c55e" strokeWidth="1.5" />
+          <text x="380" y="97" textAnchor="middle" fontSize="9" fontWeight="800" fill="#16a34a" fontFamily="system-ui">SITE LOAD</text>
+          <text x="380" y="111" textAnchor="middle" fontSize="7" fill="#64748b" fontFamily="system-ui">{site.sanctionedLoad || "Active"}</text>
+          {/* wifi icon */}
+          <path d="M374 118 q6-5 12 0" stroke="#16a34a" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+          <path d="M371 115 q9-8 18 0" stroke="#16a34a" strokeWidth="1" fill="none" strokeOpacity="0.5" strokeLinecap="round" />
+          <circle cx="380" cy="121" r="1.5" fill="#16a34a" />
+        </g>
+
+        {/* ── BATTERY BANK (bottom of rectifier) ── */}
+        {hasBattery && (
+          <g>
+            <line
+              x1="242" y1="128" x2="242" y2="155"
+              stroke={isFaulty ? faultColor : battColor}
+              strokeWidth="2"
+              className={isFaulty ? warnClass : flowClass(true)}
+            />
+            <rect x="196" y="155" width="92" height="40" rx="8" fill="#f5f3ff" stroke={battColor} strokeWidth="1.5" />
+            <text x="242" y="173" textAnchor="middle" fontSize="9" fontWeight="800" fill={battColor} fontFamily="system-ui">BATTERY</text>
+            <text x="242" y="186" textAnchor="middle" fontSize="7" fill="#94a3b8" fontFamily="system-ui">{site.batteryType?.slice(0,12) || site.batteryCapacity || "Reserve"}</text>
+          </g>
+        )}
+
+        {/* ── FAULTY OVERLAY X marks ── */}
+        {isFaulty && (
+          <g opacity="0.55">
+            <line x1="244" y1="80" x2="284" y2="120" stroke={faultColor} strokeWidth="2.5" strokeLinecap="round" />
+            <line x1="284" y1="80" x2="244" y2="120" stroke={faultColor} strokeWidth="2.5" strokeLinecap="round" />
+          </g>
+        )}
+
+        {/* ── LEGEND ── */}
+        <g transform="translate(420, 72)">
+          {hasGrid && (
+            <g>
+              <line x1="0" y1="8" x2="18" y2="8" stroke={gridColor} strokeWidth="2" className="flow-line-active" />
+              <text x="22" y="11" fontSize="7" fill="#64748b" fontFamily="system-ui">Grid</text>
+            </g>
+          )}
+          {hasSolar && (
+            <g transform="translate(0,16)">
+              <line x1="0" y1="8" x2="18" y2="8" stroke={solarColor} strokeWidth="2" className="flow-line-active" />
+              <text x="22" y="11" fontSize="7" fill="#64748b" fontFamily="system-ui">Solar</text>
+            </g>
+          )}
+          {hasGenset && (
+            <g transform="translate(0,32)">
+              <line x1="0" y1="8" x2="18" y2="8" stroke={genColor} strokeWidth="2" className="flow-line-active" />
+              <text x="22" y="11" fontSize="7" fill="#64748b" fontFamily="system-ui">Genset</text>
+            </g>
+          )}
+          {isFaulty && (
+            <g transform="translate(0,48)">
+              <line x1="0" y1="8" x2="18" y2="8" stroke={faultColor} strokeWidth="2" className="flow-line-warning" />
+              <text x="22" y="11" fontSize="7" fill={faultColor} fontFamily="system-ui" fontWeight="700">Fault</text>
+            </g>
+          )}
+        </g>
+      </svg>
+
+      {/* Metric pills */}
+      <div className="mt-3 flex flex-wrap gap-2">
+        {site.rectifierCapacity && site.rectifierCapacity !== "N/A" && (
+          <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+            Load: {site.rectifierCapacity}
+          </span>
+        )}
+        {site.rectifierMaxCapacity && site.rectifierMaxCapacity !== "N/A" && (
+          <span className="rounded-full border border-blue-500/10 bg-slate-100 px-3 py-1 text-[9px] font-black text-slate-500 dark:bg-slate-800 dark:text-slate-400 uppercase tracking-wider">
+            Peak: {site.rectifierMaxCapacity}
+          </span>
+        )}
+        {site.batteryCapacity && site.batteryCapacity !== "N/A" && (
+          <span className="rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1 text-[9px] font-black text-violet-600 dark:text-violet-400 uppercase tracking-wider">
+            Battery: {site.batteryCapacity}
+          </span>
+        )}
+        {site.solarCapacity && site.solarCapacity !== "N/A" && (
+          <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-[9px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+            PV: {site.solarCapacity}
+          </span>
+        )}
+        {isFaulty && (
+          <span className="rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1 text-[9px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider">
+            ⚡ Fault Active
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
 
 interface SiteDetailModalProps {
   site: Site;
@@ -213,6 +452,7 @@ const SiteDetailModal = ({ site, onClose, onSave }: SiteDetailModalProps) => {
                     <Zap size={16} className="text-indigo-600" />
                     <h4 className="text-xs font-black text-slate-700 uppercase tracking-widest">Power & Electrical Infrastructure</h4>
                   </div>
+                  <PowerFlowSchematic site={formData} mode="power" />
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <Field label="Primary Source" value={formData.powerSource} fieldName="powerSource" isEditing={isEditing} formData={formData} onChange={(v) => updateField("powerSource", v)} />
                     <Field label="Rectifier Model" value={formData.rectifierType} fieldName="rectifierType" isEditing={isEditing} formData={formData} onChange={(v) => updateField("rectifierType", v)} />
@@ -233,6 +473,7 @@ const SiteDetailModal = ({ site, onClose, onSave }: SiteDetailModalProps) => {
                     <Sun size={16} className="text-indigo-600" />
                     <h4 className="text-xs font-black text-slate-700 uppercase tracking-widest">DC Metering & Solar Analytics</h4>
                   </div>
+                  <PowerFlowSchematic site={formData} mode="solar" />
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <Field label="Smart DC Meter ID" value={formData.dcMeter} fieldName="dcMeter" isEditing={isEditing} formData={formData} onChange={(v) => updateField("dcMeter", v)} />
                     <Field label="Meter Setup Date" value={formData.dcMeterInstallationDate} fieldName="dcMeterInstallationDate" isEditing={isEditing} formData={formData} onChange={(v) => updateField("dcMeterInstallationDate", v)} />

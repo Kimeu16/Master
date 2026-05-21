@@ -57,16 +57,16 @@
   }
 
   .dark {
-    --background: 224 71.4% 4.1%;
+    --background: 222 47% 6%;
     --foreground: 210 20% 98%;
 
-    --card: 224 71.4% 4.1%;
+    --card: 222 47% 8%;
     --card-foreground: 210 20% 98%;
 
-    --popover: 224 71.4% 4.1%;
+    --popover: 222 47% 8%;
     --popover-foreground: 210 20% 98%;
 
-    --primary: 263.4 70% 50.4%;
+    --primary: 224 86% 58%;
     --primary-foreground: 210 20% 98%;
 
     --secondary: 215 27.9% 16.9%;
@@ -75,15 +75,30 @@
     --muted: 215 27.9% 16.9%;
     --muted-foreground: 217.9 10.6% 64.9%;
 
-    --accent: 215 27.9% 16.9%;
+    --accent: 172 80% 40%;
     --accent-foreground: 210 20% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 348 84% 60%;
     --destructive-foreground: 210 20% 98%;
 
     --border: 215 27.9% 16.9%;
     --input: 215 27.9% 16.9%;
-    --ring: 263.4 70% 50.4%;
+    --ring: 224 86% 58%;
+
+    --sidebar-background: 222 47% 5%;
+    --sidebar-foreground: 210 20% 98%;
+    --sidebar-border: 215 27.9% 12%;
+    --sidebar-primary: 224 86% 58%;
+    --sidebar-primary-foreground: 210 20% 98%;
+    --sidebar-accent: 215 27.9% 14%;
+    --sidebar-accent-foreground: 210 20% 98%;
+
+    --success: 142.1 70.6% 45.3%;
+    --success-foreground: 210 20% 98%;
+    --warning: 47.9 95.8% 53.1%;
+    --warning-foreground: 210 20% 98%;
+    --info: 198.6 98.7% 40%;
+    --info-foreground: 210 20% 98%;
   }
 }
 
@@ -100,6 +115,12 @@
       linear-gradient(180deg, hsl(215 32% 98%) 0%, hsl(215 24% 96%) 100%);
     background-attachment: fixed;
     min-height: 100vh;
+  }
+  .dark body {
+    background-image: 
+      radial-gradient(at 100% 0%, hsla(224, 86%, 58%, 0.08) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(172, 80%, 40%, 0.04) 0px, transparent 50%),
+      linear-gradient(180deg, hsl(222 47% 6%) 0%, hsl(222 47% 4%) 100%);
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-display tracking-tight;
@@ -118,7 +139,7 @@
 
   /* Microsoft-Fluent card with ambient light shading and elegant scaling transition */
   .premium-card {
-    @apply bg-white rounded-xl border border-white/65 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_12px_24px_-4px_rgba(15,23,42,0.02),0_30px_60px_-10px_rgba(15,23,42,0.03)] transition-all duration-300;
+    @apply bg-white dark:bg-slate-900/40 rounded-xl border border-white/65 dark:border-white/5 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_12px_24px_-4px_rgba(15,23,42,0.02),0_30px_60px_-10px_rgba(15,23,42,0.03)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.2)] transition-all duration-300;
     transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
@@ -144,12 +165,12 @@
   }
 
   .surface-panel {
-    @apply bg-white/70 backdrop-blur-md border border-white/70 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.01),0_16px_36px_rgba(15,23,42,0.02)];
+    @apply bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-white/70 dark:border-white/5 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.01),0_16px_36px_rgba(15,23,42,0.02)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.15)];
   }
 
   /* State-of-the-art Interactive Buttons with click compression */
   .control-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-border/70 bg-white px-3.5 py-2 text-xs font-bold text-muted-foreground shadow-sm transition-all duration-200 hover:border-primary/30 hover:bg-slate-50 hover:text-foreground active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-border/70 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2 text-xs font-bold text-muted-foreground dark:text-slate-400 shadow-sm transition-all duration-200 hover:border-primary/30 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-foreground dark:hover:text-white active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20;
   }
 
   .primary-button {
@@ -157,7 +178,7 @@
   }
 
   .icon-button {
-    @apply inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border/70 bg-white text-muted-foreground shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-foreground active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20;
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border/70 dark:border-slate-800 bg-white dark:bg-slate-900 text-muted-foreground dark:text-slate-400 shadow-sm transition-all duration-200 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-foreground dark:hover:text-white active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20;
   }
 
   /* Custom Slim Professional Scrollbar */
@@ -213,4 +234,70 @@
 .pulse-glow {
   animation: pulse-ring 2s infinite ease-in-out;
 }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   WORLD-CLASS PHASE 3 PREMIUM TRANSITIONS & ANIMATIONS
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Smooth Transitions for Theme Toggling (classes appended dynamically to root) */
+.theme-transition,
+.theme-transition *,
+.theme-transition ::after,
+.theme-transition ::before {
+  transition: background-color 0.4s ease, border-color 0.4s ease, text-decoration-color 0.4s ease, fill 0.4s ease, stroke 0.4s ease, color 0.25s ease !important;
+  transition-delay: 0s !important;
+}
+
+/* Dynamic Power Flow schematic pipeline dash offsets */
+@keyframes flow-dash {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.flow-line-active {
+  stroke-dasharray: 6, 4;
+  animation: flow-dash 1.2s linear infinite;
+}
+
+.flow-line-warning {
+  stroke-dasharray: 5, 5;
+  animation: flow-dash 2s linear infinite;
+}
+
+.flow-line-critical {
+  stroke-dasharray: 4, 6;
+  animation: flow-dash 0.6s linear infinite;
+}
+
+/* Glowing Pulsing SVG Regional Hotspots */
+@keyframes hotspot-glow {
+  0% {
+    r: 4px;
+    opacity: 0.85;
+  }
+  50% {
+    r: 10px;
+    opacity: 0.35;
+  }
+  100% {
+    r: 4px;
+    opacity: 0.85;
+  }
+}
+
+.pulsing-dot-core {
+  transform-origin: center;
+}
+
+.pulsing-dot-glow {
+  transform-origin: center;
+  animation: hotspot-glow 2.5s infinite ease-in-out;
+}
+
+.pulsing-dot-glow-fast {
+  transform-origin: center;
+  animation: hotspot-glow 1.5s infinite ease-in-out;
+}
+
 

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, ReactNode } from "react";
+import { useState, useMemo, useEffect, useRef, ReactNode } from "react";
 import { Site } from "@/types/site";
 import { useSites } from "@/hooks/useSites";
 import { updateSite } from "@/lib/googleSheets";
@@ -14,7 +14,6 @@ import {
   Eye, 
   Download, 
   Filter, 
-  Cloud, 
   AlertTriangle, 
   SlidersHorizontal,
   LayoutGrid,
@@ -29,11 +28,66 @@ import {
   Activity,
   Wifi,
   Layers,
-  Sparkles
+  ChevronDown as ChevDown
 } from "lucide-react";
 import SiteDetailModal from "./SiteDetailModal";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+
+/* ── COLUMN PROFILE PRESETS ──────────────────────────────────────────── */
+type ColumnProfileId = "all" | "network" | "power" | "field";
+
+const COLUMN_PROFILES: Record<ColumnProfileId, { label: string; icon: string; keys: (keyof Site)[] }> = {
+  all: {
+    label: "All Columns",
+    icon: "⊞",
+    keys: [
+      "no", "siteName", "region", "ipAddress", "priority", "comments",
+      "powerSource", "routerStatus", "latitude", "longitude", "onAirDate",
+      "rectifierType", "tenants", "reonIntegration", "rectifierCapacity",
+      "rectifierMaxCapacity", "securityCompany", "siteType", "electronicLockId",
+      "fieldEngineer", "fieldEngineerEmail", "fieldEngineerPhone",
+      "secondFieldEngineer", "secondFieldEngineerEmail", "secondFieldEngineerPhone",
+      "apsAmfBoard", "generatorType", "generatorTankCapacity", "externalFuelProbe",
+      "dcMeterInstallationDate", "dcMeter", "batteryType", "batteryCapacity",
+      "solarPanels", "solarCapacity", "solarPanelBrand",
+      "solarChargeControllerTracer", "solarChargeControllerFlatpack",
+      "sanctionedLoad", "sla", "dataIntegrity", "softwareCleanup",
+    ],
+  },
+  network: {
+    label: "Network & Comms",
+    icon: "📡",
+    keys: [
+      "no", "siteName", "region", "ipAddress", "priority", "comments",
+      "routerStatus", "reonIntegration", "onAirDate", "sla", "dataIntegrity",
+      "tenants", "latitude", "longitude",
+    ],
+  },
+  power: {
+    label: "Power Plant & Solar",
+    icon: "⚡",
+    keys: [
+      "no", "siteName", "region", "priority", "comments",
+      "powerSource", "rectifierType", "rectifierCapacity", "rectifierMaxCapacity",
+      "apsAmfBoard", "generatorType", "generatorTankCapacity", "externalFuelProbe",
+      "solarPanels", "solarCapacity", "solarPanelBrand",
+      "solarChargeControllerTracer", "solarChargeControllerFlatpack",
+      "batteryType", "batteryCapacity", "dcMeter", "dcMeterInstallationDate",
+      "sanctionedLoad",
+    ],
+  },
+  field: {
+    label: "Field Operations",
+    icon: "👷",
+    keys: [
+      "no", "siteName", "region", "priority", "comments",
+      "fieldEngineer", "fieldEngineerEmail", "fieldEngineerPhone",
+      "secondFieldEngineer", "secondFieldEngineerEmail", "secondFieldEngineerPhone",
+      "securityCompany", "siteType", "electronicLockId", "softwareCleanup",
+    ],
+  },
+};
 
 const ITEMS_PER_PAGE = 25;
 
@@ -332,6 +386,20 @@ const SitesTable = () => {
   const [hasScriptUrl, setHasScriptUrl] = useState(() => !!localStorage.getItem("google_apps_script_url"));
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [kpiFilter, setKpiFilter] = useState<"all" | "critical" | "at-risk" | "integrated">("all");
+  const [columnProfile, setColumnProfile] = useState<ColumnProfileId>("all");
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  /* close profile menu on outside click */
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const { data: remoteSitesData, isLoading, isError } = useSites();
   const queryClient = useQueryClient();
@@ -596,50 +664,55 @@ const SitesTable = () => {
     }
   };
 
-  const columns: { key: keyof Site; label: string; width?: string; responsiveClass?: string }[] = [
+  /* ── ALL COLUMN DEFINITIONS (master list) ──────────────────────────── */
+  const ALL_COLUMNS: { key: keyof Site; label: string; width?: string }[] = [
     { key: "no", label: "#", width: "w-20" },
-    { key: "siteName", label: "Location / Site", width: "min-w-[280px]" }, 
-    { key: "region", label: "Region", width: "w-32", responsiveClass: "hidden sm:table-cell" },
-    { key: "ipAddress", label: "IP Address", width: "w-36", responsiveClass: "hidden md:table-cell" },
+    { key: "siteName", label: "Location / Site", width: "min-w-[280px]" },
+    { key: "region", label: "Region", width: "w-32" },
+    { key: "ipAddress", label: "IP Address", width: "w-36" },
     { key: "priority", label: "Tier", width: "w-28" },
     { key: "comments", label: "Connectivity", width: "w-32" },
-    { key: "powerSource", label: "Power Source", width: "w-40", responsiveClass: "hidden lg:table-cell" },
-    { key: "routerStatus", label: "Router Status", width: "w-40", responsiveClass: "hidden xl:table-cell" },
-    { key: "latitude", label: "Latitude", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "longitude", label: "Longitude", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "onAirDate", label: "On Air Date", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "rectifierType", label: "Rectifier", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "tenants", label: "Tenants", width: "w-48", responsiveClass: "hidden xl:table-cell" },
-    { key: "reonIntegration", label: "REON", width: "w-28", responsiveClass: "hidden md:table-cell" },
-    { key: "rectifierCapacity", label: "Rectifier Cap", width: "w-32", responsiveClass: "hidden lg:table-cell" },
-    { key: "rectifierMaxCapacity", label: "Rectifier Max", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "securityCompany", label: "Security", width: "w-40", responsiveClass: "hidden xl:table-cell" },
-    { key: "siteType", label: "Site Type", width: "w-32", responsiveClass: "hidden lg:table-cell" },
-    { key: "electronicLockId", label: "E-Lock ID", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "fieldEngineer", label: "Field Engineer", width: "w-48", responsiveClass: "hidden sm:table-cell" },
-    { key: "fieldEngineerEmail", label: "Engineer Email", width: "w-48", responsiveClass: "hidden xl:table-cell" },
-    { key: "fieldEngineerPhone", label: "Engineer Phone", width: "w-40", responsiveClass: "hidden xl:table-cell" },
-    { key: "secondFieldEngineer", label: "2nd Engineer", width: "w-48", responsiveClass: "hidden xl:table-cell" },
-    { key: "secondFieldEngineerEmail", label: "2nd Email", width: "w-48", responsiveClass: "hidden xl:table-cell" },
-    { key: "secondFieldEngineerPhone", label: "2nd Phone", width: "w-40", responsiveClass: "hidden xl:table-cell" },
-    { key: "apsAmfBoard", label: "APS / AMF", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "generatorType", label: "Gen Type", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "generatorTankCapacity", label: "Gen Tank", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "externalFuelProbe", label: "Fuel Probe", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "dcMeterInstallationDate", label: "DC Meter Date", width: "w-40", responsiveClass: "hidden xl:table-cell" },
-    { key: "dcMeter", label: "DC Meter", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "batteryType", label: "Battery Type", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "batteryCapacity", label: "Battery Cap", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "solarPanels", label: "Sun Panels", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "solarCapacity", label: "Sun Cap", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "solarPanelBrand", label: "Sun Brand", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "solarChargeControllerTracer", label: "Tracer Controller", width: "w-40", responsiveClass: "hidden xl:table-cell" },
-    { key: "solarChargeControllerFlatpack", label: "Solar Charger", width: "w-40", responsiveClass: "hidden xl:table-cell" },
-    { key: "sanctionedLoad", label: "Sanc. Load", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "sla", label: "SLA", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "dataIntegrity", label: "Data Int.", width: "w-32", responsiveClass: "hidden xl:table-cell" },
-    { key: "softwareCleanup", label: "Soft. Cleanup", width: "w-32", responsiveClass: "hidden xl:table-cell" },
+    { key: "powerSource", label: "Power Source", width: "w-40" },
+    { key: "routerStatus", label: "Router Status", width: "w-40" },
+    { key: "latitude", label: "Latitude", width: "w-32" },
+    { key: "longitude", label: "Longitude", width: "w-32" },
+    { key: "onAirDate", label: "On Air Date", width: "w-32" },
+    { key: "rectifierType", label: "Rectifier", width: "w-32" },
+    { key: "tenants", label: "Tenants", width: "w-48" },
+    { key: "reonIntegration", label: "REON", width: "w-28" },
+    { key: "rectifierCapacity", label: "Rectifier Cap", width: "w-32" },
+    { key: "rectifierMaxCapacity", label: "Rectifier Max", width: "w-32" },
+    { key: "securityCompany", label: "Security", width: "w-40" },
+    { key: "siteType", label: "Site Type", width: "w-32" },
+    { key: "electronicLockId", label: "E-Lock ID", width: "w-32" },
+    { key: "fieldEngineer", label: "Field Engineer", width: "w-48" },
+    { key: "fieldEngineerEmail", label: "Engineer Email", width: "w-48" },
+    { key: "fieldEngineerPhone", label: "Engineer Phone", width: "w-40" },
+    { key: "secondFieldEngineer", label: "2nd Engineer", width: "w-48" },
+    { key: "secondFieldEngineerEmail", label: "2nd Email", width: "w-48" },
+    { key: "secondFieldEngineerPhone", label: "2nd Phone", width: "w-40" },
+    { key: "apsAmfBoard", label: "APS / AMF", width: "w-32" },
+    { key: "generatorType", label: "Gen Type", width: "w-32" },
+    { key: "generatorTankCapacity", label: "Gen Tank", width: "w-32" },
+    { key: "externalFuelProbe", label: "Fuel Probe", width: "w-32" },
+    { key: "dcMeterInstallationDate", label: "DC Meter Date", width: "w-40" },
+    { key: "dcMeter", label: "DC Meter", width: "w-32" },
+    { key: "batteryType", label: "Battery Type", width: "w-32" },
+    { key: "batteryCapacity", label: "Battery Cap", width: "w-32" },
+    { key: "solarPanels", label: "Sun Panels", width: "w-32" },
+    { key: "solarCapacity", label: "Sun Cap", width: "w-32" },
+    { key: "solarPanelBrand", label: "Sun Brand", width: "w-32" },
+    { key: "solarChargeControllerTracer", label: "Tracer Controller", width: "w-40" },
+    { key: "solarChargeControllerFlatpack", label: "Solar Charger", width: "w-40" },
+    { key: "sanctionedLoad", label: "Sanc. Load", width: "w-32" },
+    { key: "sla", label: "SLA", width: "w-32" },
+    { key: "dataIntegrity", label: "Data Int.", width: "w-32" },
+    { key: "softwareCleanup", label: "Soft. Cleanup", width: "w-32" },
   ];
+
+  /* Filter the master list to only the keys in the active profile */
+  const activeProfileKeys = COLUMN_PROFILES[columnProfile].keys;
+  const columns = ALL_COLUMNS.filter(col => activeProfileKeys.includes(col.key));
 
   return (
     <div className="flex h-full flex-col overflow-hidden relative">
@@ -785,9 +858,79 @@ const SitesTable = () => {
               </select>
             </div>
             
-            <button className="control-button h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-[11px] font-extrabold text-slate-700 dark:text-slate-300 shadow-sm transition-all hover:border-slate-305 active:scale-95 flex items-center" aria-label="Configure headers">
-              <SlidersHorizontal size={13} className="mr-1.5 text-slate-400" /> Configure
-            </button>
+            {/* ── SMART COLUMN PROFILE SELECTOR ── */}
+            <div ref={profileMenuRef} className="relative">
+              <button
+                id="column-profile-btn"
+                aria-label="Select column profile"
+                aria-haspopup="true"
+                aria-expanded={profileMenuOpen}
+                onClick={() => setProfileMenuOpen(prev => !prev)}
+                className={cn(
+                  "flex h-9 items-center gap-1.5 rounded-xl border px-3 text-[11px] font-extrabold shadow-sm transition-all active:scale-95",
+                  columnProfile !== "all"
+                    ? "border-indigo-500/30 bg-indigo-50/60 dark:bg-indigo-950/30 text-indigo-650 dark:text-indigo-400"
+                    : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700"
+                )}
+              >
+                <SlidersHorizontal size={13} className={columnProfile !== "all" ? "text-indigo-500" : "text-slate-400"} />
+                <span className="hidden sm:inline">
+                  {columnProfile !== "all" ? COLUMN_PROFILES[columnProfile].label : "Columns"}
+                </span>
+                {columnProfile !== "all" && (
+                  <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-500 text-[8px] font-black text-white">
+                    {activeProfileKeys.length}
+                  </span>
+                )}
+                <ChevDown size={11} className={cn("transition-transform duration-200", profileMenuOpen ? "rotate-180" : "")} />
+              </button>
+
+              <AnimatePresence>
+                {profileMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                    transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute right-0 top-11 z-50 w-56 overflow-hidden rounded-2xl border border-white/60 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-[0_16px_48px_rgba(15,23,42,0.12)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.4)]"
+                  >
+                    <div className="border-b border-slate-100 dark:border-slate-800 px-4 py-2.5">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">View Profile</p>
+                    </div>
+                    <div className="p-1.5">
+                      {(Object.entries(COLUMN_PROFILES) as [ColumnProfileId, typeof COLUMN_PROFILES["all"]][]).map(([id, profile]) => (
+                        <button
+                          key={id}
+                          id={`profile-${id}`}
+                          onClick={() => { setColumnProfile(id); setProfileMenuOpen(false); }}
+                          className={cn(
+                            "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60",
+                            columnProfile === id && "bg-indigo-50/70 dark:bg-indigo-950/40"
+                          )}
+                        >
+                          <span className="text-sm">{profile.icon}</span>
+                          <div className="min-w-0 flex-1">
+                            <p className={cn(
+                              "text-[11px] font-extrabold truncate",
+                              columnProfile === id ? "text-indigo-650 dark:text-indigo-400" : "text-slate-700 dark:text-slate-200"
+                            )}>
+                              {profile.label}
+                            </p>
+                            <p className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">
+                              {profile.keys.length} columns
+                            </p>
+                          </div>
+                          {columnProfile === id && (
+                            <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 shrink-0" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <button className="control-button h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-[11px] font-extrabold text-slate-700 dark:text-slate-305 shadow-sm transition-all hover:border-slate-305 active:scale-95 flex items-center" aria-label="Export sites list">
               <Download size={13} className="mr-1.5 text-slate-400" /> Export
             </button>
@@ -840,7 +983,6 @@ const SitesTable = () => {
                           className={cn(
                             "group cursor-pointer whitespace-nowrap border-b border-slate-805 px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.12em] text-slate-300 dark:text-slate-400 transition-colors hover:bg-slate-800 dark:hover:bg-slate-900 hover:text-white",
                             col.width || "w-40",
-                            col.responsiveClass,
                             col.key === "no" && "sticky left-0 z-40 bg-slate-900 border-r border-slate-800/50 shadow-[4px_0_14px_-8px_rgba(0,0,0,0.35)]",
                             col.key === "siteName" && "sticky left-[80px] z-40 bg-slate-900 border-r border-slate-800/50 shadow-[4px_0_24px_-10px_rgba(0,0,0,0.4)]",
                           )}
@@ -864,7 +1006,6 @@ const SitesTable = () => {
                         {columns.map((col) => (
                           <td key={`${site.no}-${col.key}`} className={cn(
                             "overflow-hidden text-ellipsis whitespace-nowrap bg-white dark:bg-slate-900 px-5 py-3.5 align-middle text-xs font-semibold border-b border-slate-100 dark:border-slate-800/40 transition-colors group-hover:bg-indigo-50/5 dark:group-hover:bg-indigo-950/5",
-                            col.responsiveClass,
                             col.key === "no" && "sticky left-0 z-20 text-slate-400 dark:text-slate-500 font-mono tracking-tighter border-r border-slate-100/60 dark:border-slate-800/60 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm group-hover:bg-indigo-50/80 dark:group-hover:bg-indigo-950/40",
                             col.key === "siteName" && "sticky left-[80px] z-20 font-extrabold text-slate-800 dark:text-slate-205 shadow-[4px_0_24px_-10px_rgba(15,23,42,0.06)] bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm group-hover:bg-indigo-50/80 dark:group-hover:bg-indigo-950/40 border-r border-slate-100/60 dark:border-slate-800/60 uppercase tracking-wide",
                             col.key !== "no" && col.key !== "siteName" && "text-slate-650 dark:text-slate-350",

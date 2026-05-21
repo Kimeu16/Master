@@ -46,12 +46,12 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
       animate={{ width: collapsed ? 90 : 280 }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "fixed left-0 top-0 z-50 flex h-screen flex-col border-r border-slate-200/50 bg-white/75 shadow-[4px_0_30px_rgba(0,0,0,0.02)] backdrop-blur-2xl",
+        "fixed left-0 top-0 z-50 flex h-screen flex-col border-r border-slate-200/50 dark:border-slate-800/60 bg-white/75 dark:bg-slate-950/70 shadow-[4px_0_30px_rgba(0,0,0,0.02)] dark:shadow-[4px_0_30px_rgba(0,0,0,0.2)] backdrop-blur-2xl",
         className
       )}
     >
       {/* Brand logo block */}
-      <div className="flex h-20 items-center border-b border-slate-100/80 px-5">
+      <div className="flex h-20 items-center border-b border-slate-100/80 dark:border-slate-800/60 px-5">
         <div className="flex min-w-0 items-center gap-3 overflow-hidden">
           <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-primary to-indigo-600 text-sm font-black text-white shadow-lg shadow-primary/10">
             AD
@@ -96,8 +96,8 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
                     "group relative flex w-full items-center gap-3.5 rounded-xl px-3 py-3 text-xs font-bold transition-all duration-200",
                     collapsed && "justify-center px-0",
                     isActive
-                      ? "bg-primary/10 text-primary shadow-sm"
-                      : "text-muted-foreground/80 hover:bg-slate-100/60 hover:text-foreground"
+                      ? "bg-primary/10 dark:bg-primary/15 text-primary shadow-sm"
+                      : "text-muted-foreground/80 hover:bg-slate-100/60 dark:hover:bg-slate-900/60 hover:text-foreground dark:hover:text-white"
                   )}
                 >
                   {isActive && (
@@ -136,8 +136,8 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
                 "group relative flex w-full items-center gap-3.5 rounded-xl px-3 py-3 text-xs font-bold transition-all duration-200",
                 collapsed && "justify-center px-0",
                 activeView === "settings"
-                  ? "bg-primary/10 text-primary shadow-sm"
-                  : "text-muted-foreground/80 hover:bg-slate-100/60 hover:text-foreground"
+                  ? "bg-primary/10 dark:bg-primary/15 text-primary shadow-sm"
+                  : "text-muted-foreground/80 hover:bg-slate-100/60 dark:hover:bg-slate-900/60 hover:text-foreground dark:hover:text-white"
               )}
             >
               {activeView === "settings" && (
@@ -159,7 +159,7 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
             <button
               title={collapsed ? "Help Center" : undefined}
               className={cn(
-                "group flex w-full items-center gap-3.5 rounded-xl px-3 py-3 text-xs font-bold text-muted-foreground/80 transition-all duration-200 hover:bg-slate-100/60 hover:text-foreground",
+                 "group flex w-full items-center gap-3.5 rounded-xl px-3 py-3 text-xs font-bold text-muted-foreground/80 transition-all duration-200 hover:bg-slate-100/60 dark:hover:bg-slate-900/60 hover:text-foreground dark:hover:text-white",
                 collapsed && "justify-center px-0"
               )}
             >
@@ -171,17 +171,17 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
       </div>
 
       {/* Sidebar Footer block */}
-      <div className="border-t border-slate-100/80 p-4">
+      <div className="border-t border-slate-100/80 dark:border-slate-800/60 p-4">
         {!collapsed && (
-          <div className="mb-4 rounded-xl border border-emerald-100 bg-emerald-50/40 p-3 shadow-inner">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-emerald-800">
+          <div className="mb-4 rounded-xl border border-emerald-100 dark:border-emerald-950/30 bg-emerald-50/40 dark:bg-emerald-950/10 p-3 shadow-inner">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="pulse-glow absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-600"></span>
               </span>
               Systems Operational
             </div>
-            <p className="mt-1 text-[9px] font-bold leading-relaxed text-muted-foreground/80">
+            <p className="mt-1 text-[9px] font-bold leading-relaxed text-muted-foreground/80 dark:text-slate-400">
               Sync nodes and mobile checklist engines are online.
             </p>
           </div>
@@ -194,7 +194,7 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
         )}
         <button
           onClick={() => onCollapsedChange(!collapsed)}
-          className="flex w-full items-center justify-center rounded-xl py-2 text-muted-foreground/60 transition-all duration-200 hover:bg-slate-100/60 hover:text-foreground active:scale-[0.95]"
+          className="flex w-full items-center justify-center rounded-xl py-2 text-muted-foreground/60 transition-all duration-200 hover:bg-slate-100/60 dark:hover:bg-slate-900/60 hover:text-foreground dark:hover:text-white active:scale-[0.95]"
           aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
         >
           {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
