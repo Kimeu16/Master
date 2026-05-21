@@ -36,6 +36,7 @@ export interface Site {
   solarPanelBrand: string;
   solarChargeControllerTracer: string;
   solarChargeControllerFlatpack: string;
+  megmeetMppt: string;
   sanctionedLoad: string;
   sla: string;
   dataIntegrity: string;

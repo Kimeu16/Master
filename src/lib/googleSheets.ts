@@ -1,5 +1,6 @@
 import Papa from "papaparse";
 import { Site, User, EscalationEntry, ChecklistTask, RevisionSummary } from "@/types/site";
+import { sites as localSites } from "@/data/sites";
 
 // Published Google Sheets CSV URLs
 const SITES_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSJ9ghNuvsFsz5CZLIjMr2cHKPvhH3OVt8OJMRe0om7YPtflOiYGJSmZBACydF5IQ/pub?gid=1127743265&single=true&output=csv";
@@ -13,6 +14,7 @@ const REVISION_SUMMARY_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS
  */
 const SITES_HEADER_MAP: Record<string, string> = {
   "No": "no",
+  "NO": "no",
   "Site Name": "siteName",
   "Power Source": "powerSource",
   "Router Installation Status": "routerStatus",
@@ -49,6 +51,7 @@ const SITES_HEADER_MAP: Record<string, string> = {
   "Solar Panel Brand": "solarPanelBrand",
   "No Of Solar Charge Controller (Tracer8420AN)": "solarChargeControllerTracer",
   "No Of Solar Charge Controller Flatpack2 48V Solar Charger or Megmeet Charge": "solarChargeControllerFlatpack",
+  "Megmeet MPPT": "megmeetMppt",
   "Sactioned Load": "sanctionedLoad",
   "SLA": "sla",
   "Data Integrity": "dataIntegrity",
@@ -226,7 +229,23 @@ export const updateUser = async (userNo: string, data: Partial<User>) => {
   }
 };
 
-export const getSites = () => fetchSheetData<Site>(SITES_SHEET_URL, SITES_HEADER_MAP);
+export const getSites = async () => {
+  try {
+    const remoteSites = await fetchSheetData<Site>(SITES_SHEET_URL, SITES_HEADER_MAP);
+    const normalizedRemote = new Map(remoteSites.map((site) => [site.no?.replace(".0", "").trim(), site]));
+    const mergedSites = [...remoteSites];
+    for (const localSite of localSites) {
+      const localId = localSite.no?.replace(".0", "").trim();
+      if (!normalizedRemote.has(localId)) {
+        mergedSites.push(localSite);
+      }
+    }
+    return mergedSites;
+  } catch (error) {
+    console.warn("Remote site fetch failed; using local CSV fallback.", error);
+    return localSites;
+  }
+};
 export const getUsers = async () => {
   const users = await fetchSheetData<User>(USERS_SHEET_URL, USERS_HEADER_MAP);
   // Return all users that have at least a name or numeric ID to see what data is coming through

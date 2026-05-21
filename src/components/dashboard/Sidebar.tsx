@@ -1,4 +1,4 @@
-import { useState } from "react";
+import type { ElementType } from "react";
 import { motion } from "framer-motion";
 import {
   Radio,
@@ -11,14 +11,15 @@ import {
   FileText,
   LogOut,
   Settings,
-  HelpCircle
+  HelpCircle,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
   id: string;
   label: string;
-  icon: React.ElementType;
+  icon: ElementType;
 };
 
 const navItems: NavItem[] = [
@@ -26,131 +27,177 @@ const navItems: NavItem[] = [
   { id: "sites", label: "Site Inventory", icon: Radio },
   { id: "users", label: "Users & Teams", icon: Users },
   { id: "escalation", label: "Escalation Matrix", icon: AlertTriangle },
-  { id: "checklists", label: "Operations Checklists", icon: FileText },
-  { id: "security", label: "Security & Access", icon: Shield },
+  { id: "checklists", label: "Checklists & PM", icon: FileText },
+  { id: "security", label: "Security & Locks", icon: Shield },
 ];
 
 interface SidebarProps {
   activeView: string;
   onViewChange: (view: string) => void;
+  collapsed: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
   className?: string;
 }
 
-const Sidebar = ({ activeView, onViewChange, className }: SidebarProps) => {
-  const [collapsed, setCollapsed] = useState(false);
-
+const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, className }: SidebarProps) => {
   return (
     <motion.aside
       initial={false}
-      animate={{ width: collapsed ? 100 : 280 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      animate={{ width: collapsed ? 90 : 280 }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "fixed left-0 top-0 h-screen bg-sidebar z-50 flex flex-col border-r border-sidebar-border shadow-2xl",
+        "fixed left-0 top-0 z-50 flex h-screen flex-col border-r border-slate-200/50 bg-white/75 shadow-[4px_0_30px_rgba(0,0,0,0.02)] backdrop-blur-2xl",
         className
       )}
     >
-      {/* Brand Logo */}
-      <div className="flex items-center h-20 px-6 border-b border-sidebar-border/50">
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20">
-            <span className="text-white font-display font-extrabold text-lg">AD</span>
+      {/* Brand logo block */}
+      <div className="flex h-20 items-center border-b border-slate-100/80 px-5">
+        <div className="flex min-w-0 items-center gap-3 overflow-hidden">
+          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-primary to-indigo-600 text-sm font-black text-white shadow-lg shadow-primary/10">
+            AD
           </div>
           {!collapsed && (
             <motion.div
-              initial={{ opacity: 0, x: -10 }}
+              initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
-              className="flex flex-col"
+              transition={{ duration: 0.2 }}
+              className="min-w-0"
             >
-              <span className="text-white font-display font-bold text-base tracking-tight leading-none uppercase">
+              <span className="block truncate text-xs font-black uppercase tracking-[0.16em] text-foreground">
                 AlanDick
               </span>
-              <span className="text-[10px] text-muted-foreground font-medium tracking-[0.2em] mt-1.5 uppercase">
-                Enterprise
+              <span className="mt-1 block text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                Ops Console
               </span>
             </motion.div>
           )}
         </div>
       </div>
 
-      {/* Navigation */}
-      <div className="flex-1 py-8 px-4 space-y-8 overflow-y-auto no-scrollbar">
-        <div className="space-y-1.5">
+      {/* Main navigation list */}
+      <div className="custom-scrollbar flex-1 space-y-8 overflow-y-auto px-3.5 py-6">
+        <div>
           {!collapsed && (
-            <p className="px-4 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em] mb-4">
-              Main Menu
+            <p className="mb-3 px-3 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+              Workspace
             </p>
           )}
-          {navItems.map((item) => {
-            const isActive = activeView === item.id;
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => onViewChange(item.id)}
-                className={cn(
-                  "group relative w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 text-sm font-semibold",
-                  isActive
-                    ? "bg-white/10 text-white shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
-                    : "text-muted-foreground hover:text-white hover:bg-white/5"
-                )}
-              >
-                {isActive && (
-                  <motion.div 
-                    layoutId="active-pill"
-                    className="absolute left-0 w-1 h-6 bg-primary rounded-r-full"
+          <div className="space-y-1.5">
+            {navItems.map((item) => {
+              const isActive = activeView === item.id;
+              const Icon = item.icon;
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => onViewChange(item.id)}
+                  title={collapsed ? item.label : undefined}
+                  className={cn(
+                    "group relative flex w-full items-center gap-3.5 rounded-xl px-3 py-3 text-xs font-bold transition-all duration-200",
+                    collapsed && "justify-center px-0",
+                    isActive
+                      ? "bg-primary/10 text-primary shadow-sm"
+                      : "text-muted-foreground/80 hover:bg-slate-100/60 hover:text-foreground"
+                  )}
+                >
+                  {isActive && (
+                    <motion.span
+                      layoutId="activeSideBarPill"
+                      className="absolute left-0 h-5 w-1 rounded-r-full bg-primary"
+                      transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                    />
+                  )}
+                  <Icon
+                    size={17}
+                    className={cn(
+                      "flex-shrink-0 transition-colors duration-200",
+                      isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                    )}
                   />
-                )}
-                <Icon size={20} className={cn(
-                  "transition-all duration-300",
-                  isActive ? "text-primary scale-110" : "group-hover:scale-110 group-hover:text-white"
-                )} />
-                {!collapsed && (
-                  <span className="whitespace-nowrap flex-1 text-left">{item.label}</span>
-                )}
-                {isActive && !collapsed && (
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
-                )}
-              </button>
-            );
-          })}
+                  {!collapsed && <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="space-y-1.5">
+        {/* Support items list */}
+        <div>
           {!collapsed && (
-            <p className="px-4 text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em] mb-4">
+            <p className="mb-3 px-3 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
               Support
             </p>
           )}
-          <button 
-            onClick={() => onViewChange("settings")}
-            className={cn(
-              "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-semibold group",
-              activeView === "settings" ? "bg-white/10 text-white" : "text-muted-foreground hover:text-white hover:bg-white/5"
-            )}
-          >
-            <Settings size={20} className={cn("transition-transform duration-500", activeView === "settings" ? "text-primary rotate-45" : "group-hover:rotate-45")} />
-            {!collapsed && <span>Settings</span>}
-          </button>
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:text-white hover:bg-white/5 transition-all text-sm font-semibold group">
-            <HelpCircle size={20} />
-            {!collapsed && <span>Help Center</span>}
-          </button>
+          <div className="space-y-1.5">
+            <button
+              onClick={() => onViewChange("settings")}
+              title={collapsed ? "Settings" : undefined}
+              className={cn(
+                "group relative flex w-full items-center gap-3.5 rounded-xl px-3 py-3 text-xs font-bold transition-all duration-200",
+                collapsed && "justify-center px-0",
+                activeView === "settings"
+                  ? "bg-primary/10 text-primary shadow-sm"
+                  : "text-muted-foreground/80 hover:bg-slate-100/60 hover:text-foreground"
+              )}
+            >
+              {activeView === "settings" && (
+                <motion.span
+                  layoutId="activeSideBarPill"
+                  className="absolute left-0 h-5 w-1 rounded-r-full bg-primary"
+                  transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                />
+              )}
+              <Settings
+                size={17}
+                className={cn(
+                  "flex-shrink-0 transition-colors duration-200",
+                  activeView === "settings" ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                )}
+              />
+              {!collapsed && <span>Settings</span>}
+            </button>
+            <button
+              title={collapsed ? "Help Center" : undefined}
+              className={cn(
+                "group flex w-full items-center gap-3.5 rounded-xl px-3 py-3 text-xs font-bold text-muted-foreground/80 transition-all duration-200 hover:bg-slate-100/60 hover:text-foreground",
+                collapsed && "justify-center px-0"
+              )}
+            >
+              <HelpCircle size={17} className="flex-shrink-0" />
+              {!collapsed && <span>Help Center</span>}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Footer / Toggle */}
-      <div className="p-4 bg-sidebar-accent/30 border-t border-sidebar-border/50">
+      {/* Sidebar Footer block */}
+      <div className="border-t border-slate-100/80 p-4">
         {!collapsed && (
-          <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-destructive hover:bg-destructive/10 transition-all text-sm font-bold group mb-2">
-            <LogOut size={20} />
+          <div className="mb-4 rounded-xl border border-emerald-100 bg-emerald-50/40 p-3 shadow-inner">
+            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-emerald-800">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="pulse-glow absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-600"></span>
+              </span>
+              Systems Operational
+            </div>
+            <p className="mt-1 text-[9px] font-bold leading-relaxed text-muted-foreground/80">
+              Sync nodes and mobile checklist engines are online.
+            </p>
+          </div>
+        )}
+        {!collapsed && (
+          <button className="mb-2.5 flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-xs font-black text-destructive transition-all duration-200 hover:bg-destructive/10">
+            <LogOut size={17} className="flex-shrink-0" />
             <span>Sign Out</span>
           </button>
         )}
         <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center justify-center py-2.5 rounded-xl text-muted-foreground hover:text-white hover:bg-white/5 transition-all"
+          onClick={() => onCollapsedChange(!collapsed)}
+          className="flex w-full items-center justify-center rounded-xl py-2 text-muted-foreground/60 transition-all duration-200 hover:bg-slate-100/60 hover:text-foreground active:scale-[0.95]"
+          aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
         >
-          {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </button>
       </div>
     </motion.aside>
@@ -158,4 +205,3 @@ const Sidebar = ({ activeView, onViewChange, className }: SidebarProps) => {
 };
 
 export default Sidebar;
-

@@ -6,51 +6,53 @@
 
 @layer base {
   :root {
-    /* Sophisticated Charcoal & Indigo Palette */
-    --background: 220 33% 98%;
-    --foreground: 224 71.4% 4.1%;
+    /* World-Class Enterprise Palette: Crisp, elite, highly optimized contrast */
+    --background: 215 32% 98%;
+    --foreground: 224 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
+    --card-foreground: 224 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
+    --popover-foreground: 224 47% 11%;
 
-    --primary: 242 78% 60%;
+    /* Upgraded Cobalt-Indigo gradient core */
+    --primary: 224 86% 53%;
     --primary-foreground: 210 20% 98%;
 
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
+    --secondary: 215 25% 95%;
+    --secondary-foreground: 224 47% 11%;
 
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
+    --muted: 215 20% 94%;
+    --muted-foreground: 219 16% 46%;
 
-    --accent: 262 83% 58%;
+    /* Deep Emerald/Teal Operations accent */
+    --accent: 172 80% 32%;
     --accent-foreground: 210 20% 98%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 348 84% 54%;
     --destructive-foreground: 210 20% 98%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 242 78% 60%;
+    --border: 218 20% 90%;
+    --input: 218 20% 90%;
+    --ring: 224 86% 53%;
 
-    --radius: 0.75rem;
+    --radius: 0.75rem; /* Smoother, more modern rounded corners */
 
-    --sidebar-background: 224 71.4% 4.1%;
-    --sidebar-foreground: 210 20% 98%;
-    --sidebar-primary: 242 78% 60%;
+    --sidebar-background: 215 32% 98.5%;
+    --sidebar-foreground: 224 47% 11%;
+    --sidebar-primary: 224 86% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 224 71.4% 12%;
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 224 71.4% 12%;
-    --sidebar-ring: 242 78% 60%;
+    --sidebar-accent: 215 25% 94%;
+    --sidebar-accent-foreground: 224 47% 11%;
+    --sidebar-border: 218 16% 91%;
+    --sidebar-ring: 224 86% 53%;
 
-    --success: 142 76% 36%;
+    --success: 152 76% 30%;
     --success-foreground: 210 20% 98%;
-    --warning: 38 92% 50%;
+    --warning: 38 92% 46%;
     --warning-foreground: 210 20% 98%;
-    --info: 199 89% 48%;
+    --info: 200 95% 44%;
     --info-foreground: 210 20% 98%;
   }
 
@@ -91,33 +93,102 @@
   }
   body {
     @apply bg-background text-foreground font-body antialiased;
-    background-image: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%),
-                      radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.05) 0px, transparent 50%);
+    /* Soft premium mesh background effect */
+    background-image: 
+      radial-gradient(at 100% 0%, hsla(224, 86%, 53%, 0.05) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(172, 80%, 32%, 0.03) 0px, transparent 50%),
+      linear-gradient(180deg, hsl(215 32% 98%) 0%, hsl(215 24% 96%) 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight font-bold;
+    @apply font-display tracking-tight;
   }
 }
 
 @layer components {
+  /* High-end Acrylic Glass Panels - inspired by Microsoft Fluent and Apple design */
   .glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
+    @apply bg-white/75 backdrop-blur-xl border border-white/60 shadow-[0_4px_30px_rgba(0,0,0,0.03)];
   }
   
   .glass-dark {
-    @apply bg-zinc-900/70 backdrop-blur-md border border-white/10 shadow-xl;
+    @apply bg-zinc-950/80 backdrop-blur-xl border border-white/5 shadow-2xl;
   }
 
+  /* Microsoft-Fluent card with ambient light shading and elegant scaling transition */
   .premium-card {
-    @apply bg-card rounded-2xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-300;
+    @apply bg-white rounded-xl border border-white/65 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_12px_24px_-4px_rgba(15,23,42,0.02),0_30px_60px_-10px_rgba(15,23,42,0.03)] transition-all duration-300;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
+  .page-shell {
+    @apply w-full;
+  }
+
+  .section-header {
+    @apply flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-6;
+  }
+
+  .section-headline {
+    @apply text-xl font-display font-bold tracking-tight text-foreground md:text-2xl;
+  }
+
+  .section-subtitle {
+    @apply text-sm text-muted-foreground mt-1 max-w-2xl font-medium;
+  }
+
+  /* Smooth color gradient accents */
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-gradient-pulp;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-indigo-500 to-accent font-bold;
+  }
+
+  .surface-panel {
+    @apply bg-white/70 backdrop-blur-md border border-white/70 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.01),0_16px_36px_rgba(15,23,42,0.02)];
+  }
+
+  /* State-of-the-art Interactive Buttons with click compression */
+  .control-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-border/70 bg-white px-3.5 py-2 text-xs font-bold text-muted-foreground shadow-sm transition-all duration-200 hover:border-primary/30 hover:bg-slate-50 hover:text-foreground active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20;
+  }
+
+  .primary-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-indigo-600 px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-md shadow-primary/10 transition-all duration-200 hover:shadow-lg hover:shadow-primary/15 hover:brightness-105 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25;
+  }
+
+  .icon-button {
+    @apply inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border/70 bg-white text-muted-foreground shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-foreground active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20;
+  }
+
+  /* Custom Slim Professional Scrollbar */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.25) transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.15);
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    transition: background 0.2s;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.35);
   }
 }
 
-/* Custom scrollbar */
+/* Global scrollbars for consistent desktop operations views */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -126,16 +197,20 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.2);
+  background: hsl(var(--muted-foreground) / 0.15);
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.4);
+  background: hsl(var(--muted-foreground) / 0.3);
 }
 
-@keyframes gradient-pulp {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.5; }
+  50% { transform: scale(1.15); opacity: 0.8; }
+  100% { transform: scale(0.95); opacity: 0.5; }
+}
+
+.pulse-glow {
+  animation: pulse-ring 2s infinite ease-in-out;
 }
 

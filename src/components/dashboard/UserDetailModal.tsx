@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { User as UserType } from "@/types/site";
-import { X, User, Mail, Phone, Briefcase, MapPin, Shield, Edit3, Check, RotateCcw } from "lucide-react";
+import { X, User, Edit3, Check, RotateCcw, Shield, MapPin, Briefcase, Mail, Phone, Calendar, Bookmark, HelpCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
@@ -11,32 +11,59 @@ interface UserDetailModalProps {
   onSave?: (updatedUser: UserType) => void;
 }
 
+const AVATAR_GRADIENTS = [
+  "from-indigo-500 via-purple-500 to-pink-500",
+  "from-blue-500 via-cyan-500 to-teal-500",
+  "from-emerald-400 via-teal-500 to-cyan-600",
+  "from-amber-400 via-orange-500 to-rose-500",
+  "from-rose-500 via-pink-500 to-purple-600",
+  "from-violet-500 via-purple-600 to-indigo-700",
+  "from-fuchsia-500 via-pink-500 to-rose-500",
+  "from-sky-400 via-blue-500 to-indigo-600",
+];
+
+function getGradient(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
+}
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
 const UserDetailModal = ({ user, onClose, onSave }: UserDetailModalProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<UserType>(user);
+  const gradient = getGradient(user.userName || "U");
+  const initials = getInitials(user.userName || "U");
 
-  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="mb-8">
-      <h4 className="text-xs font-extrabold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
-        <span className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+  const Section = ({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) => (
+    <div className="mb-6 rounded-2xl border border-white/20 bg-white/40 p-5 shadow-sm dark:border-slate-800/40 dark:bg-slate-900/40">
+      <h4 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+        <Icon size={14} className="text-indigo-500" />
         {title}
       </h4>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">{children}</div>
+      <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">{children}</div>
     </div>
   );
 
   const Field = ({ label, value, fieldName }: { label: string; value: string; fieldName: keyof UserType }) => (
-    <div className="space-y-1">
-      <span className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider transition-colors">{label}</span>
+    <div className="space-y-1.5">
+      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{label}</span>
       {isEditing ? (
         <Input
           value={formData[fieldName] || ""}
           onChange={(e) => setFormData({ ...formData, [fieldName]: e.target.value })}
-          className="h-8 text-xs bg-background/50 border-border focus:ring-1 focus:ring-primary/20 transition-all font-semibold"
+          className="h-9 w-full rounded-xl border-slate-200 bg-white px-3 text-xs font-semibold shadow-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
         />
       ) : (
-        <p className="text-sm text-foreground font-semibold leading-relaxed border-b border-transparent">
-          {value || <span className="text-muted-foreground font-normal italic">N/A</span>}
+        <p className="min-h-[20px] text-xs font-bold text-slate-800 dark:text-slate-200">
+          {value || <span className="font-medium italic text-slate-400 dark:text-slate-600">Not Assigned</span>}
         </p>
       )}
     </div>
@@ -50,87 +77,118 @@ const UserDetailModal = ({ user, onClose, onSave }: UserDetailModalProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-[4px]" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-xl" onClick={onClose}>
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-card rounded-2xl border border-border w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl mx-4 flex flex-col"
+        exit={{ opacity: 0, scale: 0.95, y: 15 }}
+        className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-white/40 bg-white/75 shadow-2xl backdrop-blur-2xl dark:border-slate-800/80 dark:bg-slate-900/75"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-6 border-b border-border bg-secondary/10 shrink-0">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
-              <User size={24} />
+        {/* Fluent Top Gradient Glow */}
+        <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${gradient}`} />
+
+        {/* Modal Header */}
+        <div className="flex shrink-0 flex-col gap-4 border-b border-slate-100/50 bg-white/40 p-6 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800/50 dark:bg-slate-900/40">
+          <div className="flex min-w-0 items-center gap-4">
+            <div
+              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} text-lg font-black text-white shadow-md ring-4 ring-white/60 dark:ring-slate-800`}
+            >
+              {initials}
             </div>
-            <div>
-              <h3 className="font-display font-black text-foreground text-xl tracking-tight">{user.userName}</h3>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider h-5">{user.accessLevel || "Unauthorized"}</Badge>
-                <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] font-bold h-5 uppercase tracking-wider">{user.region || "Global"}</Badge>
+            <div className="min-w-0">
+              <h3 className="truncate text-xl font-black tracking-tight text-slate-800 dark:text-white">{user.userName}</h3>
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                <Badge
+                  variant="outline"
+                  className="h-5 border-indigo-500/20 bg-indigo-500/5 text-[9px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400"
+                >
+                  {user.accessLevel || "Staff Node"}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className="h-5 border-sky-500/20 bg-sky-500/5 text-[9px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400"
+                >
+                  {user.region || "Global Coverage"}
+                </Badge>
               </div>
             </div>
           </div>
+          
+          {/* Modal Header Action Panel */}
           <div className="flex items-center gap-2">
             {isEditing ? (
               <>
-                <button 
-                   onClick={() => { setFormData(user); setIsEditing(false); }}
-                   className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-muted-foreground hover:bg-secondary rounded-lg transition-all"
+                <button
+                  onClick={() => {
+                    setFormData(user);
+                    setIsEditing(false);
+                  }}
+                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-600 shadow-sm transition-all hover:bg-slate-50 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                 >
-                  <RotateCcw size={14} /> Cancel
+                  <RotateCcw size={13} /> Cancel
                 </button>
-                <button 
+                <button
                   onClick={handleSave}
-                  className="flex items-center gap-2 px-4 py-2 text-xs font-bold bg-primary text-white rounded-lg shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+                  className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-indigo-500/20 active:scale-95"
                 >
-                  <Check size={14} /> Save Changes
+                  <Check size={13} /> Save Sync
                 </button>
               </>
             ) : (
-              <button 
+              <button
                 onClick={() => setIsEditing(true)}
-                className="flex items-center gap-2 px-4 py-2 text-xs font-bold bg-white border border-border shadow-sm hover:shadow-md hover:border-primary/30 text-foreground rounded-lg transition-all"
+                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:border-indigo-500/30 hover:bg-indigo-500/5 hover:text-indigo-600 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
               >
-                <Edit3 size={14} /> Edit Detail
+                <Edit3 size={13} /> Edit Profile
               </button>
             )}
-            <div className="w-px h-6 bg-border mx-2" />
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors">
-              <X size={20} />
+            <div className="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-800" />
+            <button
+              onClick={onClose}
+              className="rounded-xl border border-slate-200 bg-white p-2 text-slate-400 transition-all hover:bg-slate-50 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-800"
+            >
+              <X size={16} />
             </button>
           </div>
         </div>
 
-        <div className="p-8 overflow-y-auto custom-scrollbar flex-1 bg-gradient-to-b from-transparent to-secondary/5">
-          <Section title="Basic Information">
-            <Field label="Staff ID / No" value={formData.no?.replace(".0", "")} fieldName="no" />
-            <Field label="Full Name" value={formData.userName} fieldName="userName" />
-            <Field label="Email Address" value={formData.email} fieldName="email" />
-            <Field label="Phone Contact" value={formData.phone} fieldName="phone" />
+        {/* Scrollable Contents */}
+        <div className="custom-scrollbar flex-1 overflow-y-auto bg-gradient-to-b from-white/20 to-slate-50/20 p-6 dark:to-slate-950/20">
+          
+          <Section title="Basic Profile Metrics" icon={User}>
+            <Field label="Staff Member ID" value={formData.no?.replace(".0", "")} fieldName="no" />
+            <Field label="Full Signature Name" value={formData.userName} fieldName="userName" />
+            <Field label="Primary Email Route" value={formData.email} fieldName="email" />
+            <Field label="Mobile Phone Matrix" value={formData.phone} fieldName="phone" />
           </Section>
 
-          <Section title="Organization & Access">
-            <Field label="Department / Group" value={formData.department} fieldName="department" />
-            <Field label="Access Group" value={formData.accessGroup} fieldName="accessGroup" />
-            <Field label="Access Level" value={formData.accessLevel} fieldName="accessLevel" />
-            <Field label="Primary Region" value={formData.region} fieldName="region" />
+          <Section title="Corporate Access Node" icon={Shield}>
+            <Field label="Operational Group" value={formData.department} fieldName="department" />
+            <Field label="Active Access Group" value={formData.accessGroup} fieldName="accessGroup" />
+            <Field label="Clearance Tier" value={formData.accessLevel} fieldName="accessLevel" />
+            <Field label="Assigned Region" value={formData.region} fieldName="region" />
           </Section>
 
-          <Section title="Roles & Responsibility">
-            <Field label="REON Onboarding Status" value={formData.reonOnboarding} fieldName="reonOnboarding" />
-            <Field label="Total Sites Managed" value={formData.sites} fieldName="sites" />
+          <Section title="Operational Scopes" icon={Briefcase}>
+            <Field label="REON Status" value={formData.reonOnboarding} fieldName="reonOnboarding" />
+            <Field label="Total Assigned Sites" value={formData.sites} fieldName="sites" />
+            
+            {/* Roles textarea block */}
             <div className="col-span-full mt-2">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-wider">Detailed Scope & Role</span>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Detailed Scope of Responsibilities
+              </span>
               {isEditing ? (
-                 <textarea
-                   value={formData.roles || ""}
-                   onChange={(e) => setFormData({ ...formData, roles: e.target.value })}
-                   className="w-full mt-2 p-3 text-xs bg-background/50 border border-border focus:ring-1 focus:ring-primary/20 rounded-xl transition-all font-semibold min-h-[80px]"
-                   placeholder="Enter user roles and scope..."
-                 />
+                <textarea
+                  value={formData.roles || ""}
+                  onChange={(e) => setFormData({ ...formData, roles: e.target.value })}
+                  className="mt-2 min-h-[90px] w-full rounded-xl border border-slate-200 bg-white p-3.5 text-xs font-semibold shadow-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                  placeholder="Enter detailed scopes..."
+                />
               ) : (
-                <p className="mt-2 p-4 rounded-xl bg-white border border-border/50 text-[13px] leading-relaxed text-foreground font-medium italic shadow-sm">
-                  {formData.roles || "No detailed roles assigned."}
+                <p className="mt-2 rounded-2xl border border-slate-100 bg-slate-50/50 p-4 text-xs font-semibold leading-relaxed text-slate-600 dark:border-slate-800/60 dark:bg-slate-950/40 dark:text-slate-400">
+                  {formData.roles || "No scope assignments entered for this node."}
                 </p>
               )}
             </div>

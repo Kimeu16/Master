@@ -8,111 +8,193 @@ import EscalationView from "@/components/dashboard/EscalationView";
 import ChecklistsView from "@/components/dashboard/ChecklistsView";
 import SecurityView from "@/components/dashboard/SecurityView";
 import SettingsView from "@/components/dashboard/SettingsView";
-import { Bell, Search, Menu } from "lucide-react";
+import { Activity, Bell, Menu, Search, ShieldCheck } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const Index = () => {
   const [activeView, setActiveView] = useState("dashboard");
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [isNavCollapsed, setNavCollapsed] = useState(false);
 
-  const viewTitles: Record<string, string> = {
-    dashboard: "Command Center",
-    sites: "Site Inventory",
-    users: "Users & Teams",
-    escalation: "Escalation Matrix",
-    checklists: "Checklists",
-    security: "Security",
-    settings: "System Settings",
+  const viewMeta: Record<string, { title: string; description: string }> = {
+    dashboard: {
+      title: "Command Center",
+      description: "A live, AI-assisted operating picture for network assets, site tasks, and risks.",
+    },
+    sites: {
+      title: "Site Inventory",
+      description: "Explore, audit, and coordinate over 40 technical fields per network node.",
+    },
+    users: {
+      title: "Users & Teams",
+      description: "Manage system access groups, regional ownership, and operational readiness.",
+    },
+    escalation: {
+      title: "Escalation Matrix",
+      description: "Automated routing procedures for critical faults, alarms, and work approvals.",
+    },
+    checklists: {
+      title: "Preventive Checklists",
+      description: "Field procedures, snags categories, and mandatory photographic evidence audits.",
+    },
+    security: {
+      title: "Security Operations",
+      description: "Lock governance, gate alarms, and guard patrol compliance monitoring.",
+    },
+    settings: {
+      title: "System Integrations",
+      description: "Deploy Apps Script web proxy and orchestrate direct Google Sheets sync.",
+    },
+  };
+
+  const handleViewChange = (view: string) => {
+    setActiveView(view);
+    setSidebarOpen(false);
   };
 
   const renderView = () => {
     return (
       <motion.div
         key={activeView}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        initial={{ opacity: 0, y: 12, scale: 0.985 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -12, scale: 0.985 }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       >
         {(() => {
           switch (activeView) {
-            case "dashboard": return <DashboardView />;
-            case "sites": return <SitesTable />;
-            case "users": return <UsersView />;
-            case "escalation": return <EscalationView />;
-            case "checklists": return <ChecklistsView />;
-            case "security": return <SecurityView />;
-            case "settings": return <SettingsView />;
-            default: return <DashboardView />;
+            case "dashboard":
+              return <DashboardView />;
+            case "sites":
+              return <SitesTable />;
+            case "users":
+              return <UsersView />;
+            case "escalation":
+              return <EscalationView />;
+            case "checklists":
+              return <ChecklistsView />;
+            case "security":
+              return <SecurityView />;
+            case "settings":
+              return <SettingsView />;
+            default:
+              return <DashboardView />;
           }
         })()}
       </motion.div>
     );
   };
 
+  const currentView = viewMeta[activeView] || viewMeta.dashboard;
+
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/20">
-      <Sidebar 
-        activeView={activeView} 
-        onViewChange={setActiveView} 
-        className={!isSidebarOpen ? "-translate-x-full" : "translate-x-0"}
+    <div className="relative min-h-screen overflow-x-hidden text-foreground selection:bg-primary/15">
+      {/* Background radial spotlights */}
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute -left-[10%] -top-[10%] h-[500px] w-[500px] rounded-full bg-primary/5 blur-[120px]" />
+        <div className="absolute right-[5%] top-[10%] h-[600px] w-[600px] rounded-full bg-accent/3.5 blur-[130px]" />
+      </div>
+
+      {isSidebarOpen && (
+        <button
+          aria-label="Close navigation"
+          className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-md lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <Sidebar
+        activeView={activeView}
+        onViewChange={handleViewChange}
+        collapsed={isNavCollapsed}
+        onCollapsedChange={setNavCollapsed}
+        className={cn(
+          "transition-transform duration-300 ease-out",
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        )}
       />
 
-      {/* Main Content */}
-      <div className={`transition-all duration-500 ease-[0.16,1,0.3,1] ${isSidebarOpen ? "ml-[280px]" : "ml-0"}`}>
-        {/* Top Bar */}
-        <header className="h-20 glass sticky top-0 z-40 px-8 flex items-center justify-between border-b border-border/50">
-          <div className="flex items-center gap-6">
-            <button 
-              onClick={() => setSidebarOpen(!isSidebarOpen)}
-              className="p-2.5 rounded-xl hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-all duration-200 border border-transparent hover:border-border"
-            >
-              <Menu size={20} />
-            </button>
-            <div>
-              <h1 className="text-xl font-display font-bold text-foreground leading-tight tracking-tight">
-                {viewTitles[activeView]}
-              </h1>
-              <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground/80 uppercase tracking-widest">
-                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                AlanDick East Africa Operations
+      <div
+        className={cn(
+          "relative z-10 min-h-screen transition-[margin] duration-300 ease-out",
+          isNavCollapsed ? "lg:ml-[100px]" : "lg:ml-[280px]"
+        )}
+      >
+        <header className="sticky top-0 z-30 border-b border-slate-200/60 bg-white/70 px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex items-start gap-4">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="icon-button lg:hidden"
+                aria-label="Open navigation"
+              >
+                <Menu size={20} />
+              </button>
+              <div className="min-w-0">
+                <div className="mb-1.5 flex flex-wrap items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-2.5 py-1 text-success">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-success"></span>
+                    </span>
+                    Live Sync
+                  </span>
+                  <span>East Africa Operations</span>
+                  <span className="text-slate-300">/</span>
+                  <span className="text-primary font-extrabold">North Star Command</span>
+                </div>
+                <h1 className="text-2xl font-black tracking-tight text-foreground md:text-3xl font-display">
+                  {currentView.title}
+                </h1>
+                <p className="mt-1 max-w-2xl text-xs font-semibold text-muted-foreground">{currentView.description}</p>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center bg-secondary/50 border border-border/50 rounded-xl px-4 py-2 hover:bg-secondary/80 transition-all group focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/40">
-              <Search size={16} className="text-muted-foreground group-focus-within:text-primary transition-colors" />
-              <input 
-                type="text" 
-                placeholder="Search command center..." 
-                className="bg-transparent border-none focus:ring-0 text-sm ml-3 w-48 placeholder:text-muted-foreground/60"
-              />
-            </div>
-            
-            <div className="flex items-center gap-2 border-l border-border/50 pl-4">
-              <button className="p-2.5 rounded-xl hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-all relative group border border-transparent hover:border-border">
-                <Bell size={18} />
-                <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-destructive ring-4 ring-background" />
+            <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-end">
+              {/* Dynamic Interactive search input */}
+              <div className="hidden min-w-[280px] items-center rounded-lg border border-slate-200 bg-white/80 px-3.5 py-2 shadow-sm transition-all duration-300 focus-within:border-primary/50 focus-within:bg-white focus-within:ring-4 focus-within:ring-primary/10 lg:flex">
+                <Search size={16} className="text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search console..."
+                  className="ml-3 w-full border-none bg-transparent text-xs font-semibold outline-none placeholder:text-muted-foreground/60 focus:ring-0"
+                />
+              </div>
+
+              {/* Status banner with dynamic gradient track */}
+              <div className="hidden items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50/50 px-3.5 py-2 text-xs font-bold text-emerald-800 shadow-sm md:flex">
+                <span className="relative flex h-2 w-2">
+                  <span className="pulse-glow absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
+                </span>
+                99.1% Network SLA
+              </div>
+
+              {/* Notification bubble */}
+              <button className="icon-button relative hover:border-primary/20 hover:text-primary" aria-label="Notifications">
+                <Bell size={17} />
+                <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-destructive ring-2 ring-white animate-pulse" />
               </button>
-              
-              <button className="flex items-center gap-3 p-1.5 pr-4 rounded-xl hover:bg-secondary/80 transition-all border border-transparent hover:border-border">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
-                  <span className="text-white font-display font-bold text-xs">AD</span>
+
+              {/* User Manager tag */}
+              <button className="flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white p-1.5 pr-3.5 shadow-sm transition-all duration-200 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-tr from-primary to-indigo-600 text-xs font-black text-white shadow-md shadow-primary/10">
+                  AD
                 </div>
-                <div className="hidden lg:block text-left">
-                  <p className="text-xs font-bold leading-none">Administrator</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Ops Manager</p>
+                <div className="hidden text-left xl:block">
+                  <p className="text-[11px] font-black leading-none text-foreground">Administrator</p>
+                  <p className="mt-1.5 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <ShieldCheck size={11} className="text-success" />
+                    Ops Manager
+                  </p>
                 </div>
               </button>
             </div>
           </div>
         </header>
 
-        {/* Content */}
-        <main className="p-8 max-w-[1600px] mx-auto">
-          <AnimatePresence mode="wait">
-            {renderView()}
-          </AnimatePresence>
+        <main className="mx-auto w-full max-w-[1680px] px-4 py-6 sm:px-6 lg:px-8">
+          <AnimatePresence mode="wait">{renderView()}</AnimatePresence>
         </main>
       </div>
     </div>
