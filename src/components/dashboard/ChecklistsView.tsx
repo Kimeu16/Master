@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { usePMChecklist, useCreatePMChecklist, useUpdatePMChecklist, useDeletePMChecklist } from "@/hooks/useSites";
+import { usePMChecklist } from "@/hooks/useSites";
 import { Badge } from "@/components/ui/badge";
 import {
   Camera,
@@ -11,12 +11,9 @@ import {
   ChevronUp,
   ImageIcon,
   Sparkles,
-  Plus,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
-import ChecklistDetailModal from "./ChecklistDetailModal";
-import { ChecklistTask } from "@/types/site";
 
 /* ── section colour palette ─────────────────────────────────────────── */
 const SECTION_PALETTES = [
@@ -35,27 +32,27 @@ function getPalette(index: number) {
 /* ── ChecklistCard ──────────────────────────────────────────────────── */
 function ChecklistCard({
   section,
-  tasks,
+  fields,
   index,
+  photoFields,
   searchQuery,
-  onTaskClick,
 }: {
   section: string;
-  tasks: ChecklistTask[];
+  fields: string[];
   index: number;
+  photoFields: Set<string>;
   searchQuery: string;
-  onTaskClick: (task: ChecklistTask) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
   const palette = getPalette(index);
 
-  const filteredTasks = searchQuery
-    ? tasks.filter((t) => t.field.toLowerCase().includes(searchQuery.toLowerCase()))
-    : tasks;
+  const filteredFields = searchQuery
+    ? fields.filter((f) => f.toLowerCase().includes(searchQuery.toLowerCase()))
+    : fields;
 
-  const photoCount = tasks.filter((t) => t.pictureRequired?.toLowerCase() === "yes").length;
+  const photoCount = fields.filter((f) => photoFields.has(f)).length;
 
-  if (filteredTasks.length === 0) return null;
+  if (filteredFields.length === 0) return null;
 
   return (
     <motion.div
@@ -81,7 +78,7 @@ function ChecklistCard({
               {section}
             </h4>
             <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-0.5">
-              {tasks.length} tasks{photoCount > 0 ? ` · ${photoCount} snapshots` : ""}
+              {fields.length} tasks{photoCount > 0 ? ` · ${photoCount} snapshots` : ""}
             </p>
           </div>
         </div>
@@ -93,7 +90,7 @@ function ChecklistCard({
             </span>
           )}
           <span className="rounded-full border border-slate-200 bg-white/80 px-2 py-0.5 text-[10px] font-black text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-400">
-            {filteredTasks.length}
+            {filteredFields.length}
           </span>
           <div className="rounded-lg bg-slate-100 p-1 text-slate-400 transition-colors hover:text-slate-600 dark:bg-slate-800">
             {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -113,17 +110,16 @@ function ChecklistCard({
           >
             <div className="px-5 pb-5 pt-3">
               <ul className="space-y-1.5">
-                {filteredTasks.map((task) => {
-                  const needsPhoto = task.pictureRequired?.toLowerCase() === "yes";
+                {filteredFields.map((field) => {
+                  const needsPhoto = photoFields.has(field);
                   return (
                     <li
-                      key={task.no}
-                      onClick={() => onTaskClick(task)}
-                      className="group flex items-start gap-3 rounded-xl p-2 transition-colors hover:bg-indigo-50/20 dark:hover:bg-slate-800/20 cursor-pointer"
+                      key={field}
+                      className="group flex items-start gap-3 rounded-xl p-2 transition-colors hover:bg-indigo-50/20 dark:hover:bg-slate-800/20"
                     >
                       <CheckCircle2 size={15} className={`mt-0.5 shrink-0 transition-transform group-hover:scale-110 ${palette.check}`} />
                       <span className="flex-1 text-[12px] font-medium leading-relaxed text-slate-600 dark:text-slate-350">
-                        {task.field}
+                        {field}
                       </span>
                       {needsPhoto && (
                         <span className="flex shrink-0 items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
@@ -146,44 +142,16 @@ function ChecklistCard({
 /* ── main component ─────────────────────────────────────────────────── */
 const ChecklistsView = () => {
   const { data: pmTasks, isLoading } = usePMChecklist();
-  const createChecklistMutation = useCreatePMChecklist();
-  const updateChecklistMutation = useUpdatePMChecklist();
-  const deleteChecklistMutation = useDeletePMChecklist();
-  
   const [search, setSearch] = useState("");
-  const [selectedTask, setSelectedTask] = useState<ChecklistTask | null>(null);
-
-  const handleSave = async (updatedTask: ChecklistTask, isNew?: boolean) => {
-    if (isNew) {
-      await createChecklistMutation.mutateAsync(updatedTask);
-    } else {
-      await updateChecklistMutation.mutateAsync({ id: updatedTask.no, data: updatedTask });
-    }
-    setSelectedTask(null);
-  };
-
-  const handleDelete = async (id: string) => {
-    await deleteChecklistMutation.mutateAsync(id);
-    setSelectedTask(null);
-  };
-
-  const handleAdd = () => {
-    setSelectedTask({
-      no: `PM${Date.now()}`,
-      section: "New Section",
-      field: "New Checklist Item",
-      pictureRequired: "No",
-    } as ChecklistTask);
-  };
 
   const pmChecklistSections = useMemo(() => {
     if (!pmTasks) return [];
     const grouped = pmTasks.reduce((acc, task) => {
       if (!acc[task.section]) acc[task.section] = [];
-      acc[task.section].push(task);
+      acc[task.section].push(task.field);
       return acc;
-    }, {} as Record<string, ChecklistTask[]>);
-    return Object.entries(grouped).map(([name, tasks]) => ({ name, tasks }));
+    }, {} as Record<string, string[]>);
+    return Object.entries(grouped).map(([name, fields]) => ({ name, fields }));
   }, [pmTasks]);
 
   const photoFieldSet = useMemo(() => {
@@ -210,7 +178,7 @@ const ChecklistsView = () => {
     ? pmChecklistSections.filter(
         (s) =>
           s.name.toLowerCase().includes(search.toLowerCase()) ||
-          s.tasks.some((t) => t.field.toLowerCase().includes(search.toLowerCase()))
+          s.fields.some((f) => f.toLowerCase().includes(search.toLowerCase()))
       )
     : pmChecklistSections;
 
@@ -231,12 +199,10 @@ const ChecklistsView = () => {
               Active Sync
             </Badge>
           )}
-          <button
-            onClick={handleAdd}
-            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-500/20 transition-all hover:brightness-105 active:scale-95"
-          >
-            <Plus size={14} /> Add Checklist Item
-          </button>
+          <Badge variant="outline" className="gap-1.5 border-emerald-500/20 bg-emerald-500/5 text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-450">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+            Live Engine
+          </Badge>
         </div>
       </div>
 
@@ -321,10 +287,10 @@ const ChecklistsView = () => {
             <ChecklistCard
               key={section.name}
               section={section.name}
-              tasks={section.tasks}
+              fields={section.fields}
               index={i}
+              photoFields={photoFieldSet}
               searchQuery={search}
-              onTaskClick={setSelectedTask}
             />
           ))}
           {filteredSections.length === 0 && !isLoading && (
@@ -340,18 +306,6 @@ const ChecklistsView = () => {
           )}
         </div>
       </motion.section>
-
-      <AnimatePresence>
-        {selectedTask && (
-          <ChecklistDetailModal
-            task={selectedTask}
-            isNew={!pmTasks?.find(t => t.no === selectedTask.no)}
-            onClose={() => setSelectedTask(null)}
-            onSave={(t) => handleSave(t, !pmTasks?.find(s => s.no === selectedTask.no))}
-            onDelete={handleDelete}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 };

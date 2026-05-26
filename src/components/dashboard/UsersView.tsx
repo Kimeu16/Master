@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { useUsers, useUpdateUser, useCreateUser, useDeleteUser } from "@/hooks/useSites";
+import { useUsers } from "@/hooks/useSites";
+import { updateUser } from "@/lib/googleSheets";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -18,8 +19,6 @@ import {
   UserCheck,
   UserPlus,
   Sparkles,
-  Plus,
-  Trash2,
 } from "lucide-react";
 import UserDetailModal from "./UserDetailModal";
 import { User } from "@/types/site";
@@ -275,9 +274,6 @@ const UsersView = () => {
   const queryClient = useQueryClient();
 
   const { data: remoteUsersData, isLoading, isError } = useUsers();
-  const updateUserMutation = useUpdateUser();
-  const createUserMutation = useCreateUser();
-  const deleteUserMutation = useDeleteUser();
 
   const [localOverrides, setLocalOverrides] = useState<Record<string, Partial<User>>>(() => {
     const saved = localStorage.getItem("user_overrides");
@@ -293,43 +289,19 @@ const UsersView = () => {
     });
   }, [remoteUsersData, localOverrides]);
 
-  const handleSaveUser = async (updatedUser: User, isNew?: boolean) => {
+  const handleSaveUser = async (updatedUser: User) => {
     const newOverrides = { ...localOverrides, [updatedUser.no]: updatedUser };
     setLocalOverrides(newOverrides);
     localStorage.setItem("user_overrides", JSON.stringify(newOverrides));
     setIsSyncing(true);
     try {
-      if (isNew) {
-        await createUserMutation.mutateAsync(updatedUser);
-      } else {
-        await updateUserMutation.mutateAsync({ id: updatedUser.no, data: updatedUser });
-      }
+      await updateUser(updatedUser.no, updatedUser);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     } catch (err) {
       console.error("Cloud sync failed:", err);
     } finally {
       setIsSyncing(false);
     }
-  };
-
-  const handleDeleteUser = async (id: string) => {
-    setIsSyncing(true);
-    try {
-      await deleteUserMutation.mutateAsync(id);
-      setSelectedUser(null);
-    } catch (err) {
-      console.error("Delete failed:", err);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  const handleAddUser = () => {
-    const newUser: Partial<User> = {
-      no: `U${Date.now()}`,
-      userName: "New User",
-      email: "newuser@alandick.com",
-    };
-    setSelectedUser(newUser as User);
   };
 
   const management = useMemo(
@@ -451,13 +423,6 @@ const UsersView = () => {
             </Badge>
           )}
           
-          <button
-            onClick={handleAddUser}
-            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-500/20 transition-all hover:brightness-105 active:scale-95"
-          >
-            <Plus size={14} /> Add Team Member
-          </button>
-          
           {/* Frosted View toggle controls */}
           <div className="flex items-center rounded-xl border border-slate-200 bg-slate-100/60 p-1 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/60">
             {(["cards", "table"] as const).map((v) => (
@@ -532,10 +497,8 @@ const UsersView = () => {
         {selectedUser && (
           <UserDetailModal
             user={usersData.find((u) => u.no === selectedUser.no) || selectedUser}
-            isNew={!usersData.find(s => s.no === selectedUser.no)}
             onClose={() => setSelectedUser(null)}
-            onSave={(u) => handleSaveUser(u, !usersData.find(s => s.no === selectedUser.no))}
-            onDelete={handleDeleteUser}
+            onSave={handleSaveUser}
           />
         )}
       </AnimatePresence>

@@ -99,35 +99,4 @@ export interface RevisionSummary {
   revisionDate: string;
 }
 
-export interface FuelingChecklistTask {
-  no: string;
-  section: string;
-  field: string;
-  inputType: string;
-  options: string;
-  format: string;
-  restrictions: string;
-  pictureRequired: string;
-  snagCategory: string;
-  priority: string;
-}
 
-export interface CMChecklistTask {
-  no: string;
-  section: string;
-  field: string;
-  inputType: string;
-  options: string;
-  format: string;
-  restrictions: string;
-  pictureRequired: string;
-  snagCategory: string;
-  priority: string;
-}
-
-export interface WorkOrderChecklistTask {
-  no: string;
-  parameters: string;
-  status: string;
-  options: string;
-}

@@ -12,23 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Environment files
-.env
-.env.*
-!.env.example
-
-# Runtime output
-.codex-run-logs/
-backend/.codex-run-logs/
-
-# Local database/import artifacts
-*.xlsx
-*.xls
-*.csv
-
-# Nested/local working copies
-George/
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

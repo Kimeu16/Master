@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useEscalations, useCreateEscalation, useUpdateEscalation, useDeleteEscalation } from "@/hooks/useSites";
+import { useEscalations } from "@/hooks/useSites";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertTriangle,
@@ -14,11 +13,8 @@ import {
   Timer,
   ArrowRight,
   Sparkles,
-  Plus,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import EscalationDetailModal from "./EscalationDetailModal";
-import { EscalationEntry } from "@/types/site";
+import { motion } from "framer-motion";
 
 /* ── level colour config ─────────────────────────────────────────────── */
 const LEVEL_CONFIG = [
@@ -58,7 +54,7 @@ const LEVEL_CONFIG = [
 ];
 
 /* ── EscalationFlowCard ─────────────────────────────────────────────── */
-function EscalationFlowCard({ entry, onClick }: { entry: EscalationEntry, onClick: () => void }) {
+function EscalationFlowCard({ entry }: { entry: any }) {
   const isAlarm = entry.alarm !== "N/A";
   const isAuto = entry.method === "Auto";
 
@@ -67,8 +63,7 @@ function EscalationFlowCard({ entry, onClick }: { entry: EscalationEntry, onClic
       layout
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      onClick={onClick}
-      className="group relative overflow-hidden rounded-3xl border border-white/40 bg-white/60 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/20 hover:shadow-[0_20px_40px_rgba(79,70,229,0.06)] dark:border-slate-800/60 dark:bg-slate-900/60 cursor-pointer"
+      className="group relative overflow-hidden rounded-3xl border border-white/40 bg-white/60 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/20 hover:shadow-[0_20px_40px_rgba(79,70,229,0.06)] dark:border-slate-800/60 dark:bg-slate-900/60"
     >
       {/* Top Accent Strip */}
       <div
@@ -206,44 +201,9 @@ function WorkflowStep({
 
 /* ── main component ─────────────────────────────────────────────────── */
 const EscalationView = () => {
-  const { data: escalations, isLoading } = useEscalations();
-  const createEscalationMutation = useCreateEscalation();
-  const updateEscalationMutation = useUpdateEscalation();
-  const deleteEscalationMutation = useDeleteEscalation();
-  
-  const [selectedEntry, setSelectedEntry] = useState<EscalationEntry | null>(null);
+  const { data: remoteEscalationData, isLoading, isError } = useEscalations();
 
-  const handleSave = async (updatedEntry: EscalationEntry, isNew?: boolean) => {
-    if (isNew) {
-      await createEscalationMutation.mutateAsync(updatedEntry);
-    } else {
-      await updateEscalationMutation.mutateAsync({ id: updatedEntry.no, data: updatedEntry });
-    }
-    setSelectedEntry(null);
-  };
-
-  const handleDelete = async (id: string) => {
-    await deleteEscalationMutation.mutateAsync(id);
-    setSelectedEntry(null);
-  };
-
-  const handleAdd = () => {
-    setSelectedEntry({
-      no: `E${Date.now()}`,
-      event: "New Event",
-      alarm: "N/A",
-      method: "Manual",
-      issueType: "Service",
-      level1: "L1 Support",
-      level2: "L2 Coordinator",
-      level3: "L3 Director",
-      notificationTime: "1 hr",
-      designator: "L1",
-      scopeDesignee: "NOC"
-    } as EscalationEntry);
-  };
-
-  const escalationData = escalations || [];
+  const escalationData = remoteEscalationData || [];
   const alarmCount = escalationData.filter((e) => e.alarm !== "N/A").length;
   const autoCount = escalationData.filter((e) => e.method === "Auto").length;
   const manualCount = escalationData.length - autoCount;
@@ -305,19 +265,18 @@ const EscalationView = () => {
             Trouble-ticket escalation workflows, notification priority chains, and response SLA templates.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           {isLoading && (
             <Badge variant="outline" className="gap-1.5 border-indigo-200 bg-indigo-50/80 text-indigo-600 dark:border-indigo-800/30 dark:bg-indigo-900/30 dark:text-indigo-400">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-500" />
               Active Sync
             </Badge>
           )}
-          <button
-            onClick={handleAdd}
-            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-500/20 transition-all hover:brightness-105 active:scale-95"
-          >
-            <Plus size={14} /> Add Escalation
-          </button>
+          {isError && (
+            <Badge variant="outline" className="border-rose-200 bg-rose-50 text-rose-600 dark:border-rose-800/30 dark:bg-rose-900/30 dark:text-rose-400">
+              Local Mode
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -374,7 +333,7 @@ const EscalationView = () => {
         ) : (
           <div className="grid grid-cols-1 gap-5 p-5 md:grid-cols-2 xl:grid-cols-3">
             {escalationData.map((entry, i) => (
-              <EscalationFlowCard key={`${entry.no}-${i}`} entry={entry} onClick={() => setSelectedEntry(entry)} />
+              <EscalationFlowCard key={`${entry.no}-${i}`} entry={entry} />
             ))}
             {escalationData.length === 0 && (
               <div className="col-span-full py-16 text-center text-sm font-semibold text-slate-400">
@@ -461,18 +420,6 @@ const EscalationView = () => {
           </div>
         </motion.section>
       </div>
-
-      <AnimatePresence>
-        {selectedEntry && (
-          <EscalationDetailModal
-            entry={selectedEntry}
-            isNew={!escalations?.find(e => e.no === selectedEntry.no)}
-            onClose={() => setSelectedEntry(null)}
-            onSave={(e) => handleSave(e, !escalations?.find(s => s.no === selectedEntry.no))}
-            onDelete={handleDelete}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 };

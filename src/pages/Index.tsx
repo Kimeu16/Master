@@ -8,6 +8,7 @@ import EscalationView from "@/components/dashboard/EscalationView";
 import ChecklistsView from "@/components/dashboard/ChecklistsView";
 import SecurityView from "@/components/dashboard/SecurityView";
 import SettingsView from "@/components/dashboard/SettingsView";
+import GISMapView from "@/components/dashboard/GISMapView";
 import { Activity, Bell, Menu, Search, ShieldCheck, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -53,6 +54,10 @@ const Index = () => {
       title: "Site Inventory",
       description: "Explore, audit, and coordinate over 40 technical fields per network node.",
     },
+    gis: {
+      title: "GIS Map",
+      description: "Plot live Kenya network nodes using free Leaflet and CartoDB basemaps.",
+    },
     users: {
       title: "Users & Teams",
       description: "Manage system access groups, regional ownership, and operational readiness.",
@@ -95,6 +100,8 @@ const Index = () => {
               return <DashboardView />;
             case "sites":
               return <SitesTable />;
+            case "gis":
+              return <GISMapView />;
             case "users":
               return <UsersView />;
             case "escalation":
@@ -254,4 +261,3 @@ const Index = () => {
 };
 
 export default Index;
-

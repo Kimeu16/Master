@@ -10,6 +10,7 @@ import {
   Shield,
   FileText,
   LogOut,
+  Map,
   Settings,
   HelpCircle,
   Activity,
@@ -25,6 +26,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   { id: "dashboard", label: "Command Center", icon: LayoutDashboard },
   { id: "sites", label: "Site Inventory", icon: Radio },
+  { id: "gis", label: "GIS Map", icon: Map },
   { id: "users", label: "Users & Teams", icon: Users },
   { id: "escalation", label: "Escalation Matrix", icon: AlertTriangle },
   { id: "checklists", label: "Checklists & PM", icon: FileText },

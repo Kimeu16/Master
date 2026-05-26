@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import 'leaflet/dist/leaflet.css';
 
 @tailwind base;
 @tailwind components;
@@ -298,6 +299,84 @@
 .pulsing-dot-glow-fast {
   transform-origin: center;
   animation: hotspot-glow 1.5s infinite ease-in-out;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   LEAFLET MAP THEMING & CUSTOM STYLES
+   ────────────────────────────────────────────────────────────────────────── */
+
+.leaflet-container {
+  @apply rounded-lg;
+  overflow: visible !important;
+  font-family: inherit;
+}
+
+/* Ensure popups render above sidebars and other map elements */
+.leaflet-popup-pane {
+  z-index: 1000 !important;
+}
+
+.leaflet-popup {
+  z-index: 1000 !important;
+}
+
+/* Dark mode map tiles */
+.dark .leaflet-container {
+  @apply bg-slate-900;
+}
+
+/* Custom marker styling */
+.leaflet-marker-icon {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+}
+
+/* Popup styling to match app theme */
+.leaflet-popup-content-wrapper {
+  @apply rounded-lg shadow-lg border border-slate-200 bg-white;
+  border-radius: 8px !important;
+}
+
+.dark .leaflet-popup-content-wrapper {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+.leaflet-popup-content {
+  @apply text-slate-900 m-0;
+  font-size: 13px !important;
+}
+
+.dark .leaflet-popup-content {
+  color: #f1f5f9 !important;
+}
+
+.leaflet-popup-tip {
+  @apply bg-white;
+}
+
+.dark .leaflet-popup-tip {
+  background: #0f172a !important;
+}
+
+/* Zoom and control button styling */
+.leaflet-control-zoom a,
+.leaflet-control-attribution a {
+  @apply bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700;
+}
+
+.leaflet-control-zoom a:hover {
+  @apply bg-slate-50 dark:bg-slate-800;
+}
+
+/* Fit bounds button */
+.leaflet-control {
+  @apply shadow-md;
+}
+
+/* Kenya outline polygon styling */
+.leaflet-interactive {
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 

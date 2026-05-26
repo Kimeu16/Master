@@ -1,16 +1,14 @@
 import { useState } from "react";
 import { User as UserType } from "@/types/site";
-import { X, User, Edit3, Check, RotateCcw, Shield, MapPin, Briefcase, Mail, Phone, Calendar, Bookmark, HelpCircle, Trash2 } from "lucide-react";
+import { X, User, Edit3, Check, RotateCcw, Shield, MapPin, Briefcase, Mail, Phone, Calendar, Bookmark, HelpCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 
 interface UserDetailModalProps {
   user: UserType;
-  isNew?: boolean;
   onClose: () => void;
   onSave?: (updatedUser: UserType) => void;
-  onDelete?: (id: string) => void;
 }
 
 const AVATAR_GRADIENTS = [
@@ -38,8 +36,8 @@ function getInitials(name: string) {
     .join("");
 }
 
-const UserDetailModal = ({ user, isNew, onClose, onSave, onDelete }: UserDetailModalProps) => {
-  const [isEditing, setIsEditing] = useState(!!isNew);
+const UserDetailModal = ({ user, onClose, onSave }: UserDetailModalProps) => {
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<UserType>(user);
   const gradient = getGradient(user.userName || "U");
   const initials = getInitials(user.userName || "U");
@@ -138,26 +136,12 @@ const UserDetailModal = ({ user, isNew, onClose, onSave, onDelete }: UserDetailM
                 </button>
               </>
             ) : (
-              <>
-                {onDelete && !isNew && (
-                  <button
-                    onClick={() => {
-                      if (window.confirm("Are you sure you want to delete this user?")) {
-                        onDelete(user.no);
-                      }
-                    }}
-                    className="flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-600 shadow-sm transition-all hover:bg-rose-100 active:scale-95 dark:border-rose-900/30 dark:bg-rose-900/10 dark:text-rose-400"
-                  >
-                    <Trash2 size={13} /> Delete
-                  </button>
-                )}
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:border-indigo-500/30 hover:bg-indigo-500/5 hover:text-indigo-600 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                >
-                  <Edit3 size={13} /> Edit Profile
-                </button>
-              </>
+              <button
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:border-indigo-500/30 hover:bg-indigo-500/5 hover:text-indigo-600 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              >
+                <Edit3 size={13} /> Edit Profile
+              </button>
             )}
             <div className="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-800" />
             <button
