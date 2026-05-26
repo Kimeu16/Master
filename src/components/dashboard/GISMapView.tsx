@@ -1,9 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
-import { CircleDot, Loader2, MapPin, Radio, Search, ShieldAlert, Wifi } from "lucide-react";
-import { divIcon, type LatLngExpression } from "leaflet";
-import { MapContainer, Marker, Popup, TileLayer, ZoomControl, useMap } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { CircleDot, Loader2, LocateFixed, MapPin, Radio, Search, ShieldAlert, Wifi } from "lucide-react";
+import L from "leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useSites } from "@/hooks/useSites";
@@ -17,13 +15,36 @@ type PlottedSite = Site & {
   status: "operational" | "warning" | "critical";
 };
 
-const KENYA_CENTER: LatLngExpression = [0.0236, 37.9062];
+const KENYA_CENTER = { lat: 0.3, lng: 37.9 };
 const KENYA_BOUNDS = {
-  minLat: -5,
-  maxLat: 6,
-  minLng: 33,
-  maxLng: 42.5,
+  minLat: -4.85,
+  maxLat: 4.95,
+  minLng: 33.65,
+  maxLng: 42.05,
 };
+
+const KENYA_OUTLINE: [number, number][] = [
+  [4.62, 35.92],
+  [4.25, 36.58],
+  [3.52, 38.12],
+  [3.22, 40.15],
+  [2.08, 41.0],
+  [0.86, 41.82],
+  [-1.55, 41.56],
+  [-2.52, 40.98],
+  [-3.98, 39.78],
+  [-4.66, 39.2],
+  [-4.35, 37.72],
+  [-3.82, 37.15],
+  [-2.88, 36.06],
+  [-1.55, 34.82],
+  [-0.6, 34.28],
+  [0.45, 34.0],
+  [1.18, 34.88],
+  [2.06, 34.98],
+  [3.08, 34.98],
+  [4.62, 35.92],
+];
 
 const parseCoordinate = (value: string) => {
   const normalized = value?.trim().replace(",", ".");
@@ -47,72 +68,190 @@ const getSiteStatus = (site: Site): PlottedSite["status"] => {
   return "operational";
 };
 
-const statusStyles: Record<PlottedSite["status"], { label: string; pin: string; badge: string }> = {
+const statusColors: Record<PlottedSite["status"], { main: string; light: string }> = {
+  operational: { main: "#10b981", light: "#d1fae5" },
+  warning: { main: "#f59e0b", light: "#fef3c7" },
+  critical: { main: "#f43f5e", light: "#ffe4e6" },
+};
+
+const statusStyles: Record<PlottedSite["status"], { label: string; badge: string }> = {
   operational: {
     label: "Operational",
-    pin: "bg-emerald-500 ring-emerald-500/25 shadow-emerald-500/30",
     badge: "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   },
   warning: {
     label: "Monitoring",
-    pin: "bg-amber-500 ring-amber-500/25 shadow-amber-500/30",
     badge: "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400",
   },
   critical: {
     label: "At Risk",
-    pin: "bg-rose-500 ring-rose-500/25 shadow-rose-500/30",
     badge: "border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400",
   },
 };
 
-const createSiteIcon = (site: PlottedSite) =>
-  divIcon({
-    className: "ad-leaflet-marker",
-    html: `
-      <span class="relative flex h-7 w-7 items-center justify-center">
-        <span class="absolute inline-flex h-full w-full animate-ping rounded-full opacity-35 ${statusStyles[site.status].pin}"></span>
-        <span class="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-white ${statusStyles[site.status].pin} shadow-lg ring-8">
-          <span class="h-1.5 w-1.5 rounded-full bg-white"></span>
-        </span>
-      </span>
-    `,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-    popupAnchor: [0, -14],
+const useIsDarkMode = () => {
+  const [isDark, setIsDark] = useState(() => {
+    return typeof document !== "undefined" && document.documentElement.classList.contains("dark");
   });
-
-const ThemeAwareTileLayer = () => {
-  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains("dark"));
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
       setIsDark(document.documentElement.classList.contains("dark"));
     });
 
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    if (typeof document !== "undefined") {
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    }
+
     return () => observer.disconnect();
   }, []);
 
-  const attribution = '&copy; OpenStreetMap contributors &copy; CARTO';
-  const tileUrl = isDark
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-
-  return <TileLayer attribution={attribution} url={tileUrl} />;
+  return isDark;
 };
 
-const FitSitesBounds = ({ sites }: { sites: PlottedSite[] }) => {
+// Create custom marker icons
+const createMarkerIcon = (status: PlottedSite["status"]) => {
+  const color = statusColors[status].main;
+
+  return L.divIcon({
+    className: "custom-marker",
+    html: `
+      <div style="width: 14px; height: 14px; border-radius: 50%; background: ${color}; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.15);"></div>
+    `,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+    popupAnchor: [0, -12],
+  });
+};
+
+const KenyaMapBadge = () => (
+  <div className="pointer-events-none absolute left-4 top-4 z-[500] rounded-lg border border-white/70 bg-white/90 px-3.5 py-2.5 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/85">
+    <p className="text-[9px] font-black uppercase tracking-[0.18em] text-muted-foreground">Kenya Map</p>
+    <p className="mt-0.5 text-xs font-black text-foreground">Leaflet / Live GIS</p>
+  </div>
+);
+
+// Map fit bounds controller
+const MapFitBounds = ({ sites, isReady }: { sites: PlottedSite[]; isReady: boolean }) => {
   const map = useMap();
 
   useEffect(() => {
-    if (sites.length === 0) return;
+    if (!isReady || sites.length === 0) return;
 
-    const bounds = sites.map((site) => [site.lat, site.lng] as [number, number]);
-    map.fitBounds(bounds, { padding: [34, 34], maxZoom: 10 });
-  }, [map, sites]);
+    // Create bounds from all visible sites
+    const bounds = L.latLngBounds(sites.map((site) => [site.lat, site.lng]));
+    
+    // Fit map to bounds with padding
+    map.fitBounds(bounds, { 
+      padding: [50, 50],
+      maxZoom: 14,
+    });
+  }, [sites, map, isReady]);
 
   return null;
 };
+
+const LeafletMapContent = ({
+  sites,
+  onSelectSite,
+  isDark,
+}: {
+  sites: PlottedSite[];
+  onSelectSite: (site: Site) => void;
+  isDark: boolean;
+}) => {
+  const [activeSite, setActiveSite] = useState<PlottedSite | null>(null);
+  const mapRef = useRef<any>(null);
+
+  const handleResetMap = useCallback(() => {
+    if (mapRef.current) {
+      mapRef.current.setView(KENYA_CENTER, 6);
+    }
+  }, []);
+
+  return (
+    <>
+      <TileLayer
+        url={
+          isDark
+            ? "https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"
+            : "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
+        }
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        maxZoom={18}
+        minZoom={5}
+      />
+
+      {/* Site markers */}
+      {sites.map((site) => (
+        <Marker
+          key={`${site.no}-${site.siteName}`}
+          position={[site.lat, site.lng]}
+          icon={createMarkerIcon(site.status)}
+          eventHandlers={{
+            click: () => setActiveSite(site),
+          }}
+        >
+          {activeSite?.no === site.no && (
+            <Popup
+              eventHandlers={{ remove: () => setActiveSite(null) }}
+              autoClose={false}
+              closeButton
+              closeOnClick={false}
+              className="site-popup"
+            >
+              <div className="min-w-[240px] space-y-3 py-1">
+                <div>
+                  <p className="text-sm font-black uppercase tracking-wide text-slate-900 dark:text-white">
+                    {site.siteName}
+                  </p>
+                  <p className="mt-1 text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                    {site.region || "Unassigned region"} / {site.ipAddress || "No IP"}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="rounded-md bg-slate-100 p-2 dark:bg-slate-800">
+                    <p className="font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Power</p>
+                    <p className="mt-1 font-bold text-slate-800 dark:text-slate-200">{site.powerSource || "N/A"}</p>
+                  </div>
+                  <div className="rounded-md bg-slate-100 p-2 dark:bg-slate-800">
+                    <p className="font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Priority</p>
+                    <p className="mt-1 font-bold text-slate-800 dark:text-slate-200">
+                      P{site.priority?.replace(".0", "") || "N/A"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    onSelectSite(site);
+                    setActiveSite(null);
+                  }}
+                  className="w-full rounded-md bg-slate-900 px-3 py-2 text-[11px] font-black uppercase tracking-wider text-white transition-colors hover:bg-primary dark:bg-primary dark:hover:brightness-110"
+                >
+                  Open Site Record
+                </button>
+              </div>
+            </Popup>
+          )}
+        </Marker>
+      ))}
+
+      <MapFitBounds sites={sites} isReady={sites.length > 0} />
+
+      {/* Reset map button */}
+      <button
+        type="button"
+        onClick={handleResetMap}
+        className="absolute right-4 top-4 z-[500] flex h-10 w-10 items-center justify-center rounded-lg border border-white/70 bg-white/95 text-slate-700 shadow-sm backdrop-blur transition-colors hover:bg-slate-50 hover:text-primary dark:border-slate-800 dark:bg-slate-950/85 dark:text-slate-300 dark:hover:text-white"
+        aria-label="Reset map to Kenya"
+        title="Reset to Kenya"
+      >
+        <LocateFixed size={16} />
+      </button>
+    </>
+  );
+};
+
 
 const GISMapView = () => {
   const { data: sites = [], isLoading, isError } = useSites();
@@ -120,6 +259,7 @@ const GISMapView = () => {
   const [region, setRegion] = useState("all");
   const [status, setStatus] = useState<"all" | PlottedSite["status"]>("all");
   const [selectedSite, setSelectedSite] = useState<Site | null>(null);
+  const isDark = useIsDarkMode();
 
   const plottedSites = useMemo<PlottedSite[]>(() => {
     return sites
@@ -185,12 +325,12 @@ const GISMapView = () => {
                 Live GIS
               </Badge>
               <Badge variant="outline" className="px-3 py-1 text-[10px] font-black uppercase tracking-wider">
-                CartoDB tiles
+                Leaflet Maps
               </Badge>
             </div>
             <h2 className="text-xl font-black tracking-tight text-foreground md:text-2xl">Kenya Network Nodes</h2>
             <p className="mt-1 max-w-2xl text-xs font-semibold leading-relaxed text-muted-foreground">
-              Interactive Leaflet map using live site latitude and longitude records.
+              Interactive map using live site latitude and longitude records.
             </p>
           </div>
 
@@ -230,6 +370,7 @@ const GISMapView = () => {
               </label>
 
               <select
+                aria-label="Filter regions"
                 value={region}
                 onChange={(event) => setRegion(event.target.value)}
                 className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-foreground shadow-sm outline-none transition-colors focus:border-primary/40 dark:border-slate-800 dark:bg-slate-950"
@@ -287,49 +428,21 @@ const GISMapView = () => {
             </div>
           </aside>
 
-          <div className="relative h-[640px] min-h-[520px] bg-slate-100 dark:bg-slate-950">
+          <div className="relative h-[min(72vh,760px)] min-h-[420px] bg-slate-100 dark:bg-slate-950 sm:min-h-[520px] lg:h-[calc(100vh-260px)] lg:min-h-[620px] xl:min-h-[680px]">
             <MapContainer
-              center={KENYA_CENTER}
+              center={[KENYA_CENTER.lat, KENYA_CENTER.lng]}
               zoom={6}
-              minZoom={5}
-              maxZoom={17}
-              zoomControl={false}
-              className="h-full w-full"
-              scrollWheelZoom
+              style={{ height: "100%", width: "100%" }}
+              maxBounds={[
+                [KENYA_BOUNDS.minLat, KENYA_BOUNDS.minLng],
+                [KENYA_BOUNDS.maxLat, KENYA_BOUNDS.maxLng],
+              ]}
+              maxBoundsViscosity={1}
             >
-              <ThemeAwareTileLayer />
-              <ZoomControl position="bottomright" />
-              <FitSitesBounds sites={filteredSites} />
-
-              {filteredSites.map((site) => (
-                <Marker key={`${site.no}-${site.siteName}`} position={[site.lat, site.lng]} icon={createSiteIcon(site)}>
-                  <Popup minWidth={260}>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm font-black uppercase tracking-wide text-slate-900">{site.siteName}</p>
-                        <p className="mt-1 text-[11px] font-bold text-slate-500">{site.region || "Unassigned region"} / {site.ipAddress || "No IP"}</p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-[11px]">
-                        <div className="rounded-md bg-slate-100 p-2">
-                          <p className="font-black uppercase tracking-wider text-slate-400">Power</p>
-                          <p className="mt-1 font-bold text-slate-800">{site.powerSource || "N/A"}</p>
-                        </div>
-                        <div className="rounded-md bg-slate-100 p-2">
-                          <p className="font-black uppercase tracking-wider text-slate-400">Priority</p>
-                          <p className="mt-1 font-bold text-slate-800">P{site.priority?.replace(".0", "") || "N/A"}</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setSelectedSite(site)}
-                        className="w-full rounded-md bg-slate-900 px-3 py-2 text-[11px] font-black uppercase tracking-wider text-white transition-colors hover:bg-primary"
-                      >
-                        Open Site Record
-                      </button>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
+              <LeafletMapContent sites={filteredSites} onSelectSite={setSelectedSite} isDark={isDark} />
             </MapContainer>
+
+            <KenyaMapBadge />
 
             {isLoading && (
               <div className="absolute inset-0 z-[500] flex items-center justify-center bg-white/45 backdrop-blur-sm dark:bg-slate-950/45">
@@ -357,24 +470,6 @@ const GISMapView = () => {
           </div>
         </div>
       </section>
-
-      <style>{`
-        .leaflet-container {
-          font-family: inherit;
-          background: hsl(var(--background));
-        }
-
-        .leaflet-control-zoom a {
-          color: hsl(var(--foreground));
-          background: hsl(var(--card));
-          border-color: hsl(var(--border));
-        }
-
-        .leaflet-popup-content-wrapper,
-        .leaflet-popup-tip {
-          border-radius: 10px;
-        }
-      `}</style>
 
       {selectedSite && (
         <SiteDetailModal
