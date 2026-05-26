@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect, useRef, ReactNode } from "react";
 import { Site } from "@/types/site";
-import { useSites } from "@/hooks/useSites";
-import { updateSite } from "@/lib/googleSheets";
+import { useSites, useUpdateSite, useCreateSite, useDeleteSite } from "@/hooks/useSites";
 import { useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +27,9 @@ import {
   Activity,
   Wifi,
   Layers,
-  ChevronDown as ChevDown
+  ChevronDown as ChevDown,
+  Plus,
+  Trash2
 } from "lucide-react";
 import SiteDetailModal from "./SiteDetailModal";
 import { cn } from "@/lib/utils";
@@ -402,6 +403,9 @@ const SitesTable = () => {
   }, []);
 
   const { data: remoteSitesData, isLoading, isError } = useSites();
+  const updateSiteMutation = useUpdateSite();
+  const createSiteMutation = useCreateSite();
+  const deleteSiteMutation = useDeleteSite();
   const queryClient = useQueryClient();
   const normalizeId = (id: string) => id?.replace(".0", "").trim() || "";
 
@@ -424,7 +428,7 @@ const SitesTable = () => {
     setHasScriptUrl(!!localStorage.getItem("google_apps_script_url"));
   }, [localOverrides]);
 
-  const handleSaveSite = async (updatedSite: Site) => {
+  const handleSaveSite = async (updatedSite: Site, isNew?: boolean) => {
     const siteId = normalizeId(updatedSite.no);
     const newOverrides = {
       ...localOverrides,
@@ -435,13 +439,38 @@ const SitesTable = () => {
 
     setIsSyncing(true);
     try {
-      await updateSite(updatedSite.no, updatedSite);
-      queryClient.invalidateQueries({ queryKey: ["sites"] });
+      if (isNew) {
+        await createSiteMutation.mutateAsync(updatedSite);
+      } else {
+        await updateSiteMutation.mutateAsync({ id: updatedSite.no, data: updatedSite });
+      }
     } catch (err) {
       console.error("Cloud sync failed:", err);
     } finally {
       setIsSyncing(false);
     }
+  };
+
+  const handleDeleteSite = async (id: string) => {
+    setIsSyncing(true);
+    try {
+      await deleteSiteMutation.mutateAsync(id);
+      setSelectedSite(null);
+    } catch (err) {
+      console.error("Delete failed:", err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleAddSite = () => {
+    const newSite: Partial<Site> = {
+      no: `S${Date.now()}`, // Generate a temporary ID or let the user enter one
+      siteName: "New Site",
+      region: "Central",
+      priority: "3",
+    };
+    setSelectedSite(newSite as Site);
   };
 
   const sitesData = useMemo(() => {
@@ -801,6 +830,12 @@ const SitesTable = () => {
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-2.5">
+            <button
+              onClick={handleAddSite}
+              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-500/20 transition-all hover:brightness-105 active:scale-95"
+            >
+              <Plus size={14} /> Add Site
+            </button>
             {/* View Mode layout Switcher */}
             <div className="flex items-center gap-1 rounded-xl bg-slate-100/80 dark:bg-slate-800/85 p-1 border border-slate-200/40 dark:border-slate-700/40">
               <button
@@ -1118,8 +1153,10 @@ const SitesTable = () => {
         {selectedSite && (
           <SiteDetailModal 
             site={sitesData.find(s => s.no === selectedSite.no) || selectedSite} 
+            isNew={!sitesData.find(s => s.no === selectedSite.no)}
             onClose={() => setSelectedSite(null)} 
-            onSave={handleSaveSite}
+            onSave={(site) => handleSaveSite(site, !sitesData.find(s => s.no === selectedSite.no))}
+            onDelete={handleDeleteSite}
           />
         )}
       </AnimatePresence>
