@@ -306,8 +306,18 @@
    ────────────────────────────────────────────────────────────────────────── */
 
 .leaflet-container {
-  @apply rounded-lg overflow-hidden;
+  @apply rounded-lg;
+  overflow: visible !important;
   font-family: inherit;
+}
+
+/* Ensure popups render above sidebars and other map elements */
+.leaflet-popup-pane {
+  z-index: 1000 !important;
+}
+
+.leaflet-popup {
+  z-index: 1000 !important;
 }
 
 /* Dark mode map tiles */
@@ -322,17 +332,30 @@
 
 /* Popup styling to match app theme */
 .leaflet-popup-content-wrapper {
-  @apply rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900;
+  @apply rounded-lg shadow-lg border border-slate-200 bg-white;
   border-radius: 8px !important;
 }
 
+.dark .leaflet-popup-content-wrapper {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+}
+
 .leaflet-popup-content {
-  @apply text-slate-900 dark:text-slate-100 m-0;
+  @apply text-slate-900 m-0;
   font-size: 13px !important;
 }
 
+.dark .leaflet-popup-content {
+  color: #f1f5f9 !important;
+}
+
 .leaflet-popup-tip {
-  @apply bg-white dark:bg-slate-900;
+  @apply bg-white;
+}
+
+.dark .leaflet-popup-tip {
+  background: #0f172a !important;
 }
 
 /* Zoom and control button styling */

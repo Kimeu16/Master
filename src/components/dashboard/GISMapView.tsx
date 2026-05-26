@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { CircleDot, Loader2, LocateFixed, MapPin, Radio, Search, ShieldAlert, Wifi } from "lucide-react";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, LayersControl, Polygon, ZoomControl } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useSites } from "@/hooks/useSites";
 import { cn } from "@/lib/utils";
+import { IconUtils, GeomUtils, ThemeUtils } from "@/lib/mapUtils";
 import type { Site } from "@/types/site";
 import SiteDetailModal from "./SiteDetailModal";
 
@@ -22,29 +24,6 @@ const KENYA_BOUNDS = {
   minLng: 33.65,
   maxLng: 42.05,
 };
-
-const KENYA_OUTLINE: [number, number][] = [
-  [4.62, 35.92],
-  [4.25, 36.58],
-  [3.52, 38.12],
-  [3.22, 40.15],
-  [2.08, 41.0],
-  [0.86, 41.82],
-  [-1.55, 41.56],
-  [-2.52, 40.98],
-  [-3.98, 39.78],
-  [-4.66, 39.2],
-  [-4.35, 37.72],
-  [-3.82, 37.15],
-  [-2.88, 36.06],
-  [-1.55, 34.82],
-  [-0.6, 34.28],
-  [0.45, 34.0],
-  [1.18, 34.88],
-  [2.06, 34.98],
-  [3.08, 34.98],
-  [4.62, 35.92],
-];
 
 const parseCoordinate = (value: string) => {
   const normalized = value?.trim().replace(",", ".");
@@ -109,19 +88,32 @@ const useIsDarkMode = () => {
   return isDark;
 };
 
-// Create custom marker icons
+// Create custom marker icons using the utility
 const createMarkerIcon = (status: PlottedSite["status"]) => {
-  const color = statusColors[status].main;
+  return IconUtils.createStatusIcon(status, statusColors);
+};
 
-  return L.divIcon({
-    className: "custom-marker",
-    html: `
-      <div style="width: 14px; height: 14px; border-radius: 50%; background: ${color}; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.15);"></div>
-    `,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9],
-    popupAnchor: [0, -12],
+// Cluster icon creator with status awareness
+const createClusterCustomIcon = (cluster: any) => {
+  const children = cluster.getAllChildMarkers();
+  let hasCritical = false;
+  let hasWarning = false;
+
+  children.forEach((marker: any) => {
+    const status = marker.options.status;
+    if (status === "critical") hasCritical = true;
+    else if (status === "warning") hasWarning = true;
   });
+
+  let clusterColor = statusColors.operational.main; // green
+
+  if (hasCritical) {
+    clusterColor = statusColors.critical.main; // red
+  } else if (hasWarning) {
+    clusterColor = statusColors.warning.main; // amber
+  }
+
+  return IconUtils.createClusterIcon(cluster.getChildCount(), clusterColor);
 };
 
 const KenyaMapBadge = () => (
@@ -171,70 +163,107 @@ const LeafletMapContent = ({
 
   return (
     <>
-      <TileLayer
-        url={
-          isDark
-            ? "https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"
-            : "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
-        }
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        maxZoom={18}
-        minZoom={5}
+      <LayersControl position="topright">
+        <LayersControl.BaseLayer checked={!isDark} name="Light Map">
+          <TileLayer
+            url="https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            maxZoom={18}
+            minZoom={5}
+          />
+        </LayersControl.BaseLayer>
+        <LayersControl.BaseLayer checked={isDark} name="Dark Map">
+          <TileLayer
+            url="https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            maxZoom={18}
+            minZoom={5}
+          />
+        </LayersControl.BaseLayer>
+        <LayersControl.BaseLayer name="Satellite Map">
+          <TileLayer
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+            attribution="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+            maxZoom={18}
+            minZoom={5}
+          />
+        </LayersControl.BaseLayer>
+      </LayersControl>
+
+      <Polygon
+        positions={GeomUtils.kenyaOutline}
+        pathOptions={{
+          color: ThemeUtils.getOutlineColor(isDark),
+          weight: 1.5,
+          opacity: 0.4,
+          fillOpacity: 0.03,
+          dashArray: "4 4",
+        }}
+        interactive={false}
       />
 
-      {/* Site markers */}
-      {sites.map((site) => (
-        <Marker
-          key={`${site.no}-${site.siteName}`}
-          position={[site.lat, site.lng]}
-          icon={createMarkerIcon(site.status)}
-          eventHandlers={{
-            click: () => setActiveSite(site),
-          }}
-        >
-          {activeSite?.no === site.no && (
-            <Popup
-              eventHandlers={{ remove: () => setActiveSite(null) }}
-              autoClose={false}
-              closeButton
-              closeOnClick={false}
-              className="site-popup"
-            >
-              <div className="min-w-[240px] space-y-3 py-1">
-                <div>
-                  <p className="text-sm font-black uppercase tracking-wide text-slate-900 dark:text-white">
-                    {site.siteName}
-                  </p>
-                  <p className="mt-1 text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                    {site.region || "Unassigned region"} / {site.ipAddress || "No IP"}
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-[11px]">
-                  <div className="rounded-md bg-slate-100 p-2 dark:bg-slate-800">
-                    <p className="font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Power</p>
-                    <p className="mt-1 font-bold text-slate-800 dark:text-slate-200">{site.powerSource || "N/A"}</p>
-                  </div>
-                  <div className="rounded-md bg-slate-100 p-2 dark:bg-slate-800">
-                    <p className="font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Priority</p>
-                    <p className="mt-1 font-bold text-slate-800 dark:text-slate-200">
-                      P{site.priority?.replace(".0", "") || "N/A"}
+      {/* Site markers clustered */}
+      <MarkerClusterGroup 
+        chunkedLoading 
+        iconCreateFunction={createClusterCustomIcon}
+        maxClusterRadius={80}
+        disableClusteringAtZoom={14}
+        spiderfyOnMaxZoom={true}
+      >
+        {sites.map((site) => (
+          <Marker
+            key={`${site.no}-${site.siteName}`}
+            position={[site.lat, site.lng]}
+            icon={createMarkerIcon(site.status)}
+            {...{ status: site.status }}
+            eventHandlers={{
+              click: () => setActiveSite(site),
+            }}
+          >
+            {activeSite?.no === site.no && (
+              <Popup
+                eventHandlers={{ remove: () => setActiveSite(null) }}
+                autoClose={false}
+                closeButton
+                closeOnClick={false}
+                className="site-popup"
+              >
+                <div className="min-w-[240px] space-y-3 py-1">
+                  <div>
+                    <p className="text-sm font-black uppercase tracking-wide text-slate-900 dark:text-white">
+                      {site.siteName}
+                    </p>
+                    <p className="mt-1 text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                      {site.region || "Unassigned region"} / {site.ipAddress || "No IP"}
                     </p>
                   </div>
+                  <div className="grid grid-cols-2 gap-2 text-[11px]">
+                    <div className="rounded-md bg-slate-100 p-2 dark:bg-slate-800">
+                      <p className="font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Power</p>
+                      <p className="mt-1 font-bold text-slate-800 dark:text-slate-200">{site.powerSource || "N/A"}</p>
+                    </div>
+                    <div className="rounded-md bg-slate-100 p-2 dark:bg-slate-800">
+                      <p className="font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Priority</p>
+                      <p className="mt-1 font-bold text-slate-800 dark:text-slate-200">
+                        P{site.priority?.replace(".0", "") || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      onSelectSite(site);
+                      setActiveSite(null);
+                    }}
+                    className="w-full rounded-md bg-slate-900 px-3 py-2 text-[11px] font-black uppercase tracking-wider text-white transition-colors hover:bg-primary dark:bg-primary dark:hover:brightness-110"
+                  >
+                    Open Site Record
+                  </button>
                 </div>
-                <button
-                  onClick={() => {
-                    onSelectSite(site);
-                    setActiveSite(null);
-                  }}
-                  className="w-full rounded-md bg-slate-900 px-3 py-2 text-[11px] font-black uppercase tracking-wider text-white transition-colors hover:bg-primary dark:bg-primary dark:hover:brightness-110"
-                >
-                  Open Site Record
-                </button>
-              </div>
-            </Popup>
-          )}
-        </Marker>
-      ))}
+              </Popup>
+            )}
+          </Marker>
+        ))}
+      </MarkerClusterGroup>
 
       <MapFitBounds sites={sites} isReady={sites.length > 0} />
 
@@ -317,7 +346,7 @@ const GISMapView = () => {
 
   return (
     <div className="space-y-5 pb-10">
-      <section className="premium-card overflow-hidden">
+      <section className="premium-card overflow-visible relative">
         <div className="flex flex-col gap-4 border-b border-slate-200/70 bg-white/80 p-5 dark:border-slate-800/70 dark:bg-slate-950/30 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -357,7 +386,7 @@ const GISMapView = () => {
         </div>
 
         <div className="grid gap-0 xl:grid-cols-[320px_minmax(0,1fr)]">
-          <aside className="border-b border-slate-200/70 bg-white/60 p-4 dark:border-slate-800 dark:bg-slate-950/20 xl:border-b-0 xl:border-r">
+          <aside className="relative z-[500] border-b border-slate-200/70 bg-white/60 p-4 dark:border-slate-800 dark:bg-slate-950/20 xl:border-b-0 xl:border-r">
             <div className="space-y-3">
               <label className="relative block">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -432,6 +461,7 @@ const GISMapView = () => {
             <MapContainer
               center={[KENYA_CENTER.lat, KENYA_CENTER.lng]}
               zoom={6}
+              zoomControl={false}
               style={{ height: "100%", width: "100%" }}
               maxBounds={[
                 [KENYA_BOUNDS.minLat, KENYA_BOUNDS.minLng],
@@ -439,6 +469,7 @@ const GISMapView = () => {
               ]}
               maxBoundsViscosity={1}
             >
+              <ZoomControl position="bottomright" />
               <LeafletMapContent sites={filteredSites} onSelectSite={setSelectedSite} isDark={isDark} />
             </MapContainer>
 
