@@ -16,6 +16,7 @@ import {
   Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 type NavItem = {
   id: string;
@@ -42,6 +43,8 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, className }: SidebarProps) => {
+  const { role, setRole } = useAuth();
+
   return (
     <motion.aside
       initial={false}
@@ -186,6 +189,20 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
             <p className="mt-1 text-[9px] font-bold leading-relaxed text-muted-foreground/80 dark:text-slate-400">
               Sync nodes and mobile checklist engines are online.
             </p>
+          </div>
+        )}
+        {!collapsed && (
+          <div className="mb-4">
+            <p className="mb-2 px-1 text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Simulate Role</p>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as any)}
+              className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+            >
+              <option value="Read-Only">Read-Only User</option>
+              <option value="CRUD">CRUD User</option>
+              <option value="Admin">Administrator</option>
+            </select>
           </div>
         )}
         {!collapsed && (

@@ -61,7 +61,7 @@ function colorize(code: string): React.ReactNode[] {
       if (mode === "str") tokens.push(<span key={j} className="text-emerald-400 font-medium">{p}</span>);
       else if (mode === "kw") tokens.push(<span key={j} className="text-pink-400 font-extrabold">{p}</span>);
       else if (mode === "num") tokens.push(<span key={j} className="text-amber-400 font-medium">{p}</span>);
-      else tokens.push(<span key={j} className="text-slate-350">{p}</span>);
+      else tokens.push(<span key={j} className="text-slate-300">{p}</span>);
     });
 
     return (
@@ -225,7 +225,7 @@ const SettingsView = () => {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-black uppercase tracking-widest text-emerald-600">Active Pipeline Node</p>
-            <p className="mt-0.5 truncate text-xs font-bold text-slate-600 dark:text-slate-350">{scriptUrl}</p>
+            <p className="mt-0.5 truncate text-xs font-bold text-slate-600 dark:text-slate-300">{scriptUrl}</p>
           </div>
           <CheckCircle2 size={20} className="shrink-0 text-emerald-500" />
         </motion.div>

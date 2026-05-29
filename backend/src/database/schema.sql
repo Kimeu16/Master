@@ -58,7 +58,8 @@ CREATE TABLE IF NOT EXISTS users (
     access_level VARCHAR(255),
     region VARCHAR(255),
     sites TEXT,
-    roles VARCHAR(255)
+    roles VARCHAR(255),
+    rbac_role ENUM('Read-Only', 'CRUD', 'Admin') DEFAULT 'Read-Only'
 );
 
 CREATE TABLE IF NOT EXISTS escalations (

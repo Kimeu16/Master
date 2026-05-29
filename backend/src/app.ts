@@ -29,14 +29,23 @@ app.use("/api/wo-approval-workflows", createTableCrudRouter("wo_approval_workflo
 app.use("/api/excel-sheet-rows", createTableCrudRouter("excel_sheet_rows", "Excel sheet rows", "id"));
 app.use("/api/revision-summaries", revisionSummaryRoutes);
 
-app.get("/api/health", (req, res) => {
+app.get("/api/health", (req: express.Request, res: express.Response) => {
   res.json({ status: "ok" });
 });
 
-app.get("/", (req, res) => {
+app.get("/", (req: express.Request, res: express.Response) => {
   res.json({
     message: "Backend API running successfully",
   });
+});
+
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something broke!' });
+});
+
+app.use((req: express.Request, res: express.Response) => {
+  res.status(404).json({ error: 'Route not found' });
 });
 
 app.use(errorHandler);
