@@ -57,9 +57,6 @@ const StatsCard = ({ title, value, icon: Icon, trend, trendValue, variant = "def
     <motion.div
       whileHover={{ y: -4, scale: 1.015, boxShadow: "0 20px 40px -15px rgba(0,0,0,0.06)" }}
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
-      style={{
-        background: `radial-gradient(circle at 80% 20%, ${style.glow} 0%, #ffffff 80%)`
-      } as React.CSSProperties}
       className={cn(
         "premium-card group relative flex min-h-[160px] flex-col overflow-hidden p-5 border border-slate-100",
         style.border,
