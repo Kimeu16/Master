@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useUsers } from "@/hooks/useSites";
-import { updateUser } from "@/lib/googleSheets";
+import { api } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -295,7 +295,7 @@ const UsersView = () => {
     localStorage.setItem("user_overrides", JSON.stringify(newOverrides));
     setIsSyncing(true);
     try {
-      await updateUser(updatedUser.no, updatedUser);
+      await api.put(`/users/${updatedUser.no}`, updatedUser);
       queryClient.invalidateQueries({ queryKey: ["users"] });
     } catch (err) {
       console.error("Cloud sync failed:", err);
@@ -483,6 +483,19 @@ const UsersView = () => {
         <div className="flex items-center gap-3 rounded-2xl border border-indigo-100 bg-indigo-50/50 px-5 py-4 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/40">
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
           <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">Retrieving operational team nodes...</span>
+        </div>
+      )}
+      
+      {/* empty state */}
+      {!isLoading && !isError && usersData.length === 0 && (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 border-dashed bg-white/50 py-16 px-6 dark:border-slate-800 dark:bg-slate-900/30">
+          <div className="rounded-full bg-slate-100 p-4 dark:bg-slate-800">
+            <Users size={32} className="text-slate-400" />
+          </div>
+          <h3 className="mt-4 text-sm font-bold text-slate-800 dark:text-slate-200">No team members found</h3>
+          <p className="mt-1 text-center text-xs font-medium text-slate-500 dark:text-slate-400">
+            The database currently has no users. Please run the backend seeder or add new users.
+          </p>
         </div>
       )}
 

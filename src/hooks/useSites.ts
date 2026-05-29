@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { getSites, getUsers, getEscalations, getPMChecklist, getRevisionSummary } from "@/lib/googleSheets";
+import { getSites, getEscalations, getPMChecklist, getRevisionSummary } from "@/lib/googleSheets";
+import { api } from "@/lib/api";
 
 export const useSites = () => {
     return useQuery({
@@ -12,7 +13,7 @@ export const useSites = () => {
 export const useUsers = () => {
     return useQuery({
         queryKey: ["users"],
-        queryFn: getUsers,
+        queryFn: () => api.get("/users"),
         staleTime: 1000 * 60 * 10,
     });
 };

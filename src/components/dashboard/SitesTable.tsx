@@ -245,7 +245,7 @@ const KPICard = ({
     </div>
     <div className={cn(
       "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-md transition-all",
-      active ? color : "bg-white/5 text-slate-350"
+      active ? color : "bg-white/5 text-slate-300"
     )}>
       {icon}
     </div>
@@ -295,7 +295,7 @@ const SiteCard = ({ site, onClick }: { site: Site; onClick: () => void }) => {
             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
               {site.siteType || "Greenfield"}
             </span>
-            <span className="text-[9px] font-semibold text-slate-350">|</span>
+            <span className="text-[9px] font-semibold text-slate-300">|</span>
             <span className="text-[9px] font-mono font-bold text-slate-400">#{site.no?.replace(".0", "").padStart(4, '0')}</span>
           </div>
         </div>
@@ -309,7 +309,7 @@ const SiteCard = ({ site, onClick }: { site: Site; onClick: () => void }) => {
       </div>
 
       <div className="flex flex-wrap gap-1.5 mb-4">
-        <span className="font-mono text-[9px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-350 rounded-lg px-2.5 py-0.5 border border-slate-200/50 dark:border-slate-700/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
+        <span className="font-mono text-[9px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg px-2.5 py-0.5 border border-slate-200/50 dark:border-slate-700/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
           {site.ipAddress || "0.0.0.0"}
         </span>
         <span className="text-[9px] font-black bg-indigo-500/10 dark:bg-indigo-500/5 text-indigo-600 dark:text-indigo-450 rounded-lg px-2.5 py-0.5 border border-indigo-500/10 dark:border-indigo-500/5 uppercase tracking-wider">
@@ -340,7 +340,7 @@ const SiteCard = ({ site, onClick }: { site: Site; onClick: () => void }) => {
         <div className="col-span-2">
           <div className="flex justify-between items-center text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">
             <span>Rectifier Cap</span>
-            <span className="text-slate-650 dark:text-slate-350 font-bold">{site.rectifierCapacity || "-"} / {site.rectifierMaxCapacity || "-"}</span>
+            <span className="text-slate-600 dark:text-slate-300 font-bold">{site.rectifierCapacity || "-"} / {site.rectifierMaxCapacity || "-"}</span>
           </div>
           {(() => {
             const numVal = parseFloat(site.rectifierCapacity?.replace(/[^0-9.]/g, "") || "");
@@ -655,7 +655,7 @@ const SitesTable = () => {
         ) : <span className="opacity-25">-</span>;
       case "ipAddress":
         return site.ipAddress ? (
-          <span className="font-mono text-[10px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-605 dark:text-slate-350 rounded px-1.5 py-0.5 border border-slate-200/50 dark:border-slate-700/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
+          <span className="font-mono text-[10px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded px-1.5 py-0.5 border border-slate-200/50 dark:border-slate-700/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
             {site.ipAddress}
           </span>
         ) : <span className="opacity-25">-</span>;
@@ -742,7 +742,7 @@ const SitesTable = () => {
             <h2 className="text-2xl font-black tracking-tight text-white font-display md:text-3xl leading-tight">
               Site Inventory Operations Hub
             </h2>
-            <p className="max-w-2xl text-xs font-semibold text-slate-350 leading-relaxed">
+            <p className="max-w-2xl text-xs font-semibold text-slate-300 leading-relaxed">
               Explore, audit, and coordinate over 40 technical parameters per network node. Select any card metric tile to isolate nodes by operational state.
             </p>
           </div>
@@ -1008,7 +1008,7 @@ const SitesTable = () => {
                             "overflow-hidden text-ellipsis whitespace-nowrap bg-white dark:bg-slate-900 px-5 py-3.5 align-middle text-xs font-semibold border-b border-slate-100 dark:border-slate-800/40 transition-colors group-hover:bg-indigo-50/5 dark:group-hover:bg-indigo-950/5",
                             col.key === "no" && "sticky left-0 z-20 text-slate-400 dark:text-slate-500 font-mono tracking-tighter border-r border-slate-100/60 dark:border-slate-800/60 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm group-hover:bg-indigo-50/80 dark:group-hover:bg-indigo-950/40",
                             col.key === "siteName" && "sticky left-[80px] z-20 font-extrabold text-slate-800 dark:text-slate-205 shadow-[4px_0_24px_-10px_rgba(15,23,42,0.06)] bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm group-hover:bg-indigo-50/80 dark:group-hover:bg-indigo-950/40 border-r border-slate-100/60 dark:border-slate-800/60 uppercase tracking-wide",
-                            col.key !== "no" && col.key !== "siteName" && "text-slate-650 dark:text-slate-350",
+                            col.key !== "no" && col.key !== "siteName" && "text-slate-600 dark:text-slate-300",
                           )}>
                             {renderCellContent(site, col.key)}
                           </td>

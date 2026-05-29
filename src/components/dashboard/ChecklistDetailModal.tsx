@@ -3,6 +3,7 @@ import { ChecklistTask } from "@/types/site";
 import { X, Edit3, Check, RotateCcw, ClipboardCheck, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ChecklistDetailModalProps {
   task: ChecklistTask;
@@ -13,6 +14,7 @@ interface ChecklistDetailModalProps {
 }
 
 const ChecklistDetailModal = ({ task, isNew, onClose, onSave, onDelete }: ChecklistDetailModalProps) => {
+  const { canEdit } = useAuth();
   const [isEditing, setIsEditing] = useState(!!isNew);
   const [formData, setFormData] = useState<ChecklistTask>(task);
 
@@ -73,14 +75,16 @@ const ChecklistDetailModal = ({ task, isNew, onClose, onSave, onDelete }: Checkl
               </>
             ) : (
               <>
-                {onDelete && !isNew && (
+                {onDelete && !isNew && canEdit && (
                   <button onClick={() => { if (window.confirm("Are you sure?")) onDelete(task.no); }} className="flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-600 shadow-sm transition-all hover:bg-rose-100 active:scale-95">
                     <Trash2 size={13} /> Delete
                   </button>
                 )}
-                <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-indigo-500/5 hover:text-indigo-600 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                  <Edit3 size={13} /> Edit
-                </button>
+                {canEdit && (
+                  <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-indigo-500/5 hover:text-indigo-600 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                    <Edit3 size={13} /> Edit
+                  </button>
+                )}
               </>
             )}
             <div className="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-800" />

@@ -60,6 +60,21 @@ const setupDb = async () => {
       await ensureColumn(tableName, 'comments', 'TEXT');
     }
 
+    await ensureColumn('users', 'rbac_role', "ENUM('Read-Only', 'CRUD', 'Admin') DEFAULT 'Read-Only'");
+
+    console.log('Seeding initial RBAC roles for users...');
+    await pool.query(`
+      UPDATE users 
+      SET rbac_role = 
+        CASE 
+          WHEN LOWER(access_level) LIKE '%admin%' OR LOWER(access_level) LIKE '%level 1%' THEN 'Admin'
+          WHEN LOWER(access_level) LIKE '%level 2%' OR LOWER(access_level) LIKE '%level 3%' THEN 'CRUD'
+          ELSE 'Read-Only'
+        END
+      WHERE rbac_role = 'Read-Only'
+    `);
+    console.log('RBAC roles seeded.');
+
     console.log('Database setup complete.');
     process.exit(0);
   } catch (error) {
