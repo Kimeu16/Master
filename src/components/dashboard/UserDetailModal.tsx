@@ -37,7 +37,7 @@ function getInitials(name: string) {
     .join("");
 }
 
-export default function UserDetailModal({ user, onClose, onSave }: UserDetailModalProps) {
+export function UserDetailModal({ user, onClose, onSave }: UserDetailModalProps) {
   const { canEdit } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<UserType>(user);

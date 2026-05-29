@@ -1,0 +1,760 @@
+﻿diff --git a/backend/scripts/setupDb.ts b/backend/scripts/setupDb.ts
+index bfa20bd..37143c7 100644
+--- a/backend/scripts/setupDb.ts
++++ b/backend/scripts/setupDb.ts
+@@ -60,6 +60,21 @@ const setupDb = async () => {
+       await ensureColumn(tableName, 'comments', 'TEXT');
+     }
+ 
++    await ensureColumn('users', 'rbac_role', "ENUM('Read-Only', 'CRUD', 'Admin') DEFAULT 'Read-Only'");
++
++    console.log('Seeding initial RBAC roles for users...');
++    await pool.query(`
++      UPDATE users 
++      SET rbac_role = 
++        CASE 
++          WHEN LOWER(access_level) LIKE '%admin%' OR LOWER(access_level) LIKE '%level 1%' THEN 'Admin'
++          WHEN LOWER(access_level) LIKE '%level 2%' OR LOWER(access_level) LIKE '%level 3%' THEN 'CRUD'
++          ELSE 'Read-Only'
++        END
++      WHERE rbac_role = 'Read-Only'
++    `);
++    console.log('RBAC roles seeded.');
++
+     console.log('Database setup complete.');
+     process.exit(0);
+   } catch (error) {
+diff --git a/backend/src/app.ts b/backend/src/app.ts
+index 59fb65c..fd93e59 100644
+--- a/backend/src/app.ts
++++ b/backend/src/app.ts
+@@ -29,16 +29,25 @@ app.use("/api/wo-approval-workflows", createTableCrudRouter("wo_approval_workflo
+ app.use("/api/excel-sheet-rows", createTableCrudRouter("excel_sheet_rows", "Excel sheet rows", "id"));
+ app.use("/api/revision-summaries", revisionSummaryRoutes);
+ 
+-app.get("/api/health", (req, res) => {
++app.get("/api/health", (req: express.Request, res: express.Response) => {
+   res.json({ status: "ok" });
+ });
+ 
+-app.get("/", (req, res) => {
++app.get("/", (req: express.Request, res: express.Response) => {
+   res.json({
+     message: "Backend API running successfully",
+   });
+ });
+ 
++app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
++  console.error(err.stack);
++  res.status(500).json({ error: 'Something broke!' });
++});
++
++app.use((req: express.Request, res: express.Response) => {
++  res.status(404).json({ error: 'Route not found' });
++});
++
+ app.use(errorHandler);
+ 
+ export default app;
+diff --git a/backend/src/database/schema.sql b/backend/src/database/schema.sql
+index 74ec01a..8475f9a 100644
+--- a/backend/src/database/schema.sql
++++ b/backend/src/database/schema.sql
+@@ -58,7 +58,8 @@ CREATE TABLE IF NOT EXISTS users (
+     access_level VARCHAR(255),
+     region VARCHAR(255),
+     sites TEXT,
+-    roles VARCHAR(255)
++    roles VARCHAR(255),
++    rbac_role ENUM('Read-Only', 'CRUD', 'Admin') DEFAULT 'Read-Only'
+ );
+ 
+ CREATE TABLE IF NOT EXISTS escalations (
+diff --git a/backend/src/middleware/rbac.ts b/backend/src/middleware/rbac.ts
+new file mode 100644
+index 0000000..3f2c867
+--- /dev/null
++++ b/backend/src/middleware/rbac.ts
+@@ -0,0 +1,20 @@
++import { Request, Response, NextFunction } from "express";
++
++export const requireRole = (allowedRoles: string[]) => {
++  return (req: Request, res: Response, next: NextFunction) => {
++    // In a real application, this would be extracted from a verified JWT token.
++    // For this implementation, we extract it from the custom header set by the frontend.
++    const userRole = req.header("X-User-Role") || "Read-Only";
++
++    if (!allowedRoles.includes(userRole)) {
++      return res.status(403).json({
++        error: "Forbidden: You do not have the required permissions to perform this action.",
++      });
++    }
++
++    next();
++  };
++};
++
++export const requireCrudOrAdmin = requireRole(["CRUD", "Admin"]);
++export const requireAdmin = requireRole(["Admin"]);
+diff --git a/backend/src/routes/tableCrudRoutes.ts b/backend/src/routes/tableCrudRoutes.ts
+index 61953d5..b9b5fb7 100644
+--- a/backend/src/routes/tableCrudRoutes.ts
++++ b/backend/src/routes/tableCrudRoutes.ts
+@@ -1,6 +1,7 @@
+-import { Router } from 'express';
++import { Router, Request, Response } from 'express';
+ import pool from '../database/db';
+ import { mapKeysToCamelCase, mapKeysToSnakeCase } from '../utils/caseConverter';
++import { requireCrudOrAdmin } from '../middleware/rbac';
+ 
+ const ALLOWED_TABLES = new Set([
+   'fueling_checklists',
+@@ -22,7 +23,7 @@ export const createTableCrudRouter = (tableName: string, label: string, idColumn
+   const table = quoteIdentifier(tableName);
+   const primaryKey = idColumn === 'id' ? '`id`' : '`no`';
+ 
+-  router.get('/', async (_req, res) => {
++  router.get('/', async (_req: Request, res: Response) => {
+     try {
+       const [rows] = await pool.query(`SELECT * FROM ${table}`);
+       res.json(mapKeysToCamelCase(rows));
+@@ -32,7 +33,7 @@ export const createTableCrudRouter = (tableName: string, label: string, idColumn
+     }
+   });
+ 
+-  router.get('/:id', async (req, res) => {
++  router.get('/:id', async (req: Request, res: Response) => {
+     try {
+       const id = String(req.params.id);
+       const [rows] = await pool.query(`SELECT * FROM ${table} WHERE ${primaryKey} = ?`, [id]);
+@@ -47,7 +48,7 @@ export const createTableCrudRouter = (tableName: string, label: string, idColumn
+     }
+   });
+ 
+-  router.post('/', async (req, res) => {
++  router.post('/', requireCrudOrAdmin, async (req: Request, res: Response) => {
+     try {
+       const snakeData = mapKeysToSnakeCase(req.body);
+       const keys = Object.keys(snakeData);
+@@ -63,7 +64,7 @@ export const createTableCrudRouter = (tableName: string, label: string, idColumn
+     }
+   });
+ 
+-  router.put('/:id', async (req, res) => {
++  router.put('/:id', requireCrudOrAdmin, async (req: Request, res: Response) => {
+     try {
+       const id = String(req.params.id);
+       const snakeData = mapKeysToSnakeCase(req.body);
+@@ -84,7 +85,7 @@ export const createTableCrudRouter = (tableName: string, label: string, idColumn
+     }
+   });
+ 
+-  router.delete('/:id', async (req, res) => {
++  router.delete('/:id', requireCrudOrAdmin, async (req: Request, res: Response) => {
+     try {
+       const id = String(req.params.id);
+       await pool.query(`DELETE FROM ${table} WHERE ${primaryKey} = ?`, [id]);
+diff --git a/backend/src/routes/userRoutes.ts b/backend/src/routes/userRoutes.ts
+index 12ab53f..2bceb41 100644
+--- a/backend/src/routes/userRoutes.ts
++++ b/backend/src/routes/userRoutes.ts
+@@ -1,12 +1,13 @@
+ import { Router } from 'express';
+ import * as userController from '../controllers/userController';
++import { requireCrudOrAdmin } from '../middleware/rbac';
+ 
+ const router = Router();
+ 
+ router.get('/', userController.getAllUsers);
+ router.get('/:id', userController.getUserById);
+-router.post('/', userController.createUser);
+-router.put('/:id', userController.updateUser);
+-router.delete('/:id', userController.deleteUser);
++router.post('/', requireCrudOrAdmin, userController.createUser);
++router.put('/:id', requireCrudOrAdmin, userController.updateUser);
++router.delete('/:id', requireCrudOrAdmin, userController.deleteUser);
+ 
+ export default router;
+diff --git a/src/App.tsx b/src/App.tsx
+index ed7ca23..9958471 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -1,26 +1,30 @@
+ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+-import { BrowserRouter, Route, Routes } from "react-router-dom";
++import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+ import { Toaster as Sonner } from "@/components/ui/sonner";
+ import { Toaster } from "@/components/ui/toaster";
+ import { TooltipProvider } from "@/components/ui/tooltip";
+ import Index from "./pages/Index.tsx";
+ import NotFound from "./pages/NotFound.tsx";
++import { AuthProvider } from "./contexts/AuthContext";
+ 
+ const queryClient = new QueryClient();
+ 
+ const App = () => (
+   <QueryClientProvider client={queryClient}>
+-    <TooltipProvider>
+-      <Toaster />
+-      <Sonner />
+-      <BrowserRouter>
+-        <Routes>
+-          <Route path="/" element={<Index />} />
+-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+-          <Route path="*" element={<NotFound />} />
+-        </Routes>
+-      </BrowserRouter>
+-    </TooltipProvider>
++    <AuthProvider>
++      <TooltipProvider>
++        <Toaster />
++        <Sonner />
++        <BrowserRouter>
++          <Routes>
++            <Route path="/" element={<Navigate to="/dashboard" replace />} />
++            <Route path="/:view" element={<Index />} />
++            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
++            <Route path="*" element={<NotFound />} />
++          </Routes>
++        </BrowserRouter>
++      </TooltipProvider>
++    </AuthProvider>
+   </QueryClientProvider>
+ );
+ 
+diff --git a/src/components/dashboard/ChecklistDetailModal.tsx b/src/components/dashboard/ChecklistDetailModal.tsx
+index c3e017e..bfe5f7a 100644
+--- a/src/components/dashboard/ChecklistDetailModal.tsx
++++ b/src/components/dashboard/ChecklistDetailModal.tsx
+@@ -3,6 +3,7 @@ import { ChecklistTask } from "@/types/site";
+ import { X, Edit3, Check, RotateCcw, ClipboardCheck, Trash2 } from "lucide-react";
+ import { Input } from "@/components/ui/input";
+ import { motion } from "framer-motion";
++import { useAuth } from "@/contexts/AuthContext";
+ 
+ interface ChecklistDetailModalProps {
+   task: ChecklistTask;
+@@ -13,6 +14,7 @@ interface ChecklistDetailModalProps {
+ }
+ 
+ const ChecklistDetailModal = ({ task, isNew, onClose, onSave, onDelete }: ChecklistDetailModalProps) => {
++  const { canEdit } = useAuth();
+   const [isEditing, setIsEditing] = useState(!!isNew);
+   const [formData, setFormData] = useState<ChecklistTask>(task);
+ 
+@@ -73,14 +75,16 @@ const ChecklistDetailModal = ({ task, isNew, onClose, onSave, onDelete }: Checkl
+               </>
+             ) : (
+               <>
+-                {onDelete && !isNew && (
++                {onDelete && !isNew && canEdit && (
+                   <button onClick={() => { if (window.confirm("Are you sure?")) onDelete(task.no); }} className="flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-600 shadow-sm transition-all hover:bg-rose-100 active:scale-95">
+                     <Trash2 size={13} /> Delete
+                   </button>
+                 )}
+-                <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-indigo-500/5 hover:text-indigo-600 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+-                  <Edit3 size={13} /> Edit
+-                </button>
++                {canEdit && (
++                  <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-indigo-500/5 hover:text-indigo-600 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
++                    <Edit3 size={13} /> Edit
++                  </button>
++                )}
+               </>
+             )}
+             <div className="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-800" />
+diff --git a/src/components/dashboard/ChecklistsView.tsx b/src/components/dashboard/ChecklistsView.tsx
+index aac4793..4b8e03f 100644
+--- a/src/components/dashboard/ChecklistsView.tsx
++++ b/src/components/dashboard/ChecklistsView.tsx
+@@ -118,7 +118,7 @@ function ChecklistCard({
+                       className="group flex items-start gap-3 rounded-xl p-2 transition-colors hover:bg-indigo-50/20 dark:hover:bg-slate-800/20"
+                     >
+                       <CheckCircle2 size={15} className={`mt-0.5 shrink-0 transition-transform group-hover:scale-110 ${palette.check}`} />
+-                      <span className="flex-1 text-[12px] font-medium leading-relaxed text-slate-600 dark:text-slate-350">
++                      <span className="flex-1 text-[12px] font-medium leading-relaxed text-slate-600 dark:text-slate-300">
+                         {field}
+                       </span>
+                       {needsPhoto && (
+diff --git a/src/components/dashboard/DashboardView.tsx b/src/components/dashboard/DashboardView.tsx
+index 625201b..677a568 100644
+--- a/src/components/dashboard/DashboardView.tsx
++++ b/src/components/dashboard/DashboardView.tsx
+@@ -227,7 +227,7 @@ const DashboardView = () => {
+                 <h2 className="max-w-3xl text-3xl font-extrabold tracking-tight text-white font-display md:text-4xl leading-tight">
+                   Unified command interface for sites, field assets, and escalations.
+                 </h2>
+-                <p className="max-w-xl text-xs font-semibold text-slate-350 leading-relaxed">
++                <p className="max-w-xl text-xs font-semibold text-slate-300 leading-relaxed">
+                   Supervise {filteredSitesData.length} active cellular nodes, evaluate structural connectivity risks, and synchronize operations across {stats.regions} regions in East Africa.
+                 </p>
+               </div>
+@@ -350,8 +350,8 @@ const DashboardView = () => {
+               <Badge variant="secondary" className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5">Live GIS</Badge>
+             </div>
+ 
+-            <div className="relative w-full h-[320px] bg-slate-50/50 dark:bg-slate-900/20 border border-slate-100 dark:border-slate-800/40 rounded-xl flex items-center justify-center p-4">
+-              <svg viewBox="0 0 320 300" className="w-full h-full max-h-[290px] text-slate-350 dark:text-slate-700">
++            <div className="relative w-full h-[320px] bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/40 rounded-xl flex items-center justify-center p-4">
++              <svg viewBox="0 0 320 300" className="w-full h-full max-h-[290px] text-slate-400 dark:text-slate-500">
+                 {/* stylized map backgrounds for operational zones */}
+                 <g>
+                   {/* Northern Frontier (Turkana / USF) */}
+@@ -572,7 +572,7 @@ const DashboardView = () => {
+                           return (
+                             <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-xs text-foreground dark:text-white shadow-lg backdrop-blur-md">
+                               <p className="font-black uppercase tracking-wider">{data.name}</p>
+-                              <p className="mt-1 font-bold text-slate-500 dark:text-slate-350">{data.value} active nodes</p>
++                              <p className="mt-1 font-bold text-slate-500 dark:text-slate-300">{data.value} active nodes</p>
+                               <p className="mt-1.5 text-[9px] text-primary font-bold uppercase tracking-wider">{isFiltered ? "Click to clear filter" : "Click to select region"}</p>
+                             </div>
+                           );
+@@ -660,7 +660,7 @@ const DashboardView = () => {
+                           return (
+                             <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-xs text-foreground dark:text-white shadow-lg backdrop-blur-md">
+                               <p className="font-black uppercase tracking-wider">{data.name}</p>
+-                              <p className="mt-1 font-bold text-slate-500 dark:text-slate-350">{data.value} active nodes</p>
++                              <p className="mt-1 font-bold text-slate-500 dark:text-slate-300">{data.value} active nodes</p>
+                             </div>
+                           );
+                         }
+diff --git a/src/components/dashboard/EscalationDetailModal.tsx b/src/components/dashboard/EscalationDetailModal.tsx
+index 7e4afdb..76815a7 100644
+--- a/src/components/dashboard/EscalationDetailModal.tsx
++++ b/src/components/dashboard/EscalationDetailModal.tsx
+@@ -4,6 +4,8 @@ import { X, Edit3, Check, RotateCcw, AlertTriangle, Trash2 } from "lucide-react"
+ import { Input } from "@/components/ui/input";
+ import { motion } from "framer-motion";
+ 
++import { useAuth } from "@/contexts/AuthContext";
++
+ interface EscalationDetailModalProps {
+   entry: EscalationEntry;
+   isNew?: boolean;
+@@ -13,6 +15,7 @@ interface EscalationDetailModalProps {
+ }
+ 
+ const EscalationDetailModal = ({ entry, isNew, onClose, onSave, onDelete }: EscalationDetailModalProps) => {
++  const { canEdit } = useAuth();
+   const [isEditing, setIsEditing] = useState(!!isNew);
+   const [formData, setFormData] = useState<EscalationEntry>(entry);
+ 
+@@ -73,14 +76,16 @@ const EscalationDetailModal = ({ entry, isNew, onClose, onSave, onDelete }: Esca
+               </>
+             ) : (
+               <>
+-                {onDelete && !isNew && (
++                {onDelete && !isNew && canEdit && (
+                   <button onClick={() => { if (window.confirm("Are you sure?")) onDelete(entry.no); }} className="flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-600 shadow-sm transition-all hover:bg-rose-100 active:scale-95">
+                     <Trash2 size={13} /> Delete
+                   </button>
+                 )}
+-                <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-indigo-500/5 hover:text-indigo-600 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+-                  <Edit3 size={13} /> Edit
+-                </button>
++                {canEdit && (
++                  <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-indigo-500/5 hover:text-indigo-600 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
++                    <Edit3 size={13} /> Edit
++                  </button>
++                )}
+               </>
+             )}
+             <div className="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-800" />
+diff --git a/src/components/dashboard/SecurityView.tsx b/src/components/dashboard/SecurityView.tsx
+index 50c9ecd..8897cba 100644
+--- a/src/components/dashboard/SecurityView.tsx
++++ b/src/components/dashboard/SecurityView.tsx
+@@ -71,7 +71,7 @@ function SecurityVendorCard({
+             {company.coverage}
+           </p>
+         </div>
+-        <span className="shrink-0 rounded-full border border-slate-200 bg-white/90 px-2.5 py-0.5 text-[10px] font-black text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-350">
++        <span className="shrink-0 rounded-full border border-slate-200 bg-white/90 px-2.5 py-0.5 text-[10px] font-black text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
+           {company.sites} sites
+         </span>
+       </div>
+diff --git a/src/components/dashboard/SettingsView.tsx b/src/components/dashboard/SettingsView.tsx
+index c0b8c38..b433f09 100644
+--- a/src/components/dashboard/SettingsView.tsx
++++ b/src/components/dashboard/SettingsView.tsx
+@@ -61,7 +61,7 @@ function colorize(code: string): React.ReactNode[] {
+       if (mode === "str") tokens.push(<span key={j} className="text-emerald-400 font-medium">{p}</span>);
+       else if (mode === "kw") tokens.push(<span key={j} className="text-pink-400 font-extrabold">{p}</span>);
+       else if (mode === "num") tokens.push(<span key={j} className="text-amber-400 font-medium">{p}</span>);
+-      else tokens.push(<span key={j} className="text-slate-350">{p}</span>);
++      else tokens.push(<span key={j} className="text-slate-300">{p}</span>);
+     });
+ 
+     return (
+@@ -225,7 +225,7 @@ const SettingsView = () => {
+           </div>
+           <div className="flex-1 min-w-0">
+             <p className="text-xs font-black uppercase tracking-widest text-emerald-600">Active Pipeline Node</p>
+-            <p className="mt-0.5 truncate text-xs font-bold text-slate-600 dark:text-slate-350">{scriptUrl}</p>
++            <p className="mt-0.5 truncate text-xs font-bold text-slate-600 dark:text-slate-300">{scriptUrl}</p>
+           </div>
+           <CheckCircle2 size={20} className="shrink-0 text-emerald-500" />
+         </motion.div>
+diff --git a/src/components/dashboard/Sidebar.tsx b/src/components/dashboard/Sidebar.tsx
+index 2b20ac6..d3e45f4 100644
+--- a/src/components/dashboard/Sidebar.tsx
++++ b/src/components/dashboard/Sidebar.tsx
+@@ -16,6 +16,7 @@ import {
+   Activity,
+ } from "lucide-react";
+ import { cn } from "@/lib/utils";
++import { useAuth } from "@/contexts/AuthContext";
+ 
+ type NavItem = {
+   id: string;
+@@ -42,6 +43,8 @@ interface SidebarProps {
+ }
+ 
+ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, className }: SidebarProps) => {
++  const { role, setRole } = useAuth();
++
+   return (
+     <motion.aside
+       initial={false}
+@@ -188,6 +191,20 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
+             </p>
+           </div>
+         )}
++        {!collapsed && (
++          <div className="mb-4">
++            <p className="mb-2 px-1 text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Simulate Role</p>
++            <select
++              value={role}
++              onChange={(e) => setRole(e.target.value as any)}
++              className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
++            >
++              <option value="Read-Only">Read-Only User</option>
++              <option value="CRUD">CRUD User</option>
++              <option value="Admin">Administrator</option>
++            </select>
++          </div>
++        )}
+         {!collapsed && (
+           <button className="mb-2.5 flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-xs font-black text-destructive transition-all duration-200 hover:bg-destructive/10">
+             <LogOut size={17} className="flex-shrink-0" />
+diff --git a/src/components/dashboard/SiteDetailModal.tsx b/src/components/dashboard/SiteDetailModal.tsx
+index 4f9051e..d51d8f4 100644
+--- a/src/components/dashboard/SiteDetailModal.tsx
++++ b/src/components/dashboard/SiteDetailModal.tsx
+@@ -3,6 +3,7 @@ import { Site } from "@/types/site";
+ import { X, Radio, Edit3, Check, RotateCcw, Shield, Zap, Sun, Users, AlertTriangle } from "lucide-react";
+ import { Badge } from "@/components/ui/badge";
+ import { Input } from "@/components/ui/input";
++import { useAuth } from "@/contexts/AuthContext";
+ import { motion, AnimatePresence } from "framer-motion";
+ import { cn } from "@/lib/utils";
+ 
+@@ -290,6 +291,7 @@ const Field = ({
+ 
+ const SiteDetailModal = ({ site, onClose, onSave }: SiteDetailModalProps) => {
+   const [isEditing, setIsEditing] = useState(false);
++  const { canEdit } = useAuth();
+   const [formData, setFormData] = useState<Site>(site);
+   const [activeTab, setActiveTab] = useState("general");
+ 
+@@ -359,12 +361,14 @@ const SiteDetailModal = ({ site, onClose, onSave }: SiteDetailModalProps) => {
+                 </button>
+               </>
+             ) : (
+-              <button 
+-                onClick={() => setIsEditing(true)}
+-                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-wider text-slate-700 shadow-sm transition-all hover:border-indigo-500/30 hover:bg-indigo-50/20 active:scale-95"
+-              >
+-                <Edit3 size={13} className="text-indigo-600" /> Edit Asset
+-              </button>
++              canEdit && (
++                <button 
++                  onClick={() => setIsEditing(true)}
++                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-wider text-slate-700 shadow-sm transition-all hover:border-indigo-500/30 hover:bg-indigo-50/20 active:scale-95"
++                >
++                  <Edit3 size={13} className="text-indigo-600" /> Edit Asset
++                </button>
++              )
+             )}
+             <div className="w-px h-6 bg-slate-200 mx-1.5" />
+             <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 transition-colors active:scale-90">
+@@ -384,7 +388,7 @@ const SiteDetailModal = ({ site, onClose, onSave }: SiteDetailModalProps) => {
+                 onClick={() => setActiveTab(tab.id)}
+                 className={cn(
+                   "relative flex items-center gap-2 py-4 px-4 text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
+-                  isActive ? "text-indigo-600" : "text-slate-400 hover:text-slate-650"
++                  isActive ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
+                 )}
+               >
+                 <Icon size={13} className={isActive ? "text-indigo-600" : "text-slate-450"} />
+@@ -517,7 +521,7 @@ const SiteDetailModal = ({ site, onClose, onSave }: SiteDetailModalProps) => {
+                          placeholder="Enter detailed observations or ongoing maintenance snags..."
+                        />
+                     ) : (
+-                      <p className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-4 text-xs font-bold italic leading-relaxed text-slate-650 shadow-inner">
++                      <p className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-4 text-xs font-bold italic leading-relaxed text-slate-600 shadow-inner">
+                         {formData.comments || "No active operational remarks have been logged for this node asset."}
+                       </p>
+                     )}
+diff --git a/src/components/dashboard/SitesTable.tsx b/src/components/dashboard/SitesTable.tsx
+index e5f6c47..3ebbcf2 100644
+--- a/src/components/dashboard/SitesTable.tsx
++++ b/src/components/dashboard/SitesTable.tsx
+@@ -245,7 +245,7 @@ const KPICard = ({
+     </div>
+     <div className={cn(
+       "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-md transition-all",
+-      active ? color : "bg-white/5 text-slate-350"
++      active ? color : "bg-white/5 text-slate-300"
+     )}>
+       {icon}
+     </div>
+@@ -295,7 +295,7 @@ const SiteCard = ({ site, onClick }: { site: Site; onClick: () => void }) => {
+             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+               {site.siteType || "Greenfield"}
+             </span>
+-            <span className="text-[9px] font-semibold text-slate-350">|</span>
++            <span className="text-[9px] font-semibold text-slate-300">|</span>
+             <span className="text-[9px] font-mono font-bold text-slate-400">#{site.no?.replace(".0", "").padStart(4, '0')}</span>
+           </div>
+         </div>
+@@ -309,7 +309,7 @@ const SiteCard = ({ site, onClick }: { site: Site; onClick: () => void }) => {
+       </div>
+ 
+       <div className="flex flex-wrap gap-1.5 mb-4">
+-        <span className="font-mono text-[9px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-350 rounded-lg px-2.5 py-0.5 border border-slate-200/50 dark:border-slate-700/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
++        <span className="font-mono text-[9px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg px-2.5 py-0.5 border border-slate-200/50 dark:border-slate-700/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
+           {site.ipAddress || "0.0.0.0"}
+         </span>
+         <span className="text-[9px] font-black bg-indigo-500/10 dark:bg-indigo-500/5 text-indigo-600 dark:text-indigo-450 rounded-lg px-2.5 py-0.5 border border-indigo-500/10 dark:border-indigo-500/5 uppercase tracking-wider">
+@@ -340,7 +340,7 @@ const SiteCard = ({ site, onClick }: { site: Site; onClick: () => void }) => {
+         <div className="col-span-2">
+           <div className="flex justify-between items-center text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">
+             <span>Rectifier Cap</span>
+-            <span className="text-slate-650 dark:text-slate-350 font-bold">{site.rectifierCapacity || "-"} / {site.rectifierMaxCapacity || "-"}</span>
++            <span className="text-slate-600 dark:text-slate-300 font-bold">{site.rectifierCapacity || "-"} / {site.rectifierMaxCapacity || "-"}</span>
+           </div>
+           {(() => {
+             const numVal = parseFloat(site.rectifierCapacity?.replace(/[^0-9.]/g, "") || "");
+@@ -655,7 +655,7 @@ const SitesTable = () => {
+         ) : <span className="opacity-25">-</span>;
+       case "ipAddress":
+         return site.ipAddress ? (
+-          <span className="font-mono text-[10px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-605 dark:text-slate-350 rounded px-1.5 py-0.5 border border-slate-200/50 dark:border-slate-700/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
++          <span className="font-mono text-[10px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded px-1.5 py-0.5 border border-slate-200/50 dark:border-slate-700/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
+             {site.ipAddress}
+           </span>
+         ) : <span className="opacity-25">-</span>;
+@@ -742,7 +742,7 @@ const SitesTable = () => {
+             <h2 className="text-2xl font-black tracking-tight text-white font-display md:text-3xl leading-tight">
+               Site Inventory Operations Hub
+             </h2>
+-            <p className="max-w-2xl text-xs font-semibold text-slate-350 leading-relaxed">
++            <p className="max-w-2xl text-xs font-semibold text-slate-300 leading-relaxed">
+               Explore, audit, and coordinate over 40 technical parameters per network node. Select any card metric tile to isolate nodes by operational state.
+             </p>
+           </div>
+@@ -1008,7 +1008,7 @@ const SitesTable = () => {
+                             "overflow-hidden text-ellipsis whitespace-nowrap bg-white dark:bg-slate-900 px-5 py-3.5 align-middle text-xs font-semibold border-b border-slate-100 dark:border-slate-800/40 transition-colors group-hover:bg-indigo-50/5 dark:group-hover:bg-indigo-950/5",
+                             col.key === "no" && "sticky left-0 z-20 text-slate-400 dark:text-slate-500 font-mono tracking-tighter border-r border-slate-100/60 dark:border-slate-800/60 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm group-hover:bg-indigo-50/80 dark:group-hover:bg-indigo-950/40",
+                             col.key === "siteName" && "sticky left-[80px] z-20 font-extrabold text-slate-800 dark:text-slate-205 shadow-[4px_0_24px_-10px_rgba(15,23,42,0.06)] bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm group-hover:bg-indigo-50/80 dark:group-hover:bg-indigo-950/40 border-r border-slate-100/60 dark:border-slate-800/60 uppercase tracking-wide",
+-                            col.key !== "no" && col.key !== "siteName" && "text-slate-650 dark:text-slate-350",
++                            col.key !== "no" && col.key !== "siteName" && "text-slate-600 dark:text-slate-300",
+                           )}>
+                             {renderCellContent(site, col.key)}
+                           </td>
+diff --git a/src/components/dashboard/UserDetailModal.tsx b/src/components/dashboard/UserDetailModal.tsx
+index 600c008..9f30742 100644
+--- a/src/components/dashboard/UserDetailModal.tsx
++++ b/src/components/dashboard/UserDetailModal.tsx
+@@ -4,6 +4,7 @@ import { X, User, Edit3, Check, RotateCcw, Shield, MapPin, Briefcase, Mail, Phon
+ import { Badge } from "@/components/ui/badge";
+ import { Input } from "@/components/ui/input";
+ import { motion } from "framer-motion";
++import { useAuth } from "@/contexts/AuthContext";
+ 
+ interface UserDetailModalProps {
+   user: UserType;
+@@ -36,7 +37,8 @@ function getInitials(name: string) {
+     .join("");
+ }
+ 
+-const UserDetailModal = ({ user, onClose, onSave }: UserDetailModalProps) => {
++export default function UserDetailModal({ user, onClose, onSave }: UserDetailModalProps) {
++  const { canEdit } = useAuth();
+   const [isEditing, setIsEditing] = useState(false);
+   const [formData, setFormData] = useState<UserType>(user);
+   const gradient = getGradient(user.userName || "U");
+@@ -136,12 +138,15 @@ const UserDetailModal = ({ user, onClose, onSave }: UserDetailModalProps) => {
+                 </button>
+               </>
+             ) : (
+-              <button
+-                onClick={() => setIsEditing(true)}
+-                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:border-indigo-500/30 hover:bg-indigo-500/5 hover:text-indigo-600 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+-              >
+-                <Edit3 size={13} /> Edit Profile
+-              </button>
++              canEdit && (
++                <button
++                  onClick={() => setIsEditing(true)}
++                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-indigo-500/5 hover:text-indigo-600 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
++                >
++                  <Edit3 size={14} />
++                  Edit Profile
++                </button>
++              )
+             )}
+             <div className="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-800" />
+             <button
+diff --git a/src/components/dashboard/UsersView.tsx b/src/components/dashboard/UsersView.tsx
+index 46aeb47..6481de3 100644
+--- a/src/components/dashboard/UsersView.tsx
++++ b/src/components/dashboard/UsersView.tsx
+@@ -1,6 +1,6 @@
+ import { useMemo, useState } from "react";
+ import { useUsers } from "@/hooks/useSites";
+-import { updateUser } from "@/lib/googleSheets";
++import { api } from "@/lib/api";
+ import { Input } from "@/components/ui/input";
+ import { Badge } from "@/components/ui/badge";
+ import {
+@@ -295,7 +295,7 @@ const UsersView = () => {
+     localStorage.setItem("user_overrides", JSON.stringify(newOverrides));
+     setIsSyncing(true);
+     try {
+-      await updateUser(updatedUser.no, updatedUser);
++      await api.put(`/users/${updatedUser.no}`, updatedUser);
+       queryClient.invalidateQueries({ queryKey: ["users"] });
+     } catch (err) {
+       console.error("Cloud sync failed:", err);
+@@ -485,6 +485,19 @@ const UsersView = () => {
+           <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">Retrieving operational team nodes...</span>
+         </div>
+       )}
++      
++      {/* empty state */}
++      {!isLoading && !isError && usersData.length === 0 && (
++        <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 border-dashed bg-white/50 py-16 px-6 dark:border-slate-800 dark:bg-slate-900/30">
++          <div className="rounded-full bg-slate-100 p-4 dark:bg-slate-800">
++            <Users size={32} className="text-slate-400" />
++          </div>
++          <h3 className="mt-4 text-sm font-bold text-slate-800 dark:text-slate-200">No team members found</h3>
++          <p className="mt-1 text-center text-xs font-medium text-slate-500 dark:text-slate-400">
++            The database currently has no users. Please run the backend seeder or add new users.
++          </p>
++        </div>
++      )}
+ 
+       {/* directory sections */}
+       <div className="space-y-6">
+diff --git a/src/contexts/AuthContext.tsx b/src/contexts/AuthContext.tsx
+new file mode 100644
+index 0000000..7e3774b
+--- /dev/null
++++ b/src/contexts/AuthContext.tsx
+@@ -0,0 +1,46 @@
++import React, { createContext, useContext, useState, useEffect } from 'react';
++
++export type Role = 'Read-Only' | 'CRUD' | 'Admin';
++
++interface AuthContextType {
++  role: Role;
++  setRole: (role: Role) => void;
++  isAdmin: boolean;
++  canEdit: boolean;
++}
++
++const AuthContext = createContext<AuthContextType | undefined>(undefined);
++
++export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
++  const [role, setRoleState] = useState<Role>('Read-Only');
++
++  useEffect(() => {
++    const savedRole = localStorage.getItem('rbac_role') as Role;
++    if (savedRole && ['Read-Only', 'CRUD', 'Admin'].includes(savedRole)) {
++      setRoleState(savedRole);
++    }
++  }, []);
++
++  const setRole = (newRole: Role) => {
++    setRoleState(newRole);
++    localStorage.setItem('rbac_role', newRole);
++    // Setting header for fetch api is handled inside api.ts reading from localStorage
++  };
++
++  const isAdmin = role === 'Admin';
++  const canEdit = role === 'CRUD' || role === 'Admin';
++
++  return (
++    <AuthContext.Provider value={{ role, setRole, isAdmin, canEdit }}>
++      {children}
++    </AuthContext.Provider>
++  );
++};
++
++export const useAuth = () => {
++  const context = useContext(AuthContext);
++  if (context === undefined) {
++    throw new Error('useAuth must be used within an AuthProvider');
++  }
++  return context;
++};
+diff --git a/src/hooks/useSites.ts b/src/hooks/useSites.ts
+index 75e9383..b049984 100644
+--- a/src/hooks/useSites.ts
++++ b/src/hooks/useSites.ts
+@@ -1,5 +1,6 @@
+ import { useQuery } from "@tanstack/react-query";
+-import { getSites, getUsers, getEscalations, getPMChecklist, getRevisionSummary } from "@/lib/googleSheets";
++import { getSites, getEscalations, getPMChecklist, getRevisionSummary } from "@/lib/googleSheets";
++import { api } from "@/lib/api";
+ 
+ export const useSites = () => {
+     return useQuery({
+@@ -12,7 +13,7 @@ export const useSites = () => {
+ export const useUsers = () => {
+     return useQuery({
+         queryKey: ["users"],
+-        queryFn: getUsers,
++        queryFn: () => api.get("/users"),
+         staleTime: 1000 * 60 * 10,
+     });
+ };
+diff --git a/src/lib/api.ts b/src/lib/api.ts
+new file mode 100644
+index 0000000..ce927e0
+--- /dev/null
++++ b/src/lib/api.ts
+@@ -0,0 +1,31 @@
++export const API_BASE_URL = "http://127.0.0.1:5000/api";
++
++export const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
++  // Use current role from localStorage (set by AuthContext)
++  const role = localStorage.getItem("rbac_role") || "Read-Only";
++  
++  const headers = {
++    "Content-Type": "application/json",
++    "X-User-Role": role,
++    ...options.headers,
++  };
++
++  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
++    ...options,
++    headers,
++  });
++
++  if (!response.ok) {
++    const errorData = await response.json().catch(() => ({}));
++    throw new Error(errorData.error || `API Error: ${response.status} ${response.statusText}`);
++  }
++
++  return response.json();
++};
++
++export const api = {
++  get: (endpoint: string, options?: RequestInit) => fetchApi(endpoint, { ...options, method: "GET" }),
++  post: (endpoint: string, data: any, options?: RequestInit) => fetchApi(endpoint, { ...options, method: "POST", body: JSON.stringify(data) }),
++  put: (endpoint: string, data: any, options?: RequestInit) => fetchApi(endpoint, { ...options, method: "PUT", body: JSON.stringify(data) }),
++  delete: (endpoint: string, options?: RequestInit) => fetchApi(endpoint, { ...options, method: "DELETE" }),
++};

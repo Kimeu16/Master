@@ -196,7 +196,10 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
             <p className="mb-2 px-1 text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Simulate Role</p>
             <select
               value={role}
-              onChange={(e) => setRole(e.target.value as any)}
+              onChange={(e) => {
+                const val = e.target.value as "Read-Only" | "CRUD" | "Admin";
+                setRole(val);
+              }}
               className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
             >
               <option value="Read-Only">Read-Only User</option>
