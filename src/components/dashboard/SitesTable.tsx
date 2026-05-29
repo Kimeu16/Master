@@ -1007,7 +1007,7 @@ const SitesTable = () => {
                           <td key={`${site.no}-${col.key}`} className={cn(
                             "overflow-hidden text-ellipsis whitespace-nowrap bg-white dark:bg-slate-900 px-5 py-3.5 align-middle text-xs font-semibold border-b border-slate-100 dark:border-slate-800/40 transition-colors group-hover:bg-indigo-50/5 dark:group-hover:bg-indigo-950/5",
                             col.key === "no" && "sticky left-0 z-20 text-slate-400 dark:text-slate-500 font-mono tracking-tighter border-r border-slate-100/60 dark:border-slate-800/60 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm group-hover:bg-indigo-50/80 dark:group-hover:bg-indigo-950/40",
-                            col.key === "siteName" && "sticky left-[80px] z-20 font-extrabold text-slate-800 dark:text-slate-205 shadow-[4px_0_24px_-10px_rgba(15,23,42,0.06)] bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm group-hover:bg-indigo-50/80 dark:group-hover:bg-indigo-950/40 border-r border-slate-100/60 dark:border-slate-800/60 uppercase tracking-wide",
+                            col.key === "siteName" && "sticky left-[80px] z-20 font-extrabold text-slate-800 dark:text-slate-200 shadow-[4px_0_24px_-10px_rgba(15,23,42,0.06)] bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm group-hover:bg-indigo-50/80 dark:group-hover:bg-indigo-950/40 border-r border-slate-100/60 dark:border-slate-800/60 uppercase tracking-wide",
                             col.key !== "no" && col.key !== "siteName" && "text-slate-600 dark:text-slate-300",
                           )}>
                             {renderCellContent(site, col.key)}
