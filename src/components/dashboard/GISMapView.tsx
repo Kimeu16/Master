@@ -163,13 +163,17 @@ const LeafletMapContent = ({
 
   return (
     <>
-      <LayersControl position="topright">
+      <LayersControl position="topright" key={isDark ? "dark" : "light"}>
         <LayersControl.BaseLayer checked={!isDark} name="Light Map">
           <TileLayer
             url="https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             maxZoom={18}
-            minZoom={5}
+            minZoom={6}
+            bounds={[
+              [KENYA_BOUNDS.minLat, KENYA_BOUNDS.minLng],
+              [KENYA_BOUNDS.maxLat, KENYA_BOUNDS.maxLng],
+            ]}
           />
         </LayersControl.BaseLayer>
         <LayersControl.BaseLayer checked={isDark} name="Dark Map">
@@ -177,7 +181,11 @@ const LeafletMapContent = ({
             url="https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             maxZoom={18}
-            minZoom={5}
+            minZoom={6}
+            bounds={[
+              [KENYA_BOUNDS.minLat, KENYA_BOUNDS.minLng],
+              [KENYA_BOUNDS.maxLat, KENYA_BOUNDS.maxLng],
+            ]}
           />
         </LayersControl.BaseLayer>
         <LayersControl.BaseLayer name="Satellite Map">
@@ -185,7 +193,11 @@ const LeafletMapContent = ({
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
             attribution="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
             maxZoom={18}
-            minZoom={5}
+            minZoom={6}
+            bounds={[
+              [KENYA_BOUNDS.minLat, KENYA_BOUNDS.minLng],
+              [KENYA_BOUNDS.maxLat, KENYA_BOUNDS.maxLng],
+            ]}
           />
         </LayersControl.BaseLayer>
       </LayersControl>
@@ -194,10 +206,10 @@ const LeafletMapContent = ({
         positions={GeomUtils.kenyaOutline}
         pathOptions={{
           color: ThemeUtils.getOutlineColor(isDark),
-          weight: 1.5,
-          opacity: 0.4,
+          weight: 1,
+          opacity: 0.2,
           fillOpacity: 0.03,
-          dashArray: "4 4",
+          dashArray: "4",
         }}
         interactive={false}
       />
@@ -227,6 +239,7 @@ const LeafletMapContent = ({
                 closeButton
                 closeOnClick={false}
                 className="site-popup"
+                autoPanPadding={[50, 50]}
               >
                 <div className="min-w-[240px] space-y-3 py-1">
                   <div>
@@ -234,7 +247,20 @@ const LeafletMapContent = ({
                       {site.siteName}
                     </p>
                     <p className="mt-1 text-[11px] font-bold text-slate-600 dark:text-slate-400">
-                      {site.region || "Unassigned region"} / {site.ipAddress || "No IP"}
+                      {site.region || "Unassigned region"} /{" "}
+                      {site.ipAddress ? (
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(`http://${site.ipAddress}`, "_blank");
+                          }}
+                          className="cursor-pointer hover:underline text-primary"
+                        >
+                          {site.ipAddress}
+                        </span>
+                      ) : (
+                        "No IP"
+                      )}
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-[11px]">
@@ -346,8 +372,8 @@ const GISMapView = () => {
 
   return (
     <div className="space-y-5 pb-10">
-      <section className="premium-card overflow-visible relative">
-        <div className="flex flex-col gap-4 border-b border-slate-200/70 bg-white/80 p-5 dark:border-slate-800/70 dark:bg-slate-950/30 lg:flex-row lg:items-center lg:justify-between">
+      <section className="premium-card overflow-hidden relative">
+        <div className="relative z-[800] flex flex-col gap-4 border-b border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="mb-2 flex flex-wrap items-center gap-2">
               <Badge className="border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-primary hover:bg-primary/10">
@@ -386,7 +412,7 @@ const GISMapView = () => {
         </div>
 
         <div className="grid gap-0 xl:grid-cols-[320px_minmax(0,1fr)]">
-          <aside className="relative z-[500] border-b border-slate-200/70 bg-white/60 p-4 dark:border-slate-800 dark:bg-slate-950/20 xl:border-b-0 xl:border-r">
+          <aside className="relative z-[800] border-b border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950 xl:border-b-0 xl:border-r">
             <div className="space-y-3">
               <label className="relative block">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -440,7 +466,22 @@ const GISMapView = () => {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate text-xs font-black uppercase tracking-wide text-foreground group-hover:text-primary">{site.siteName}</p>
-                      <p className="mt-1 text-[10px] font-bold text-muted-foreground">{site.region || "Unassigned"} / {site.ipAddress || "No IP"}</p>
+                      <p className="mt-1 text-[10px] font-bold text-muted-foreground">
+                        {site.region || "Unassigned"} /{" "}
+                        {site.ipAddress ? (
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(`http://${site.ipAddress}`, "_blank");
+                            }}
+                            className="cursor-pointer hover:underline text-primary"
+                          >
+                            {site.ipAddress}
+                          </span>
+                        ) : (
+                          "No IP"
+                        )}
+                      </p>
                     </div>
                     <span className={cn("shrink-0 rounded-full border px-2 py-0.5 text-[8px] font-black uppercase tracking-wider", statusStyles[site.status].badge)}>
                       {statusStyles[site.status].label}
@@ -461,13 +502,15 @@ const GISMapView = () => {
             <MapContainer
               center={[KENYA_CENTER.lat, KENYA_CENTER.lng]}
               zoom={6}
+              minZoom={6}
+              maxZoom={18}
               zoomControl={false}
               style={{ height: "100%", width: "100%" }}
               maxBounds={[
-                [KENYA_BOUNDS.minLat, KENYA_BOUNDS.minLng],
-                [KENYA_BOUNDS.maxLat, KENYA_BOUNDS.maxLng],
+                [KENYA_BOUNDS.minLat - 5, KENYA_BOUNDS.minLng - 8],
+                [KENYA_BOUNDS.maxLat + 5, KENYA_BOUNDS.maxLng + 8],
               ]}
-              maxBoundsViscosity={1}
+              maxBoundsViscosity={0.8}
             >
               <ZoomControl position="bottomright" />
               <LeafletMapContent sites={filteredSites} onSelectSite={setSelectedSite} isDark={isDark} />

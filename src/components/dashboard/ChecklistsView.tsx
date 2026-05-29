@@ -118,7 +118,7 @@ function ChecklistCard({
                       className="group flex items-start gap-3 rounded-xl p-2 transition-colors hover:bg-indigo-50/20 dark:hover:bg-slate-800/20"
                     >
                       <CheckCircle2 size={15} className={`mt-0.5 shrink-0 transition-transform group-hover:scale-110 ${palette.check}`} />
-                      <span className="flex-1 text-[12px] font-medium leading-relaxed text-slate-600 dark:text-slate-350">
+                      <span className="flex-1 text-[12px] font-medium leading-relaxed text-slate-600 dark:text-slate-300">
                         {field}
                       </span>
                       {needsPhoto && (

@@ -227,7 +227,7 @@ const DashboardView = () => {
                 <h2 className="max-w-3xl text-3xl font-extrabold tracking-tight text-white font-display md:text-4xl leading-tight">
                   Unified command interface for sites, field assets, and escalations.
                 </h2>
-                <p className="max-w-xl text-xs font-semibold text-slate-350 leading-relaxed">
+                <p className="max-w-xl text-xs font-semibold text-slate-300 leading-relaxed">
                   Supervise {filteredSitesData.length} active cellular nodes, evaluate structural connectivity risks, and synchronize operations across {stats.regions} regions in East Africa.
                 </p>
               </div>
@@ -350,8 +350,8 @@ const DashboardView = () => {
               <Badge variant="secondary" className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5">Live GIS</Badge>
             </div>
 
-            <div className="relative w-full h-[320px] bg-slate-50/50 dark:bg-slate-900/20 border border-slate-100 dark:border-slate-800/40 rounded-xl flex items-center justify-center p-4">
-              <svg viewBox="0 0 320 300" className="w-full h-full max-h-[290px] text-slate-350 dark:text-slate-700">
+            <div className="relative w-full h-[320px] bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/40 rounded-xl flex items-center justify-center p-4">
+              <svg viewBox="0 0 320 300" className="w-full h-full max-h-[290px] text-slate-400 dark:text-slate-500">
                 {/* stylized map backgrounds for operational zones */}
                 <g>
                   {/* Northern Frontier (Turkana / USF) */}
@@ -572,7 +572,7 @@ const DashboardView = () => {
                           return (
                             <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-xs text-foreground dark:text-white shadow-lg backdrop-blur-md">
                               <p className="font-black uppercase tracking-wider">{data.name}</p>
-                              <p className="mt-1 font-bold text-slate-500 dark:text-slate-350">{data.value} active nodes</p>
+                              <p className="mt-1 font-bold text-slate-500 dark:text-slate-300">{data.value} active nodes</p>
                               <p className="mt-1.5 text-[9px] text-primary font-bold uppercase tracking-wider">{isFiltered ? "Click to clear filter" : "Click to select region"}</p>
                             </div>
                           );
@@ -660,7 +660,7 @@ const DashboardView = () => {
                           return (
                             <div className="rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 text-xs text-foreground dark:text-white shadow-lg backdrop-blur-md">
                               <p className="font-black uppercase tracking-wider">{data.name}</p>
-                              <p className="mt-1 font-bold text-slate-500 dark:text-slate-350">{data.value} active nodes</p>
+                              <p className="mt-1 font-bold text-slate-500 dark:text-slate-300">{data.value} active nodes</p>
                             </div>
                           );
                         }

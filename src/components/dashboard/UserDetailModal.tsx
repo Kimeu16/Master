@@ -4,6 +4,7 @@ import { X, User, Edit3, Check, RotateCcw, Shield, MapPin, Briefcase, Mail, Phon
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UserDetailModalProps {
   user: UserType;
@@ -36,7 +37,8 @@ function getInitials(name: string) {
     .join("");
 }
 
-const UserDetailModal = ({ user, onClose, onSave }: UserDetailModalProps) => {
+export function UserDetailModal({ user, onClose, onSave }: UserDetailModalProps) {
+  const { canEdit } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<UserType>(user);
   const gradient = getGradient(user.userName || "U");
@@ -136,12 +138,15 @@ const UserDetailModal = ({ user, onClose, onSave }: UserDetailModalProps) => {
                 </button>
               </>
             ) : (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:border-indigo-500/30 hover:bg-indigo-500/5 hover:text-indigo-600 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-              >
-                <Edit3 size={13} /> Edit Profile
-              </button>
+              canEdit && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-indigo-500/5 hover:text-indigo-600 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                >
+                  <Edit3 size={14} />
+                  Edit Profile
+                </button>
+              )
             )}
             <div className="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-800" />
             <button

@@ -1,6 +1,7 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import pool from '../database/db';
 import { mapKeysToCamelCase, mapKeysToSnakeCase } from '../utils/caseConverter';
+import { requireCrudOrAdmin } from '../middleware/rbac';
 
 const ALLOWED_TABLES = new Set([
   'fueling_checklists',
@@ -22,7 +23,7 @@ export const createTableCrudRouter = (tableName: string, label: string, idColumn
   const table = quoteIdentifier(tableName);
   const primaryKey = idColumn === 'id' ? '`id`' : '`no`';
 
-  router.get('/', async (_req, res) => {
+  router.get('/', async (_req: Request, res: Response) => {
     try {
       const [rows] = await pool.query(`SELECT * FROM ${table}`);
       res.json(mapKeysToCamelCase(rows));
@@ -32,7 +33,7 @@ export const createTableCrudRouter = (tableName: string, label: string, idColumn
     }
   });
 
-  router.get('/:id', async (req, res) => {
+  router.get('/:id', async (req: Request, res: Response) => {
     try {
       const id = String(req.params.id);
       const [rows] = await pool.query(`SELECT * FROM ${table} WHERE ${primaryKey} = ?`, [id]);
@@ -47,7 +48,7 @@ export const createTableCrudRouter = (tableName: string, label: string, idColumn
     }
   });
 
-  router.post('/', async (req, res) => {
+  router.post('/', requireCrudOrAdmin, async (req: Request, res: Response) => {
     try {
       const snakeData = mapKeysToSnakeCase(req.body);
       const keys = Object.keys(snakeData);
@@ -63,7 +64,7 @@ export const createTableCrudRouter = (tableName: string, label: string, idColumn
     }
   });
 
-  router.put('/:id', async (req, res) => {
+  router.put('/:id', requireCrudOrAdmin, async (req: Request, res: Response) => {
     try {
       const id = String(req.params.id);
       const snakeData = mapKeysToSnakeCase(req.body);
@@ -84,7 +85,7 @@ export const createTableCrudRouter = (tableName: string, label: string, idColumn
     }
   });
 
-  router.delete('/:id', async (req, res) => {
+  router.delete('/:id', requireCrudOrAdmin, async (req: Request, res: Response) => {
     try {
       const id = String(req.params.id);
       await pool.query(`DELETE FROM ${table} WHERE ${primaryKey} = ?`, [id]);

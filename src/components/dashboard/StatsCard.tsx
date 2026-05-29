@@ -59,7 +59,7 @@ const StatsCard = ({ title, value, icon: Icon, trend, trendValue, variant = "def
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
       style={{
         background: `radial-gradient(circle at 80% 20%, ${style.glow} 0%, #ffffff 80%)`
-      } as any}
+      } as React.CSSProperties}
       className={cn(
         "premium-card group relative flex min-h-[160px] flex-col overflow-hidden p-5 border border-slate-100",
         style.border,

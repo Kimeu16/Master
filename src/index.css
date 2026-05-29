@@ -306,8 +306,7 @@
    ────────────────────────────────────────────────────────────────────────── */
 
 .leaflet-container {
-  @apply rounded-lg;
-  overflow: visible !important;
+  @apply rounded-lg overflow-hidden;
   font-family: inherit;
 }
 

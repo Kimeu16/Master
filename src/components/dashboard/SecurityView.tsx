@@ -71,7 +71,7 @@ function SecurityVendorCard({
             {company.coverage}
           </p>
         </div>
-        <span className="shrink-0 rounded-full border border-slate-200 bg-white/90 px-2.5 py-0.5 text-[10px] font-black text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-350">
+        <span className="shrink-0 rounded-full border border-slate-200 bg-white/90 px-2.5 py-0.5 text-[10px] font-black text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
           {company.sites} sites
         </span>
       </div>
