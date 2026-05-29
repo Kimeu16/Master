@@ -39,14 +39,6 @@ const DashboardView = () => {
 
   const sitesData = useMemo(() => remoteSitesData || [], [remoteSitesData]);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
-  const [hoveredHotspot, setHoveredHotspot] = useState<{
-    name: string;
-    x: number;
-    y: number;
-    count: number;
-    issues: number;
-  } | null>(null);
-
   // Dynamic Filtering based on selected map region
   const filteredSitesData = useMemo(() => {
     if (!selectedRegion) return sitesData;
@@ -123,50 +115,6 @@ const DashboardView = () => {
       };
     });
   }, []);
-
-  // Map hotspots definitions with coordinates on viewBox 320x300
-  const mapHotspots = useMemo(() => {
-    const locations = [
-      { name: "Nairobi", x: 175, y: 155 },
-      { name: "Eldoret", x: 125, y: 100 },
-      { name: "Kisumu", x: 95, y: 115 },
-      { name: "Mombasa", x: 235, y: 220 },
-      { name: "Turkana", x: 95, y: 40 },
-      { name: "Kakamega", x: 95, y: 90 },
-      { name: "Kisii", x: 95, y: 140 },
-      { name: "Nakuru", x: 145, y: 130 },
-      { name: "Bomet", x: 120, y: 150 },
-      { name: "Kitale", x: 110, y: 80 },
-      { name: "Kericho", x: 120, y: 130 },
-      { name: "Nyahururu", x: 155, y: 115 },
-      { name: "Narok", x: 135, y: 165 },
-      { name: "USF", x: 195, y: 65 },
-    ];
-
-    return locations.map((loc) => {
-      const regionSites = sitesData.filter((s) => {
-        const siteReg = (s.region || "").trim().toLowerCase();
-        const locName = loc.name.trim().toLowerCase();
-        return siteReg === locName || siteReg.includes(locName) || locName.includes(siteReg);
-      });
-      const count = regionSites.length;
-      const issues = regionSites.filter((s) => {
-        const c = (s.comments || "").toLowerCase();
-        return c.includes("not working") || c.includes("faulty");
-      }).length;
-
-      let statusColor = "#10b981"; // Green
-      if (issues > 2) statusColor = "#f43f5e"; // Red
-      else if (issues > 0) statusColor = "#f59e0b"; // Amber
-
-      return {
-        ...loc,
-        count,
-        issues,
-        statusColor,
-      };
-    });
-  }, [sitesData]);
 
   // Color mappings for power configurations
   const POWER_COLORS: Record<string, string> = {
@@ -330,149 +278,9 @@ const DashboardView = () => {
         />
       </div>
 
-      {/* Interactive East Africa SVG Map & Updates Timeline Feed */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        {/* SVG Map Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="premium-card p-6 xl:col-span-2 relative flex flex-col justify-between overflow-hidden"
-        >
-          <div>
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <h3 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-foreground">
-                  <MapPin size={16} className="text-primary" />
-                  East Africa Operational heat map
-                </h3>
-                <p className="mt-1 text-[10px] font-bold text-muted-foreground">Pulse hotspots indicate active node SLA status. Click to filter stats.</p>
-              </div>
-              <Badge variant="secondary" className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5">Live GIS</Badge>
-            </div>
-
-            <div className="relative w-full h-[320px] bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/40 rounded-xl flex items-center justify-center p-4">
-              <svg viewBox="0 0 320 300" className="w-full h-full max-h-[290px] text-slate-400 dark:text-slate-500">
-                {/* stylized map backgrounds for operational zones */}
-                <g>
-                  {/* Northern Frontier (Turkana / USF) */}
-                  <path
-                    d="M 60,30 L 160,20 L 220,50 L 180,90 L 120,95 L 60,70 Z"
-                    className={cn(
-                      "fill-slate-200/25 dark:fill-slate-800/10 stroke-slate-300 dark:stroke-slate-800 stroke-[1.5] transition-all duration-300 cursor-pointer hover:fill-primary/5 hover:stroke-primary/45",
-                      selectedRegion === "Turkana" && "fill-primary/10 stroke-primary dark:fill-primary/15"
-                    )}
-                    onClick={() => setSelectedRegion(selectedRegion === "Turkana" ? null : "Turkana")}
-                  />
-                  {/* Rift Valley / Eldoret / Nakuru */}
-                  <path
-                    d="M 120,95 L 180,90 L 210,130 L 160,180 L 115,160 Z"
-                    className={cn(
-                      "fill-slate-200/25 dark:fill-slate-800/10 stroke-slate-300 dark:stroke-slate-800 stroke-[1.5] transition-all duration-300 cursor-pointer hover:fill-primary/5 hover:stroke-primary/45",
-                      selectedRegion === "Eldoret" && "fill-primary/10 stroke-primary dark:fill-primary/15"
-                    )}
-                    onClick={() => setSelectedRegion(selectedRegion === "Eldoret" ? null : "Eldoret")}
-                  />
-                  {/* Nairobi & Central */}
-                  <path
-                    d="M 160,180 L 210,130 L 250,155 L 225,210 L 180,210 Z"
-                    className={cn(
-                      "fill-slate-200/25 dark:fill-slate-800/10 stroke-slate-300 dark:stroke-slate-800 stroke-[1.5] transition-all duration-300 cursor-pointer hover:fill-primary/5 hover:stroke-primary/45",
-                      selectedRegion === "Nairobi" && "fill-primary/10 stroke-primary dark:fill-primary/15"
-                    )}
-                    onClick={() => setSelectedRegion(selectedRegion === "Nairobi" ? null : "Nairobi")}
-                  />
-                  {/* Coastal Region (Mombasa) */}
-                  <path
-                    d="M 225,210 L 250,155 L 290,190 L 270,260 L 220,240 Z"
-                    className={cn(
-                      "fill-slate-200/25 dark:fill-slate-800/10 stroke-slate-300 dark:stroke-slate-800 stroke-[1.5] transition-all duration-300 cursor-pointer hover:fill-primary/5 hover:stroke-primary/45",
-                      selectedRegion === "Mombasa" && "fill-primary/10 stroke-primary dark:fill-primary/15"
-                    )}
-                    onClick={() => setSelectedRegion(selectedRegion === "Mombasa" ? null : "Mombasa")}
-                  />
-                  {/* Western / Kisumu / Kakamega */}
-                  <path
-                    d="M 60,70 L 120,95 L 115,160 L 60,150 Z"
-                    className={cn(
-                      "fill-slate-200/25 dark:fill-slate-800/10 stroke-slate-300 dark:stroke-slate-800 stroke-[1.5] transition-all duration-300 cursor-pointer hover:fill-primary/5 hover:stroke-primary/45",
-                      selectedRegion === "Kisumu" && "fill-primary/10 stroke-primary dark:fill-primary/15"
-                    )}
-                    onClick={() => setSelectedRegion(selectedRegion === "Kisumu" ? null : "Kisumu")}
-                  />
-                </g>
-
-                {/* Hotspot City Nodes */}
-                {mapHotspots.map((hotspot) => {
-                  if (hotspot.count === 0) return null;
-                  const isFiltered = selectedRegion === hotspot.name;
-
-                  return (
-                    <g
-                      key={hotspot.name}
-                      className="cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedRegion(isFiltered ? null : hotspot.name);
-                      }}
-                      onMouseEnter={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const svgRect = e.currentTarget.ownerSVGElement?.getBoundingClientRect();
-                        if (svgRect) {
-                          setHoveredHotspot({
-                            name: hotspot.name,
-                            x: rect.left - svgRect.left,
-                            y: rect.top - svgRect.top,
-                            count: hotspot.count,
-                            issues: hotspot.issues,
-                          });
-                        }
-                      }}
-                      onMouseLeave={() => setHoveredHotspot(null)}
-                    >
-                      {/* Pulsing ring animation */}
-                      <circle
-                        cx={hotspot.x}
-                        cy={hotspot.y}
-                        r={8}
-                        fill={hotspot.statusColor}
-                        opacity={0.35}
-                        className={hotspot.issues > 0 ? "pulsing-dot-glow-fast" : "pulsing-dot-glow"}
-                      />
-                      {/* Solid inner center dot */}
-                      <circle
-                        cx={hotspot.x}
-                        cy={hotspot.y}
-                        r={4}
-                        fill={hotspot.statusColor}
-                        className="pulsing-dot-core"
-                        stroke="#ffffff"
-                        strokeWidth={1}
-                      />
-                    </g>
-                  );
-                })}
-              </svg>
-
-              {/* Floating glass tooltip */}
-              {hoveredHotspot && (
-                <div
-                  className="absolute z-20 rounded-xl border border-slate-200/60 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 p-3.5 text-xs text-foreground dark:text-white shadow-xl backdrop-blur-md pointer-events-none transition-all duration-200"
-                  style={{
-                    left: `${hoveredHotspot.x + 15}px`,
-                    top: `${hoveredHotspot.y - 45}px`,
-                  }}
-                >
-                  <p className="font-black uppercase tracking-wider text-primary dark:text-primary-foreground">{hoveredHotspot.name} Region</p>
-                  <p className="mt-1.5 font-bold">Active Nodes: <span className="font-extrabold text-foreground dark:text-white">{hoveredHotspot.count}</span></p>
-                  <p className="mt-0.5 font-bold">Issues/Alarms: <span className="font-extrabold text-rose-500">{hoveredHotspot.issues}</span></p>
-                  <p className="mt-2 text-[9px] text-slate-400 dark:text-slate-500 font-extrabold uppercase tracking-wider">Click node to lock filter</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Recent Revision Log Stream (1/3 width) */}
+      {/* Updates Timeline Feed */}
+      <div className="grid grid-cols-1 gap-6">
+        {/* Recent Revision Log Stream */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
