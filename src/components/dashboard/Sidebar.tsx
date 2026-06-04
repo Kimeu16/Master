@@ -43,7 +43,7 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, className }: SidebarProps) => {
-  const { role, setRole } = useAuth();
+  const { role, setRole, signOut } = useAuth();
 
   return (
     <motion.aside
@@ -178,20 +178,6 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
       {/* Sidebar Footer block */}
       <div className="border-t border-slate-100/80 dark:border-slate-800/60 p-4">
         {!collapsed && (
-          <div className="mb-4 rounded-xl border border-emerald-100 dark:border-emerald-950/30 bg-emerald-50/40 dark:bg-emerald-950/10 p-3 shadow-inner">
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="pulse-glow absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-600"></span>
-              </span>
-              Systems Operational
-            </div>
-            <p className="mt-1 text-[9px] font-bold leading-relaxed text-muted-foreground/80 dark:text-slate-400">
-              Sync nodes and mobile checklist engines are online.
-            </p>
-          </div>
-        )}
-        {!collapsed && (
           <div className="mb-4">
             <p className="mb-2 px-1 text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Simulate Role</p>
             <select
@@ -203,13 +189,13 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
               className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
             >
               <option value="Read-Only">Read-Only User</option>
-              <option value="CRUD">CRUD User</option>
+              <option value="CRUD">Employee</option>
               <option value="Admin">Administrator</option>
             </select>
           </div>
         )}
         {!collapsed && (
-          <button className="mb-2.5 flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-xs font-black text-destructive transition-all duration-200 hover:bg-destructive/10">
+          <button onClick={signOut} className="mb-2.5 flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-xs font-black text-destructive transition-all duration-200 hover:bg-destructive/10">
             <LogOut size={17} className="flex-shrink-0" />
             <span>Sign Out</span>
           </button>
