@@ -100,22 +100,29 @@ const createClusterCustomIcon = (cluster: any) => {
   const children = cluster.getAllChildMarkers();
   let hasCritical = false;
   let hasWarning = false;
+  let hasOperational = false;
 
   children.forEach((marker: any) => {
     const status = marker.options.status;
     if (status === "critical") hasCritical = true;
     else if (status === "warning") hasWarning = true;
+    else if (status === "operational") hasOperational = true;
   });
 
-  let clusterColor = statusColors.operational.main; // green
+  const colors = [];
+  if (hasCritical) colors.push(statusColors.critical.main);
+  if (hasWarning) colors.push(statusColors.warning.main);
+  if (hasOperational) colors.push(statusColors.operational.main);
 
-  if (hasCritical) {
-    clusterColor = statusColors.critical.main; // red
-  } else if (hasWarning) {
-    clusterColor = statusColors.warning.main; // amber
+  let clusterBackground = colors[0] || statusColors.operational.main;
+
+  if (colors.length === 2) {
+    clusterBackground = `linear-gradient(135deg, ${colors[0]} 50%, ${colors[1]} 50%)`;
+  } else if (colors.length === 3) {
+    clusterBackground = `conic-gradient(${colors[0]} 0 33%, ${colors[1]} 33% 66%, ${colors[2]} 66% 100%)`;
   }
 
-  return IconUtils.createClusterIcon(cluster.getChildCount(), clusterColor);
+  return IconUtils.createClusterIcon(cluster.getChildCount(), clusterBackground);
 };
 
 const KenyaMapBadge = () => (
@@ -126,25 +133,41 @@ const KenyaMapBadge = () => (
 );
 
 // Map fit bounds controller
-const MapFitBounds = () => {
+const MapFitBounds = ({ sites, status }: { sites: PlottedSite[], status: string }) => {
   const map = useMap();
+  const prevFilterRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
-    // Force recalculate size to prevent half-loading tiles
     setTimeout(() => {
       map.invalidateSize();
     }, 100);
 
-    // Frame the exact bounding box of Kenya on initialization
     const kenyaBounds = L.latLngBounds([
       [5.5, 33.5],
       [-4.7, 42.0],
     ]);
-    
-    map.fitBounds(kenyaBounds, { 
-      padding: [20, 20]
-    });
-  }, [map]);
+
+    if (prevFilterRef.current === undefined) {
+      // Initial mount
+      prevFilterRef.current = status;
+      map.fitBounds(kenyaBounds, { padding: [20, 20] });
+      return;
+    }
+
+    if (prevFilterRef.current !== status) {
+      prevFilterRef.current = status;
+      
+      if (status !== "all" && sites.length > 0) {
+        const bounds = L.latLngBounds(sites.map((site) => [site.lat, site.lng]));
+        if (bounds.isValid()) {
+          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+        }
+      } else {
+        // Reset to Kenya if filter cleared or no sites found for filter
+        map.fitBounds(kenyaBounds, { padding: [20, 20] });
+      }
+    }
+  }, [map, status, sites]);
 
   return null;
 };
@@ -153,10 +176,12 @@ const LeafletMapContent = ({
   sites,
   onSelectSite,
   isDark,
+  status,
 }: {
   sites: PlottedSite[];
   onSelectSite: (site: Site) => void;
   isDark: boolean;
+  status: string;
 }) => {
   const [activeSite, setActiveSite] = useState<PlottedSite | null>(null);
   const mapRef = useRef<any>(null);
@@ -308,7 +333,7 @@ const LeafletMapContent = ({
         ))}
       </MarkerClusterGroup>
 
-      <MapFitBounds />
+      <MapFitBounds sites={sites} status={status} />
 
       {/* Reset map button */}
       <button
@@ -530,13 +555,22 @@ const GISMapView = () => {
               maxBoundsViscosity={1.0}
             >
               <ZoomControl position="bottomright" />
-              <LeafletMapContent sites={filteredSites} onSelectSite={setSelectedSite} isDark={isDark} />
+              <LeafletMapContent sites={filteredSites} onSelectSite={setSelectedSite} isDark={isDark} status={status} />
             </MapContainer>
 
             {/* Seamless Edge Blend (Vignette) */}
             <div className="pointer-events-none absolute inset-0 z-[400] shadow-[inset_0_0_100px_rgba(241,245,249,1)] dark:shadow-[inset_0_0_120px_rgba(2,6,23,1)]" />
 
             <KenyaMapBadge />
+
+            {/* Empty State Overlay */}
+            {filteredSites.length === 0 && !isLoading && (
+              <div className="absolute inset-0 z-[450] flex items-center justify-center bg-white/50 backdrop-blur-[2px] dark:bg-slate-950/50">
+                <div className="rounded-lg border border-slate-200 bg-white px-5 py-4 text-sm font-semibold shadow-xl dark:border-slate-800 dark:bg-slate-900 text-slate-600 dark:text-slate-400">
+                  No sites currently match this status.
+                </div>
+              </div>
+            )}
 
             {isLoading && (
               <div className="absolute inset-0 z-[500] flex items-center justify-center bg-white/45 backdrop-blur-sm dark:bg-slate-950/45">
@@ -553,13 +587,29 @@ const GISMapView = () => {
               </div>
             )}
 
-            <div className="pointer-events-none absolute bottom-4 left-4 z-[500] flex flex-wrap gap-2">
-              {(["operational", "warning", "critical"] as const).map((item) => (
-                <span key={item} className="inline-flex items-center gap-2 rounded-lg border border-white/60 bg-white/90 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-700 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/80 dark:text-slate-300">
-                  <CircleDot size={12} className={item === "operational" ? "text-emerald-500" : item === "warning" ? "text-amber-500" : "text-rose-500"} />
-                  {statusStyles[item].label}
-                </span>
-              ))}
+            <div className="absolute bottom-4 left-4 z-[500] flex flex-wrap gap-2">
+              {(["operational", "warning", "critical"] as const).map((item) => {
+                const isActive = status === item;
+                return (
+                  <button
+                    key={item}
+                    onClick={() => setStatus(isActive ? "all" : item)}
+                    className={cn(
+                      "inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-[10px] font-black uppercase tracking-wider shadow-sm backdrop-blur transition-all cursor-pointer",
+                      isActive
+                        ? item === "operational"
+                          ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:border-emerald-500/50 dark:text-emerald-400"
+                          : item === "warning"
+                          ? "border-amber-500 bg-amber-500/10 text-amber-700 dark:border-amber-500/50 dark:text-amber-400"
+                          : "border-rose-500 bg-rose-500/10 text-rose-700 dark:border-rose-500/50 dark:text-rose-400"
+                        : "border-white/60 bg-white/90 text-slate-700 hover:bg-white dark:border-slate-800 dark:bg-slate-950/80 dark:text-slate-300 dark:hover:bg-slate-900"
+                    )}
+                  >
+                    <CircleDot size={12} className={item === "operational" ? "text-emerald-500" : item === "warning" ? "text-amber-500" : "text-rose-500"} />
+                    {statusStyles[item].label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

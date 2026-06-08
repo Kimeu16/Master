@@ -107,14 +107,14 @@ export const IconUtils = {
   /**
    * Create a cluster icon
    */
-  createClusterIcon: (count: number, color: string): L.DivIcon => {
+  createClusterIcon: (count: number, backgroundStr: string): L.DivIcon => {
     const size = count > 100 ? 40 : count > 50 ? 36 : count > 10 ? 32 : 28;
 
     return L.divIcon({
       className: "marker-cluster",
       html: `
         <div style="
-          background-color: ${color};
+          background: ${backgroundStr};
           width: ${size}px;
           height: ${size}px;
           border-radius: 50%;
