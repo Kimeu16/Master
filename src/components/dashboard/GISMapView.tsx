@@ -100,22 +100,29 @@ const createClusterCustomIcon = (cluster: any) => {
   const children = cluster.getAllChildMarkers();
   let hasCritical = false;
   let hasWarning = false;
+  let hasOperational = false;
 
   children.forEach((marker: any) => {
     const status = marker.options.status;
     if (status === "critical") hasCritical = true;
     else if (status === "warning") hasWarning = true;
+    else if (status === "operational") hasOperational = true;
   });
 
-  let clusterColor = statusColors.operational.main; // green
+  const colors = [];
+  if (hasCritical) colors.push(statusColors.critical.main);
+  if (hasWarning) colors.push(statusColors.warning.main);
+  if (hasOperational) colors.push(statusColors.operational.main);
 
-  if (hasCritical) {
-    clusterColor = statusColors.critical.main; // red
-  } else if (hasWarning) {
-    clusterColor = statusColors.warning.main; // amber
+  let clusterBackground = colors[0] || statusColors.operational.main;
+
+  if (colors.length === 2) {
+    clusterBackground = `linear-gradient(135deg, ${colors[0]} 50%, ${colors[1]} 50%)`;
+  } else if (colors.length === 3) {
+    clusterBackground = `conic-gradient(${colors[0]} 0 33%, ${colors[1]} 33% 66%, ${colors[2]} 66% 100%)`;
   }
 
-  return IconUtils.createClusterIcon(cluster.getChildCount(), clusterColor);
+  return IconUtils.createClusterIcon(cluster.getChildCount(), clusterBackground);
 };
 
 const KenyaMapBadge = () => (
