@@ -10,6 +10,7 @@ import escalationRoutes from "./routes/escalationRoutes";
 import pmChecklistRoutes from "./routes/pmChecklistRoutes";
 import revisionSummaryRoutes from "./routes/revisionSummaryRoutes";
 import { createTableCrudRouter } from "./routes/tableCrudRoutes";
+import authRoutes from "./routes/authRoutes";
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use("/api/work-order-checklists", createTableCrudRouter("work_order_checklis
 app.use("/api/wo-approval-workflows", createTableCrudRouter("wo_approval_workflows", "WO approval workflows"));
 app.use("/api/excel-sheet-rows", createTableCrudRouter("excel_sheet_rows", "Excel sheet rows", "id"));
 app.use("/api/revision-summaries", revisionSummaryRoutes);
+app.use("/api/auth", authRoutes);
 
 app.get("/api/health", (req: express.Request, res: express.Response) => {
   res.json({ status: "ok" });

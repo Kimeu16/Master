@@ -21,9 +21,11 @@ import {
   Sparkles,
 } from "lucide-react";
 import UserDetailModal from "./UserDetailModal";
+import { AddMemberModal } from "./AddMemberModal";
 import { User } from "@/types/site";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 
 /* ── avatar gradient palette ───────────────────────────────────────── */
 const AVATAR_GRADIENTS = [
@@ -270,8 +272,10 @@ const UsersView = () => {
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"cards" | "table">("cards");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const queryClient = useQueryClient();
+  const { canEdit } = useAuth();
 
   const { data: remoteUsersData, isLoading, isError } = useUsers();
 
@@ -299,6 +303,32 @@ const UsersView = () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     } catch (err) {
       console.error("Cloud sync failed:", err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleAddUser = async (newUser: User) => {
+    setIsSyncing(true);
+    try {
+      await api.post("/users", newUser);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      setShowAddModal(false);
+    } catch (err) {
+      console.error("Add failed:", err);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    setIsSyncing(true);
+    try {
+      await api.delete(`/users/${userId}`);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      setSelectedUser(null);
+    } catch (err) {
+      console.error("Delete failed:", err);
     } finally {
       setIsSyncing(false);
     }
@@ -440,6 +470,16 @@ const UsersView = () => {
             ))}
           </div>
 
+          {canEdit && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-indigo-500/20 active:scale-95"
+            >
+              <UserPlus size={14} />
+              Add Member
+            </button>
+          )}
+
           {/* Elegant Frosted Search Bar */}
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -512,6 +552,16 @@ const UsersView = () => {
             user={usersData.find((u) => u.no === selectedUser.no) || selectedUser}
             onClose={() => setSelectedUser(null)}
             onSave={handleSaveUser}
+            onDelete={handleDeleteUser}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showAddModal && (
+          <AddMemberModal
+            onClose={() => setShowAddModal(false)}
+            onSave={handleAddUser}
           />
         )}
       </AnimatePresence>

@@ -9,7 +9,7 @@ import ChecklistsView from "@/components/dashboard/ChecklistsView";
 import SecurityView from "@/components/dashboard/SecurityView";
 import SettingsView from "@/components/dashboard/SettingsView";
 import GISMapView from "@/components/dashboard/GISMapView";
-import { Activity, Bell, Menu, Search, ShieldCheck, Sun, Moon } from "lucide-react";
+import { Bell, Menu, ShieldCheck, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Index = () => {
@@ -166,18 +166,6 @@ const Index = () => {
                 <Menu size={20} />
               </button>
               <div className="min-w-0">
-                <div className="mb-1.5 flex flex-wrap items-center gap-2.5 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-2.5 py-1 text-success">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-success"></span>
-                    </span>
-                    Live Sync
-                  </span>
-                  <span>East Africa Operations</span>
-                  <span className="text-slate-300">/</span>
-                  <span className="text-primary font-extrabold">North Star Command</span>
-                </div>
                 <h1 className="text-2xl font-black tracking-tight text-foreground md:text-3xl font-display">
                   {currentView.title}
                 </h1>
@@ -186,25 +174,6 @@ const Index = () => {
             </div>
 
             <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-end">
-              {/* Dynamic Interactive search input */}
-              <div className="hidden min-w-[280px] items-center rounded-lg border border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/40 px-3.5 py-2 shadow-sm transition-all duration-300 focus-within:border-primary/50 focus-within:bg-white dark:focus-within:bg-slate-900 focus-within:ring-4 focus-within:ring-primary/10 lg:flex">
-                <Search size={16} className="text-muted-foreground dark:text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search console..."
-                  className="ml-3 w-full border-none bg-transparent text-xs font-semibold text-foreground outline-none placeholder:text-muted-foreground/60 focus:ring-0"
-                />
-              </div>
-
-              {/* Status banner with dynamic gradient track */}
-              <div className="hidden items-center gap-2 rounded-lg border border-emerald-100 dark:border-emerald-950/30 bg-emerald-50/50 dark:bg-emerald-950/10 px-3.5 py-2 text-xs font-bold text-emerald-800 dark:text-emerald-400 shadow-sm md:flex">
-                <span className="relative flex h-2 w-2">
-                  <span className="pulse-glow absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
-                </span>
-                99.1% Network SLA
-              </div>
-
               {/* Theme Toggle Button */}
               <button
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}

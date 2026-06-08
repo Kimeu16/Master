@@ -10,6 +10,7 @@ interface UserDetailModalProps {
   user: UserType;
   onClose: () => void;
   onSave?: (updatedUser: UserType) => void;
+  onDelete?: (userId: string) => void;
 }
 
 const AVATAR_GRADIENTS = [
@@ -37,26 +38,27 @@ function getInitials(name: string) {
     .join("");
 }
 
-export function UserDetailModal({ user, onClose, onSave }: UserDetailModalProps) {
+const Section = ({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) => (
+  <div className="mb-6 rounded-2xl border border-white/20 bg-white/40 p-5 shadow-sm dark:border-slate-800/40 dark:bg-slate-900/40">
+    <h4 className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+      <Icon size={14} className="text-indigo-500" />
+      {title}
+    </h4>
+    <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">{children}</div>
+  </div>
+);
+
+export function UserDetailModal({ user, onClose, onSave, onDelete }: UserDetailModalProps) {
   const { canEdit } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState<UserType>(user);
   const gradient = getGradient(user.userName || "U");
   const initials = getInitials(user.userName || "U");
 
-  const Section = ({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) => (
-    <div className="mb-6 rounded-2xl border border-white/20 bg-white/40 p-5 shadow-sm dark:border-slate-800/40 dark:bg-slate-900/40">
-      <h4 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
-        <Icon size={14} className="text-indigo-500" />
-        {title}
-      </h4>
-      <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">{children}</div>
-    </div>
-  );
-
-  const Field = ({ label, value, fieldName }: { label: string; value: string; fieldName: keyof UserType }) => (
+  const renderField = (label: string, value: string, fieldName: keyof UserType) => (
     <div className="space-y-1.5">
-      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{label}</span>
+      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</span>
       {isEditing ? (
         <Input
           value={formData[fieldName] || ""}
@@ -119,7 +121,23 @@ export function UserDetailModal({ user, onClose, onSave }: UserDetailModalProps)
           
           {/* Modal Header Action Panel */}
           <div className="flex items-center gap-2">
-            {isEditing ? (
+            {isDeleting ? (
+               <div className="flex items-center gap-2 rounded-xl bg-rose-50/80 px-3 py-1.5 border border-rose-200 dark:bg-rose-900/20 dark:border-rose-800/30">
+                 <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 mr-2 max-w-[200px] leading-tight">Are you sure you want to delete this user? Once done action cannot be undone.</span>
+                 <button
+                   onClick={() => setIsDeleting(false)}
+                   className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                 >
+                   Cancel
+                 </button>
+                 <button
+                   onClick={() => onDelete && onDelete(user.no)}
+                   className="flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-md transition-all hover:bg-rose-700 hover:shadow-rose-500/20 active:scale-95"
+                 >
+                   Confirm Delete
+                 </button>
+               </div>
+            ) : isEditing ? (
               <>
                 <button
                   onClick={() => {
@@ -139,13 +157,21 @@ export function UserDetailModal({ user, onClose, onSave }: UserDetailModalProps)
               </>
             ) : (
               canEdit && (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-indigo-500/5 hover:text-indigo-600 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                >
-                  <Edit3 size={14} />
-                  Edit Profile
-                </button>
+                <>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-indigo-500/5 hover:text-indigo-600 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                  >
+                    <Edit3 size={14} />
+                    Edit Profile
+                  </button>
+                  <button
+                    onClick={() => setIsDeleting(true)}
+                    className="flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-600 shadow-sm transition-all hover:bg-rose-100 hover:text-rose-700 active:scale-95 dark:border-rose-900/30 dark:bg-rose-900/20 dark:text-rose-400 dark:hover:bg-rose-900/40"
+                  >
+                    Delete Member
+                  </button>
+                </>
               )
             )}
             <div className="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-800" />
@@ -162,26 +188,26 @@ export function UserDetailModal({ user, onClose, onSave }: UserDetailModalProps)
         <div className="custom-scrollbar flex-1 overflow-y-auto bg-gradient-to-b from-white/20 to-slate-50/20 p-6 dark:to-slate-950/20">
           
           <Section title="Basic Profile Metrics" icon={User}>
-            <Field label="Staff Member ID" value={formData.no?.replace(".0", "")} fieldName="no" />
-            <Field label="Full Signature Name" value={formData.userName} fieldName="userName" />
-            <Field label="Primary Email Route" value={formData.email} fieldName="email" />
-            <Field label="Mobile Phone Matrix" value={formData.phone} fieldName="phone" />
+            {renderField("Staff Member ID", formData.no?.replace(".0", ""), "no")}
+            {renderField("Full Signature Name", formData.userName, "userName")}
+            {renderField("Primary Email Route", formData.email, "email")}
+            {renderField("Mobile Phone Matrix", formData.phone, "phone")}
           </Section>
 
           <Section title="Corporate Access Node" icon={Shield}>
-            <Field label="Operational Group" value={formData.department} fieldName="department" />
-            <Field label="Active Access Group" value={formData.accessGroup} fieldName="accessGroup" />
-            <Field label="Clearance Tier" value={formData.accessLevel} fieldName="accessLevel" />
-            <Field label="Assigned Region" value={formData.region} fieldName="region" />
+            {renderField("Operational Group", formData.department, "department")}
+            {renderField("Active Access Group", formData.accessGroup, "accessGroup")}
+            {renderField("Clearance Tier", formData.accessLevel, "accessLevel")}
+            {renderField("Assigned Region", formData.region, "region")}
           </Section>
 
           <Section title="Operational Scopes" icon={Briefcase}>
-            <Field label="REON Status" value={formData.reonOnboarding} fieldName="reonOnboarding" />
-            <Field label="Total Assigned Sites" value={formData.sites} fieldName="sites" />
+            {renderField("REON Status", formData.reonOnboarding, "reonOnboarding")}
+            {renderField("Total Assigned Sites", formData.sites, "sites")}
             
             {/* Roles textarea block */}
             <div className="col-span-full mt-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Detailed Scope of Responsibilities
               </span>
               {isEditing ? (

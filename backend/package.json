@@ -16,17 +16,23 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.15.1",
+    "nodemailer": "^8.0.10",
     "papaparse": "^5.5.3",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.1",
+    "@types/nodemailer": "^8.0.0",
     "@types/papaparse": "^5.5.2",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",

@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { CircleDot, Loader2, LocateFixed, MapPin, Radio, Search, ShieldAlert, Wifi } from "lucide-react";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Popup, useMap, LayersControl, Polygon, ZoomControl } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, LayersControl, Polygon, ZoomControl, GeoJSON } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useSites } from "@/hooks/useSites";
 import { cn } from "@/lib/utils";
 import { IconUtils, GeomUtils, ThemeUtils } from "@/lib/mapUtils";
+import kenyaMask from "@/data/kenyaMask.json";
+import kenyaGeoJSON from "@/data/kenya.json";
 import type { Site } from "@/types/site";
 import SiteDetailModal from "./SiteDetailModal";
 
@@ -124,21 +126,25 @@ const KenyaMapBadge = () => (
 );
 
 // Map fit bounds controller
-const MapFitBounds = ({ sites, isReady }: { sites: PlottedSite[]; isReady: boolean }) => {
+const MapFitBounds = () => {
   const map = useMap();
 
   useEffect(() => {
-    if (!isReady || sites.length === 0) return;
+    // Force recalculate size to prevent half-loading tiles
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
 
-    // Create bounds from all visible sites
-    const bounds = L.latLngBounds(sites.map((site) => [site.lat, site.lng]));
+    // Frame the exact bounding box of Kenya on initialization
+    const kenyaBounds = L.latLngBounds([
+      [5.5, 33.5],
+      [-4.7, 42.0],
+    ]);
     
-    // Fit map to bounds with padding
-    map.fitBounds(bounds, { 
-      padding: [50, 50],
-      maxZoom: 14,
+    map.fitBounds(kenyaBounds, { 
+      padding: [20, 20]
     });
-  }, [sites, map, isReady]);
+  }, [map]);
 
   return null;
 };
@@ -186,6 +192,7 @@ const LeafletMapContent = ({
               [KENYA_BOUNDS.minLat, KENYA_BOUNDS.minLng],
               [KENYA_BOUNDS.maxLat, KENYA_BOUNDS.maxLng],
             ]}
+            className="sepia hue-rotate-180 brightness-95 contrast-110"
           />
         </LayersControl.BaseLayer>
         <LayersControl.BaseLayer name="Satellite Map">
@@ -203,13 +210,23 @@ const LeafletMapContent = ({
       </LayersControl>
 
       <Polygon
-        positions={GeomUtils.kenyaOutline}
+        positions={kenyaMask as any}
         pathOptions={{
-          color: ThemeUtils.getOutlineColor(isDark),
+          stroke: false,
+          fillColor: isDark ? "#020617" : "#f1f5f9", // Matches bg-slate-950 dark / bg-slate-100 light
+          fillOpacity: 1,
+        }}
+        interactive={false}
+      />
+
+      <GeoJSON
+        data={kenyaGeoJSON as any}
+        pathOptions={{
+          color: isDark ? "#334155" : "#cbd5e1",
           weight: 1,
-          opacity: 0.2,
-          fillOpacity: 0.03,
-          dashArray: "4",
+          fillColor: isDark ? "#1e293b" : "#ffffff",
+          fillOpacity: isDark ? 0.4 : 0.2,
+          dashArray: "",
         }}
         interactive={false}
       />
@@ -291,7 +308,7 @@ const LeafletMapContent = ({
         ))}
       </MarkerClusterGroup>
 
-      <MapFitBounds sites={sites} isReady={sites.length > 0} />
+      <MapFitBounds />
 
       {/* Reset map button */}
       <button
@@ -498,7 +515,7 @@ const GISMapView = () => {
             </div>
           </aside>
 
-          <div className="relative h-[min(72vh,760px)] min-h-[420px] bg-slate-100 dark:bg-slate-950 sm:min-h-[520px] lg:h-[calc(100vh-260px)] lg:min-h-[620px] xl:min-h-[680px]">
+          <div className="relative z-0 flex-1 w-full h-full min-h-[calc(100vh-100px)] bg-slate-100 dark:bg-slate-950">
             <MapContainer
               center={[KENYA_CENTER.lat, KENYA_CENTER.lng]}
               zoom={6}
@@ -507,14 +524,17 @@ const GISMapView = () => {
               zoomControl={false}
               style={{ height: "100%", width: "100%" }}
               maxBounds={[
-                [KENYA_BOUNDS.minLat - 5, KENYA_BOUNDS.minLng - 8],
-                [KENYA_BOUNDS.maxLat + 5, KENYA_BOUNDS.maxLng + 8],
+                [KENYA_BOUNDS.minLat, KENYA_BOUNDS.minLng],
+                [KENYA_BOUNDS.maxLat, KENYA_BOUNDS.maxLng],
               ]}
-              maxBoundsViscosity={0.8}
+              maxBoundsViscosity={1.0}
             >
               <ZoomControl position="bottomright" />
               <LeafletMapContent sites={filteredSites} onSelectSite={setSelectedSite} isDark={isDark} />
             </MapContainer>
+
+            {/* Seamless Edge Blend (Vignette) */}
+            <div className="pointer-events-none absolute inset-0 z-[400] shadow-[inset_0_0_100px_rgba(241,245,249,1)] dark:shadow-[inset_0_0_120px_rgba(2,6,23,1)]" />
 
             <KenyaMapBadge />
 
