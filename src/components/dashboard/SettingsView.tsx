@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -23,7 +23,7 @@ import {
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
-/* ── syntax token colors ───────────────────────────────────────────── */
+/* â”€â”€ syntax token colors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function colorize(code: string): React.ReactNode[] {
   const lines = code.split("\n");
   return lines.map((line, i) => {
@@ -72,7 +72,7 @@ function colorize(code: string): React.ReactNode[] {
   });
 }
 
-/* ── DeploymentStep ─────────────────────────────────────────────────── */
+/* â”€â”€ DeploymentStep â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function DeploymentStep({
   step,
   icon: Icon,
@@ -111,7 +111,7 @@ function DeploymentStep({
   );
 }
 
-/* ── main component ─────────────────────────────────────────────────── */
+/* â”€â”€ main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const SettingsView = () => {
   const [scriptUrl, setScriptUrl] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -177,7 +177,7 @@ const SettingsView = () => {
 
   const deploySteps = [
     { icon: Code2, label: "Open Google Apps Script Studio", description: "Navigate to script.google.com and open the designated macro project.", color: "bg-gradient-to-br from-indigo-500 to-purple-600" },
-    { icon: Globe, label: "Configure & Deploy Web Application", description: "Click Deploy → New deployment → Web App → Set Execute as Me & Access as Anyone.", color: "bg-gradient-to-br from-blue-500 to-indigo-600" },
+    { icon: Globe, label: "Configure & Deploy Web Application", description: "Click Deploy â†’ New deployment â†’ Web App â†’ Set Execute as Me & Access as Anyone.", color: "bg-gradient-to-br from-blue-500 to-indigo-600" },
     { icon: ExternalLink, label: "Establish Endpoint Connection Link", description: "Copy the deployment ID url and paste it into the Web App URL input.", color: "bg-gradient-to-br from-emerald-400 to-teal-600" },
   ];
 
@@ -238,17 +238,17 @@ const SettingsView = () => {
         <motion.section
           initial={{ opacity: 0, x: -15 }}
           animate={{ opacity: 1, x: 0 }}
-          className="overflow-hidden rounded-3xl border border-white/40 bg-white/40 shadow-sm backdrop-blur-xl dark:border-slate-800/60 dark:bg-slate-900/40"
+          className="glass-section"
         >
           {/* Section Header */}
-          <div className="border-b border-slate-100/50 bg-gradient-to-r from-slate-50/50 to-white/50 px-6 py-5 dark:border-slate-800/50 dark:from-slate-900/30 dark:to-slate-900/10">
+          <div className="border-b border-secondary/15 bg-card/30 px-6 py-5">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-500/10">
-                <Cloud size={18} className="text-indigo-500" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10">
+                <Cloud size={18} className="text-primary" />
               </div>
               <div>
-                <h3 className="text-sm font-extrabold tracking-tight text-slate-800 dark:text-slate-200">Sheets Sync</h3>
-                <p className="mt-0.5 text-[10px] font-bold text-slate-400 uppercase tracking-wide">Macro deployment connector.</p>
+                <h3 className="text-sm font-extrabold tracking-tight text-foreground">Sheets Sync</h3>
+                <p className="mt-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Macro deployment connector.</p>
               </div>
             </div>
           </div>
@@ -257,15 +257,15 @@ const SettingsView = () => {
           <div className="space-y-6 p-6">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="scriptUrl" className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <Label htmlFor="scriptUrl" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                   Web Application Script URL
                 </Label>
                 {configured ? (
-                  <span className="flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-450">
+                  <span className="flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-600">
                     <CheckCircle2 size={10} /> Active
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-450">
+                  <span className="flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-600">
                     <AlertCircle size={10} /> Pending
                   </span>
                 )}
@@ -273,13 +273,13 @@ const SettingsView = () => {
               
               {/* Custom active input wrapper */}
               <div className="relative">
-                <Globe size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Globe size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="scriptUrl"
-                  placeholder="https://script.google.com/macros/s/…"
+                  placeholder="https://script.google.com/macros/s/â€¦"
                   value={scriptUrl}
                   onChange={(e) => setScriptUrl(e.target.value)}
-                  className="h-11 rounded-2xl border-slate-200 bg-white/60 pl-10 text-xs font-semibold shadow-sm backdrop-blur-md focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+                  className="glass-input h-11 rounded-2xl pl-10 text-xs font-semibold"
                 />
               </div>
             </div>
@@ -290,8 +290,8 @@ const SettingsView = () => {
               disabled={isSaving || justSaved}
               className={`relative w-full gap-2 h-11 overflow-hidden rounded-2xl text-xs font-black uppercase tracking-wider shadow-md transition-all duration-300 ${
                 justSaved
-                  ? "bg-emerald-500 hover:bg-emerald-500"
-                  : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-500/25"
+                  ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-primary/25"
               }`}
             >
               {justSaved ? (
@@ -308,16 +308,16 @@ const SettingsView = () => {
             </Button>
 
             {/* Information card details */}
-            <div className="flex items-start gap-3 rounded-2xl border border-indigo-500/15 bg-indigo-500/5 p-4">
-              <Info size={16} className="mt-0.5 shrink-0 text-indigo-500" />
-              <p className="text-[11px] font-semibold leading-relaxed text-indigo-800 dark:text-indigo-300">
+            <div className="flex items-start gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4">
+              <Info size={16} className="mt-0.5 shrink-0 text-primary" />
+              <p className="text-[11px] font-semibold leading-relaxed text-muted-foreground">
                 Connection URL directs live updates securely back into your Google Sheets writeback template, ensuring absolute field-level operations persistence.
               </p>
             </div>
 
             {/* Corporate portals links list */}
-            <div className="space-y-2 border-t border-slate-100/50 pt-5 dark:border-slate-800/50">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Integration Resources</p>
+            <div className="space-y-2 border-t border-secondary/15 pt-5">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Integration Resources</p>
               {[
                 { label: "Google Apps Script Console", href: "https://script.google.com" },
                 { label: "Operations Google Drive Sheet", href: "https://sheets.google.com" },
@@ -327,11 +327,11 @@ const SettingsView = () => {
                   href={link.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-2 rounded-xl bg-slate-50/50 px-3 py-2.5 text-[11px] font-bold text-slate-600 transition-colors hover:bg-indigo-50/30 hover:text-indigo-650 dark:bg-slate-900/30 dark:text-slate-400 dark:hover:text-indigo-400"
+                  className="flex items-center gap-2 rounded-xl bg-secondary/10 px-3 py-2.5 text-[11px] font-bold text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
                 >
-                  <ExternalLink size={12} className="text-indigo-500" />
+                  <ExternalLink size={12} className="text-primary" />
                   {link.label}
-                  <ArrowRight size={12} className="ml-auto text-slate-300 dark:text-slate-700" />
+                  <ArrowRight size={12} className="ml-auto text-muted-foreground" />
                 </a>
               ))}
             </div>
@@ -342,17 +342,17 @@ const SettingsView = () => {
         <motion.section
           initial={{ opacity: 0, x: 15 }}
           animate={{ opacity: 1, x: 0 }}
-          className="overflow-hidden rounded-3xl border border-white/40 bg-white/40 shadow-sm backdrop-blur-xl dark:border-slate-800/60 dark:bg-slate-900/40"
+          className="glass-section"
         >
           {/* Header & Copy Control */}
-          <div className="flex items-center justify-between border-b border-slate-100/50 bg-gradient-to-r from-slate-50/50 to-white/50 px-6 py-4 dark:border-slate-800/50 dark:from-slate-900/30 dark:to-slate-900/10">
+          <div className="flex items-center justify-between border-b border-secondary/15 bg-card/30 px-6 py-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-800 shadow-sm">
-                <Terminal size={15} className="text-indigo-400" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-sm">
+                <Terminal size={15} className="text-primary-foreground" />
               </div>
               <div>
-                <h3 className="text-sm font-extrabold tracking-tight text-slate-800 dark:text-slate-200">Google Code Template</h3>
-                <p className="mt-0.5 text-[10px] font-bold text-slate-400 uppercase tracking-wide">Copy and execute GS script.</p>
+                <h3 className="text-sm font-extrabold tracking-tight text-foreground">Google Code Template</h3>
+                <p className="mt-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Copy and execute GS script.</p>
               </div>
             </div>
             
@@ -362,8 +362,8 @@ const SettingsView = () => {
               size="sm"
               className={`gap-1.5 h-8.5 rounded-xl border px-3 text-xs font-bold transition-all duration-200 ${
                 copied
-                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                  : "border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800"
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
+                  : "border-secondary/20 bg-card/50 hover:bg-primary/10 hover:text-primary"
               }`}
               onClick={handleCopy}
             >
@@ -373,8 +373,8 @@ const SettingsView = () => {
           </div>
 
           {/* Deployment steps panels */}
-          <div className="border-b border-slate-100/50 bg-slate-50/30 px-6 py-5 dark:border-slate-800/50 dark:bg-slate-950/10">
-            <p className="mb-4 text-[10px] font-black uppercase tracking-widest text-slate-400">GS Web App Deployment Instructions</p>
+          <div className="border-b border-secondary/15 bg-card/20 px-6 py-5">
+            <p className="mb-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">GS Web App Deployment Instructions</p>
             <div className="pl-1">
               {deploySteps.map((step, i) => (
                 <DeploymentStep
@@ -402,7 +402,7 @@ const SettingsView = () => {
                   <span className="h-3 w-3 rounded-full bg-red-500/80 shadow-md shadow-red-500/10" />
                   <span className="h-3 w-3 rounded-full bg-amber-500/80 shadow-md shadow-amber-500/10" />
                   <span className="h-3 w-3 rounded-full bg-emerald-500/80 shadow-md shadow-emerald-500/10" />
-                  <span className="ml-3 font-mono text-[10px] font-bold text-slate-500 tracking-wider">DOPOST.gs — Sheets Script Studio</span>
+                  <span className="ml-3 font-mono text-[10px] font-bold text-slate-500 tracking-wider">DOPOST.gs â€” Sheets Script Studio</span>
                 </div>
                 <Badge variant="outline" className="h-5 text-[9px] font-black border-slate-700 bg-slate-900/60 text-slate-400">GAS v8</Badge>
               </div>

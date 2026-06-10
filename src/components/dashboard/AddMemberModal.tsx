@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { User as UserType } from "@/types/site";
 import { X, User, Check, Shield, Briefcase, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,9 @@ interface AddMemberModalProps {
 }
 
 const Section = ({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) => (
-  <div className="mb-6 rounded-2xl border border-white/20 bg-white/40 p-5 shadow-sm dark:border-slate-800/40 dark:bg-slate-900/40">
-    <h4 className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-      <Icon size={14} className="text-indigo-500" />
+  <div className="mb-6 glass-card rounded-2xl p-5">
+    <h4 className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-foreground">
+      <Icon size={14} className="text-primary" />
       {title}
     </h4>
     <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">{children}</div>
@@ -64,32 +64,32 @@ export function AddMemberModal({ onClose, onSave }: AddMemberModalProps) {
   const isFormValid = formData.userName && formData.email && formData.phone && formData.region && formData.roles && !errors.email && !errors.phone;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-xl" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/30 p-4 backdrop-blur-xl" onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-white/40 bg-white/75 shadow-2xl backdrop-blur-2xl dark:border-slate-800/80 dark:bg-slate-900/75"
+        className="glass-panel relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Gradient Glow */}
-        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+        <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
 
         {/* Modal Header */}
-        <div className="flex shrink-0 flex-col gap-4 border-b border-slate-100/50 bg-white/40 p-6 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800/50 dark:bg-slate-900/40">
+        <div className="flex shrink-0 flex-col gap-4 border-b border-secondary/20 bg-white/30 dark:bg-primary/30 backdrop-blur-sm p-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-pink-500 text-white shadow-md ring-4 ring-white/60 dark:ring-slate-800">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/20 text-primary shadow-md ring-4 ring-white/60 dark:ring-secondary/30 backdrop-blur-md border border-primary/30">
               <UserPlus size={24} />
             </div>
             <div className="min-w-0">
-              <h3 className="truncate text-xl font-black tracking-tight text-slate-800 dark:text-white">Add New Member</h3>
+              <h3 className="truncate text-xl font-black tracking-tight text-foreground">Add New Member</h3>
             </div>
           </div>
           
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className="rounded-xl border border-slate-200 bg-white p-2 text-slate-400 transition-all hover:bg-slate-50 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-800"
+              className="icon-button"
             >
               <X size={16} />
             </button>
@@ -97,7 +97,7 @@ export function AddMemberModal({ onClose, onSave }: AddMemberModalProps) {
         </div>
 
         {/* Scrollable Contents */}
-        <div className="custom-scrollbar flex-1 overflow-y-auto bg-gradient-to-b from-white/20 to-slate-50/20 p-6 dark:to-slate-950/20">
+        <div className="custom-scrollbar flex-1 overflow-y-auto bg-white/10 dark:bg-primary/5 backdrop-blur-sm p-6">
           
           {isConfirming ? (
             <motion.div

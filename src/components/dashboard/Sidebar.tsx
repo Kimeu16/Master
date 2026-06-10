@@ -13,7 +13,6 @@ import {
   Map,
   Settings,
   HelpCircle,
-  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -51,14 +50,14 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
       animate={{ width: collapsed ? 90 : 280 }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
-        "fixed left-0 top-0 z-50 flex h-screen flex-col border-r border-slate-200/50 dark:border-slate-800/60 bg-white/75 dark:bg-slate-950/70 shadow-[4px_0_30px_rgba(0,0,0,0.02)] dark:shadow-[4px_0_30px_rgba(0,0,0,0.2)] backdrop-blur-2xl",
+        "sidebar-panel fixed left-0 top-0 z-50 flex h-screen flex-col text-white",
         className
       )}
     >
       {/* Brand logo block */}
-      <div className="flex h-20 items-center border-b border-slate-100/80 dark:border-slate-800/60 px-5">
+      <div className="flex h-20 items-center border-b border-white/10 px-5">
         <div className="flex min-w-0 items-center gap-3 overflow-hidden">
-          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-primary to-indigo-600 text-sm font-black text-white shadow-lg shadow-primary/10">
+          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 text-sm font-black text-white shadow-lg backdrop-blur-md border border-white/20">
             AD
           </div>
           {!collapsed && (
@@ -68,10 +67,10 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
               transition={{ duration: 0.2 }}
               className="min-w-0"
             >
-              <span className="block truncate text-xs font-black uppercase tracking-[0.16em] text-foreground">
+              <span className="block truncate text-xs font-black uppercase tracking-[0.16em] text-white">
                 AlanDick
               </span>
-              <span className="mt-1 block text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              <span className="mt-1 block text-[10px] font-bold text-white/50 uppercase tracking-wider">
                 Ops Console
               </span>
             </motion.div>
@@ -83,7 +82,7 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
       <div className="custom-scrollbar flex-1 space-y-8 overflow-y-auto px-3.5 py-6">
         <div>
           {!collapsed && (
-            <p className="mb-3 px-3 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+            <p className="mb-3 px-3 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
               Workspace
             </p>
           )}
@@ -101,14 +100,14 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
                     "group relative flex w-full items-center gap-3.5 rounded-xl px-3 py-3 text-xs font-bold transition-all duration-200",
                     collapsed && "justify-center px-0",
                     isActive
-                      ? "bg-primary/10 dark:bg-primary/15 text-primary shadow-sm"
-                      : "text-muted-foreground/80 hover:bg-slate-100/60 dark:hover:bg-slate-900/60 hover:text-foreground dark:hover:text-white"
+                      ? "border border-white/15 bg-white/12 text-white shadow-sm"
+                      : "text-white/60 hover:bg-white/8 hover:text-white"
                   )}
                 >
                   {isActive && (
                     <motion.span
                       layoutId="activeSideBarPill"
-                      className="absolute left-0 h-5 w-1 rounded-r-full bg-primary"
+                      className="absolute left-0 h-5 w-1 rounded-r-full bg-blue-400"
                       transition={{ type: "spring", stiffness: 350, damping: 25 }}
                     />
                   )}
@@ -116,7 +115,7 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
                     size={17}
                     className={cn(
                       "flex-shrink-0 transition-colors duration-200",
-                      isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                      isActive ? "text-blue-400" : "text-white/50 group-hover:text-white"
                     )}
                   />
                   {!collapsed && <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>}
@@ -129,7 +128,7 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
         {/* Support items list */}
         <div>
           {!collapsed && (
-            <p className="mb-3 px-3 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+            <p className="mb-3 px-3 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
               Support
             </p>
           )}
@@ -141,14 +140,14 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
                 "group relative flex w-full items-center gap-3.5 rounded-xl px-3 py-3 text-xs font-bold transition-all duration-200",
                 collapsed && "justify-center px-0",
                 activeView === "settings"
-                  ? "bg-primary/10 dark:bg-primary/15 text-primary shadow-sm"
-                  : "text-muted-foreground/80 hover:bg-slate-100/60 dark:hover:bg-slate-900/60 hover:text-foreground dark:hover:text-white"
+                  ? "border border-white/15 bg-white/12 text-white shadow-sm"
+                  : "text-white/60 hover:bg-white/8 hover:text-white"
               )}
             >
               {activeView === "settings" && (
                 <motion.span
                   layoutId="activeSideBarPill"
-                  className="absolute left-0 h-5 w-1 rounded-r-full bg-primary"
+                  className="absolute left-0 h-5 w-1 rounded-r-full bg-blue-400"
                   transition={{ type: "spring", stiffness: 350, damping: 25 }}
                 />
               )}
@@ -156,7 +155,7 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
                 size={17}
                 className={cn(
                   "flex-shrink-0 transition-colors duration-200",
-                  activeView === "settings" ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                  activeView === "settings" ? "text-blue-400" : "text-white/50 group-hover:text-white"
                 )}
               />
               {!collapsed && <span>Settings</span>}
@@ -164,7 +163,7 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
             <button
               title={collapsed ? "Help Center" : undefined}
               className={cn(
-                 "group flex w-full items-center gap-3.5 rounded-xl px-3 py-3 text-xs font-bold text-muted-foreground/80 transition-all duration-200 hover:bg-slate-100/60 dark:hover:bg-slate-900/60 hover:text-foreground dark:hover:text-white",
+                "group flex w-full items-center gap-3.5 rounded-xl px-3 py-3 text-xs font-bold text-white/60 transition-all duration-200 hover:bg-white/8 hover:text-white",
                 collapsed && "justify-center px-0"
               )}
             >
@@ -176,17 +175,17 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
       </div>
 
       {/* Sidebar Footer block */}
-      <div className="border-t border-slate-100/80 dark:border-slate-800/60 p-4">
+      <div className="border-t border-white/10 p-4">
         {!collapsed && (
           <div className="mb-4">
-            <p className="mb-2 px-1 text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Simulate Role</p>
+            <p className="mb-2 px-1 text-[9px] font-black uppercase tracking-widest text-white/40">Simulate Role</p>
             <select
               value={role}
               onChange={(e) => {
                 const val = e.target.value as "Read-Only" | "CRUD" | "Admin";
                 setRole(val);
               }}
-              className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+              className="w-full rounded-lg border border-white/15 bg-white/8 px-2 py-1.5 text-xs font-bold text-white shadow-sm backdrop-blur-md outline-none focus:border-white/30"
             >
               <option value="Read-Only">Read-Only User</option>
               <option value="CRUD">Employee</option>
@@ -195,14 +194,14 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
           </div>
         )}
         {!collapsed && (
-          <button onClick={signOut} className="mb-2.5 flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-xs font-black text-destructive transition-all duration-200 hover:bg-destructive/10">
+          <button onClick={signOut} className="mb-2.5 flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-xs font-black text-white/60 transition-all duration-200 hover:bg-white/8 hover:text-white">
             <LogOut size={17} className="flex-shrink-0" />
             <span>Sign Out</span>
           </button>
         )}
         <button
           onClick={() => onCollapsedChange(!collapsed)}
-          className="flex w-full items-center justify-center rounded-xl py-2 text-muted-foreground/60 transition-all duration-200 hover:bg-slate-100/60 dark:hover:bg-slate-900/60 hover:text-foreground dark:hover:text-white active:scale-[0.95]"
+          className="flex w-full items-center justify-center rounded-xl py-2 text-white/50 transition-all duration-200 hover:bg-white/8 hover:text-white active:scale-[0.95]"
           aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
         >
           {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}

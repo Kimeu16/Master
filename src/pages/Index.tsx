@@ -17,20 +17,19 @@ const Index = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isNavCollapsed, setNavCollapsed] = useState(false);
 
-  // Core Theme State & Logic
+  // Core Theme State & Logic — default is "dark" (the former crisp light palette)
   const [theme, setTheme] = useState(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("theme");
-      if (stored) return stored;
-      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      if (stored === "dark" || stored === "light") return stored;
     }
-    return "light";
+    return "dark";
   });
 
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.add("theme-transition");
-    
+
     if (theme === "dark") {
       root.classList.add("dark");
     } else {
@@ -127,13 +126,13 @@ const Index = () => {
       {/* Background radial spotlights */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div className="absolute -left-[10%] -top-[10%] h-[500px] w-[500px] rounded-full bg-primary/5 blur-[120px]" />
-        <div className="absolute right-[5%] top-[10%] h-[600px] w-[600px] rounded-full bg-accent/3.5 blur-[130px]" />
+        <div className="absolute right-[5%] top-[10%] h-[600px] w-[600px] rounded-full bg-accent/5 blur-[130px]" />
       </div>
 
       {isSidebarOpen && (
         <button
           aria-label="Close navigation"
-          className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-md lg:hidden"
+          className="fixed inset-0 z-40 bg-primary/20 backdrop-blur-lg lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -155,7 +154,7 @@ const Index = () => {
           isNavCollapsed ? "lg:ml-[100px]" : "lg:ml-[280px]"
         )}
       >
-        <header className="sticky top-0 z-30 border-b border-slate-200/60 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/60 px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-8">
+        <header className="glass sticky top-0 z-30 px-4 py-4 sm:px-6 lg:px-8 border-secondary/20">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex items-start gap-4">
               <button
@@ -179,6 +178,7 @@ const Index = () => {
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                 className="icon-button relative overflow-hidden"
                 aria-label="Toggle theme"
+                title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               >
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
@@ -190,29 +190,29 @@ const Index = () => {
                     className="flex items-center justify-center"
                   >
                     {theme === "dark" ? (
-                      <Sun size={17} className="text-amber-450" />
+                      <Sun size={17} className="text-muted-foreground" />
                     ) : (
-                      <Moon size={17} className="text-slate-700" />
+                      <Moon size={17} className="text-muted-foreground" />
                     )}
                   </motion.div>
                 </AnimatePresence>
               </button>
 
               {/* Notification bubble */}
-              <button className="icon-button relative hover:border-primary/20 hover:text-primary dark:hover:text-primary-foreground" aria-label="Notifications">
+              <button className="icon-button relative hover:border-primary/20 hover:text-primary" aria-label="Notifications">
                 <Bell size={17} />
-                <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-destructive ring-2 ring-white dark:ring-slate-900 animate-pulse" />
+                <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-secondary ring-2 ring-card animate-pulse" />
               </button>
 
               {/* User Manager tag */}
-              <button className="flex items-center gap-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 pr-3.5 shadow-sm transition-all duration-200 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 hover:shadow-md">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-tr from-primary to-indigo-600 text-xs font-black text-white shadow-md shadow-primary/10">
+              <button className="glass-card flex items-center gap-3 rounded-xl p-1.5 pr-3.5 transition-all duration-200 hover:border-secondary hover:bg-primary/10 hover:shadow-md">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-tr from-primary to-secondary text-xs font-black text-white shadow-md shadow-primary/10">
                   AD
                 </div>
                 <div className="hidden text-left xl:block">
                   <p className="text-[11px] font-black leading-none text-foreground">Administrator</p>
                   <p className="mt-1.5 flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
-                    <ShieldCheck size={11} className="text-success" />
+                    <ShieldCheck size={11} className="text-muted-foreground" />
                     Ops Manager
                   </p>
                 </div>

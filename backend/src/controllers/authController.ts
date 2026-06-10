@@ -24,7 +24,7 @@ export const login = async (req: Request, res: Response) => {
     const [rows]: any = await pool.query('SELECT * FROM users WHERE user_name = ?', [username]);
     if (rows.length === 0) {
       // Simulate admin if it doesn't exist yet to not lock user out
-      if (username === 'admin' && password === 'password') {
+      if (username === 'admin' && password === 'admin') {
          const token = jwt.sign({ no: 'admin_mock', role: 'Admin' }, JWT_SECRET, { expiresIn: '1d' });
          return res.json({ token, user: { user_name: 'admin', role: 'Admin' } });
       }
@@ -33,7 +33,7 @@ export const login = async (req: Request, res: Response) => {
 
     const user = rows[0];
     if (!user.password_hash) {
-      if (username === 'admin' && password === 'password') {
+      if (username === 'admin' && password === 'admin') {
          const token = jwt.sign({ no: user.no, role: 'Admin' }, JWT_SECRET, { expiresIn: '1d' });
          return res.json({ token, user });
       }

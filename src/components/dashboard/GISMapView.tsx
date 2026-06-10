@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef, useCallback } from "react";
+﻿import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { CircleDot, Loader2, LocateFixed, MapPin, Radio, Search, ShieldAlert, Wifi } from "lucide-react";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup, useMap, LayersControl, Polygon, ZoomControl, GeoJSON } from "react-leaflet";
@@ -58,15 +58,15 @@ const statusColors: Record<PlottedSite["status"], { main: string; light: string 
 const statusStyles: Record<PlottedSite["status"], { label: string; badge: string }> = {
   operational: {
     label: "Operational",
-    badge: "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    badge: "border-emerald-500/20 bg-emerald-500/10 text-emerald-600",
   },
   warning: {
     label: "Monitoring",
-    badge: "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+    badge: "border-amber-500/20 bg-amber-500/10 text-amber-700",
   },
   critical: {
     label: "At Risk",
-    badge: "border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400",
+    badge: "border-rose-500/20 bg-rose-500/10 text-rose-600",
   },
 };
 
@@ -126,7 +126,7 @@ const createClusterCustomIcon = (cluster: any) => {
 };
 
 const KenyaMapBadge = () => (
-  <div className="pointer-events-none absolute left-4 top-4 z-[500] rounded-lg border border-white/70 bg-white/90 px-3.5 py-2.5 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-950/85">
+  <div className="pointer-events-none absolute left-4 top-4 z-[500] rounded-lg border border-secondary/20 bg-card/80 px-3.5 py-2.5 shadow-sm backdrop-blur">
     <p className="text-[9px] font-black uppercase tracking-[0.18em] text-muted-foreground">Kenya Map</p>
     <p className="mt-0.5 text-xs font-black text-foreground">Leaflet / Live GIS</p>
   </div>
@@ -238,7 +238,7 @@ const LeafletMapContent = ({
         positions={kenyaMask as any}
         pathOptions={{
           stroke: false,
-          fillColor: isDark ? "#020617" : "#f1f5f9", // Matches bg-slate-950 dark / bg-slate-100 light
+          fillColor: isDark ? "hsl(var(--background))" : "hsl(var(--muted))",
           fillOpacity: 1,
         }}
         interactive={false}
@@ -247,9 +247,9 @@ const LeafletMapContent = ({
       <GeoJSON
         data={kenyaGeoJSON as any}
         pathOptions={{
-          color: isDark ? "#334155" : "#cbd5e1",
+          color: isDark ? "hsl(var(--muted-foreground) / 0.4)" : "hsl(var(--muted-foreground) / 0.6)",
           weight: 1,
-          fillColor: isDark ? "#1e293b" : "#ffffff",
+          fillColor: isDark ? "hsl(var(--card))" : "hsl(var(--card))",
           fillOpacity: isDark ? 0.4 : 0.2,
           dashArray: "",
         }}
@@ -285,10 +285,10 @@ const LeafletMapContent = ({
               >
                 <div className="min-w-[240px] space-y-3 py-1">
                   <div>
-                    <p className="text-sm font-black uppercase tracking-wide text-slate-900 dark:text-white">
+                    <p className="text-sm font-black uppercase tracking-wide text-foreground">
                       {site.siteName}
                     </p>
-                    <p className="mt-1 text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                    <p className="mt-1 text-[11px] font-bold text-muted-foreground">
                       {site.region || "Unassigned region"} /{" "}
                       {site.ipAddress ? (
                         <span
@@ -306,13 +306,13 @@ const LeafletMapContent = ({
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-[11px]">
-                    <div className="rounded-md bg-slate-100 p-2 dark:bg-slate-800">
-                      <p className="font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Power</p>
-                      <p className="mt-1 font-bold text-slate-800 dark:text-slate-200">{site.powerSource || "N/A"}</p>
+                    <div className="rounded-md bg-secondary/10 p-2">
+                      <p className="font-black uppercase tracking-wider text-muted-foreground">Power</p>
+                      <p className="mt-1 font-bold text-foreground">{site.powerSource || "N/A"}</p>
                     </div>
-                    <div className="rounded-md bg-slate-100 p-2 dark:bg-slate-800">
-                      <p className="font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Priority</p>
-                      <p className="mt-1 font-bold text-slate-800 dark:text-slate-200">
+                    <div className="rounded-md bg-secondary/10 p-2">
+                      <p className="font-black uppercase tracking-wider text-muted-foreground">Priority</p>
+                      <p className="mt-1 font-bold text-foreground">
                         P{site.priority?.replace(".0", "") || "N/A"}
                       </p>
                     </div>
@@ -322,7 +322,7 @@ const LeafletMapContent = ({
                       onSelectSite(site);
                       setActiveSite(null);
                     }}
-                    className="w-full rounded-md bg-slate-900 px-3 py-2 text-[11px] font-black uppercase tracking-wider text-white transition-colors hover:bg-primary dark:bg-primary dark:hover:brightness-110"
+                    className="w-full rounded-md bg-primary px-3 py-2 text-[11px] font-black uppercase tracking-wider text-primary-foreground transition-colors hover:bg-primary/95"
                   >
                     Open Site Record
                   </button>
@@ -339,7 +339,7 @@ const LeafletMapContent = ({
       <button
         type="button"
         onClick={handleResetMap}
-        className="absolute right-4 top-4 z-[500] flex h-10 w-10 items-center justify-center rounded-lg border border-white/70 bg-white/95 text-slate-700 shadow-sm backdrop-blur transition-colors hover:bg-slate-50 hover:text-primary dark:border-slate-800 dark:bg-slate-950/85 dark:text-slate-300 dark:hover:text-white"
+        className="absolute right-4 top-4 z-[500] flex h-10 w-10 items-center justify-center rounded-lg border border-secondary/20 bg-card/85 text-muted-foreground shadow-sm backdrop-blur transition-colors hover:text-foreground"
         aria-label="Reset map to Kenya"
         title="Reset to Kenya"
       >
@@ -415,7 +415,7 @@ const GISMapView = () => {
   return (
     <div className="space-y-5 pb-10">
       <section className="premium-card overflow-hidden relative">
-        <div className="relative z-[800] flex flex-col gap-4 border-b border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative z-[800] flex flex-col gap-4 border-b border-secondary/15 bg-card/30 p-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="mb-2 flex flex-wrap items-center gap-2">
               <Badge className="border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-primary hover:bg-primary/10">
@@ -436,12 +436,12 @@ const GISMapView = () => {
               { label: "Mapped", value: stats.plotted, icon: MapPin, color: "text-primary" },
               { label: "Online", value: stats.operational, icon: Wifi, color: "text-emerald-500" },
               { label: "At Risk", value: stats.critical, icon: ShieldAlert, color: "text-rose-500" },
-              { label: "No Coords", value: stats.hidden, icon: Radio, color: "text-slate-400" },
+              { label: "No Coords", value: stats.hidden, icon: Radio, color: "text-muted-foreground" },
             ].map((item) => {
               const Icon = item.icon;
 
               return (
-                <div key={item.label} className="rounded-lg border border-slate-200/70 bg-slate-50/70 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/45">
+                <div key={item.label} className="rounded-lg border border-secondary/10 bg-secondary/5 px-3 py-2">
                   <div className="mb-1 flex items-center justify-between gap-3">
                     <span className="text-[9px] font-black uppercase tracking-wider text-muted-foreground">{item.label}</span>
                     <Icon size={13} className={item.color} />
@@ -454,7 +454,7 @@ const GISMapView = () => {
         </div>
 
         <div className="grid gap-0 xl:grid-cols-[320px_minmax(0,1fr)]">
-          <aside className="relative z-[800] border-b border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950 xl:border-b-0 xl:border-r">
+          <aside className="relative z-[800] border-b border-secondary/15 bg-card/20 p-4 xl:border-b-0 xl:border-r">
             <div className="space-y-3">
               <label className="relative block">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -462,7 +462,7 @@ const GISMapView = () => {
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Search nodes..."
-                  className="h-10 rounded-lg pl-9 text-xs font-semibold"
+                  className="glass-input h-10 rounded-lg pl-9 text-xs font-semibold"
                 />
               </label>
 
@@ -470,7 +470,7 @@ const GISMapView = () => {
                 aria-label="Filter regions"
                 value={region}
                 onChange={(event) => setRegion(event.target.value)}
-                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-foreground shadow-sm outline-none transition-colors focus:border-primary/40 dark:border-slate-800 dark:bg-slate-950"
+                className="glass-input h-10 w-full rounded-lg px-3 text-xs font-bold text-foreground"
               >
                 <option value="all">All regions</option>
                 {regions.map((item) => (
@@ -489,7 +489,7 @@ const GISMapView = () => {
                       "rounded-lg border px-3 py-2 text-[10px] font-black uppercase tracking-wider transition-all",
                       status === item
                         ? "border-primary/30 bg-primary/10 text-primary"
-                        : "border-slate-200 bg-white text-muted-foreground hover:text-foreground dark:border-slate-800 dark:bg-slate-950/60"
+                        : "border-secondary/20 bg-card/50 text-muted-foreground hover:text-foreground"
                     )}
                   >
                     {item === "all" ? "All" : statusStyles[item].label}
@@ -503,7 +503,7 @@ const GISMapView = () => {
                 <button
                   key={`${site.no}-${site.siteName}`}
                   onClick={() => setSelectedSite(site)}
-                  className="group w-full rounded-lg border border-slate-200/70 bg-white/80 p-3 text-left shadow-sm transition-all hover:border-primary/25 hover:bg-primary/5 dark:border-slate-800 dark:bg-slate-950/40"
+                  className="group w-full rounded-lg border border-secondary/10 bg-card/30 p-3 text-left shadow-sm transition-all hover:border-primary/25 hover:bg-primary/5"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -533,14 +533,14 @@ const GISMapView = () => {
               ))}
 
               {filteredSites.length === 0 && !isLoading && (
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-5 text-center text-xs font-semibold text-muted-foreground dark:border-slate-800 dark:bg-slate-950/40">
+                <div className="rounded-lg border border-secondary/15 bg-card/25 p-5 text-center text-xs font-semibold text-muted-foreground">
                   No mapped nodes match the current filters.
                 </div>
               )}
             </div>
           </aside>
 
-          <div className="relative z-0 flex-1 w-full h-full min-h-[calc(100vh-100px)] bg-slate-100 dark:bg-slate-950">
+          <div className="relative z-0 flex-1 w-full h-full min-h-[calc(100vh-100px)] bg-card/5">
             <MapContainer
               center={[KENYA_CENTER.lat, KENYA_CENTER.lng]}
               zoom={6}
@@ -559,22 +559,22 @@ const GISMapView = () => {
             </MapContainer>
 
             {/* Seamless Edge Blend (Vignette) */}
-            <div className="pointer-events-none absolute inset-0 z-[400] shadow-[inset_0_0_100px_rgba(241,245,249,1)] dark:shadow-[inset_0_0_120px_rgba(2,6,23,1)]" />
+            <div className="pointer-events-none absolute inset-0 z-[400] shadow-[inset_0_0_100px_rgba(0,0,0,0.08)]" />
 
             <KenyaMapBadge />
 
             {/* Empty State Overlay */}
             {filteredSites.length === 0 && !isLoading && (
-              <div className="absolute inset-0 z-[450] flex items-center justify-center bg-white/50 backdrop-blur-[2px] dark:bg-slate-950/50">
-                <div className="rounded-lg border border-slate-200 bg-white px-5 py-4 text-sm font-semibold shadow-xl dark:border-slate-800 dark:bg-slate-900 text-slate-600 dark:text-slate-400">
+              <div className="absolute inset-0 z-[450] flex items-center justify-center bg-card/50 backdrop-blur-[2px]">
+                <div className="rounded-lg border border-secondary/20 bg-card px-5 py-4 text-sm font-semibold shadow-xl text-muted-foreground">
                   No sites currently match this status.
                 </div>
               </div>
             )}
 
             {isLoading && (
-              <div className="absolute inset-0 z-[500] flex items-center justify-center bg-white/45 backdrop-blur-sm dark:bg-slate-950/45">
-                <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-xs font-black uppercase tracking-wider shadow-xl dark:border-slate-800 dark:bg-slate-900">
+              <div className="absolute inset-0 z-[500] flex items-center justify-center bg-card/45 backdrop-blur-sm">
+                <div className="flex items-center gap-3 rounded-lg border border-secondary/20 bg-card px-4 py-3 text-xs font-black uppercase tracking-wider shadow-xl">
                   <Loader2 className="h-4 w-4 animate-spin text-primary" />
                   Loading mapped nodes
                 </div>
@@ -582,7 +582,7 @@ const GISMapView = () => {
             )}
 
             {isError && (
-              <div className="absolute left-4 top-4 z-[500] rounded-lg border border-rose-500/20 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-700 shadow-xl dark:bg-rose-950/80 dark:text-rose-300">
+              <div className="absolute left-4 top-4 z-[500] rounded-lg border border-rose-500/20 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-700 shadow-xl">
                 Site sync failed. Map is waiting for data.
               </div>
             )}
@@ -598,11 +598,11 @@ const GISMapView = () => {
                       "inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-[10px] font-black uppercase tracking-wider shadow-sm backdrop-blur transition-all cursor-pointer",
                       isActive
                         ? item === "operational"
-                          ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:border-emerald-500/50 dark:text-emerald-400"
+                          ? "border-emerald-500 bg-emerald-500/10 text-emerald-700"
                           : item === "warning"
-                          ? "border-amber-500 bg-amber-500/10 text-amber-700 dark:border-amber-500/50 dark:text-amber-400"
-                          : "border-rose-500 bg-rose-500/10 text-rose-700 dark:border-rose-500/50 dark:text-rose-400"
-                        : "border-white/60 bg-white/90 text-slate-700 hover:bg-white dark:border-slate-800 dark:bg-slate-950/80 dark:text-slate-300 dark:hover:bg-slate-900"
+                          ? "border-amber-500 bg-amber-500/10 text-amber-700"
+                          : "border-rose-500 bg-rose-500/10 text-rose-700"
+                        : "border-secondary/20 bg-card/90 text-muted-foreground hover:text-foreground"
                     )}
                   >
                     <CircleDot size={12} className={item === "operational" ? "text-emerald-500" : item === "warning" ? "text-amber-500" : "text-rose-500"} />

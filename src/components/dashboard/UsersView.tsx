@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { useUsers } from "@/hooks/useSites";
 import { api } from "@/lib/api";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 
-/* ── avatar gradient palette ───────────────────────────────────────── */
+/* â”€â”€ avatar gradient palette â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const AVATAR_GRADIENTS = [
   "from-indigo-500 via-purple-500 to-pink-500",
   "from-blue-500 via-cyan-500 to-teal-500",
@@ -53,7 +53,7 @@ function getInitials(name: string) {
     .join("");
 }
 
-/* ── access level colour map ────────────────────────────────────────── */
+/* â”€â”€ access level colour map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function accessStyle(level: string) {
   const l = (level || "").toLowerCase();
   if (l.includes("admin") || l.includes("level 1")) {
@@ -68,7 +68,7 @@ function accessStyle(level: string) {
   return "bg-slate-500/10 text-slate-600 border-slate-500/20 dark:text-slate-300";
 }
 
-/* ── onboarding badge ────────────────────────────────────────────────── */
+/* â”€â”€ onboarding badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function OnboardBadge({ status }: { status: string }) {
   const done = status === "Done";
   return (
@@ -85,7 +85,7 @@ function OnboardBadge({ status }: { status: string }) {
   );
 }
 
-/* ── UserCard ─────────────────────────────────────────────────────────── */
+/* â”€â”€ UserCard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function UserCard({ user, onClick }: { user: User; onClick: () => void }) {
   const gradient = getGradient(user.userName || "U");
   const initials = getInitials(user.userName || "U");
@@ -98,7 +98,7 @@ function UserCard({ user, onClick }: { user: User; onClick: () => void }) {
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
       onClick={onClick}
-      className="group relative cursor-pointer overflow-hidden rounded-2xl border border-white/40 bg-white/60 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/30 hover:shadow-[0_20px_40px_rgba(79,70,229,0.08)] dark:border-slate-800/60 dark:bg-slate-900/60"
+      className="glass-card group relative cursor-pointer overflow-hidden p-5 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)]"
     >
       {/* Fluent border overlay glow */}
       <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${gradient} opacity-80 group-hover:opacity-100 transition-opacity`} />
@@ -108,47 +108,47 @@ function UserCard({ user, onClick }: { user: User; onClick: () => void }) {
         {/* Profile Avatar */}
         <div className="relative shrink-0">
           <div
-            className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-sm font-black text-white shadow-md ring-2 ring-white/80 dark:ring-slate-800`}
+            className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-sm font-black text-white shadow-md ring-2 ring-white/80 dark:ring-secondary/30`}
           >
             {initials}
           </div>
-          <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-white bg-emerald-500 dark:border-slate-900">
+          <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 border-white bg-emerald-500 dark:border-background">
             <span className="absolute h-2 w-2 animate-ping rounded-full bg-emerald-400 opacity-75" />
           </span>
         </div>
 
         {/* User Identifiers */}
         <div className="min-w-0 flex-1">
-          <p className="truncate text-base font-extrabold text-slate-800 tracking-tight dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+          <p className="truncate text-base font-extrabold text-foreground tracking-tight group-hover:text-primary transition-colors">
             {user.userName || "Unnamed"}
           </p>
-          <p className="mt-0.5 truncate text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+          <p className="mt-0.5 truncate text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
             {user.department || "No department"}
           </p>
         </div>
 
         <ChevronRight
           size={16}
-          className="mt-1 shrink-0 text-slate-300 transition-all duration-300 group-hover:translate-x-1 group-hover:text-indigo-500"
+          className="mt-1 shrink-0 text-muted-foreground/60 transition-all duration-300 group-hover:translate-x-1 group-hover:text-primary"
         />
       </div>
 
       {/* Access Details / Roles snippet */}
       <div className="mb-4">
-        <p className="line-clamp-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400 h-8 font-medium">
+        <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground h-8 font-medium">
           {user.roles || "No detailed roles assigned."}
         </p>
       </div>
 
       {/* Communication Quick Actions */}
-      <div className="mb-4 flex flex-col gap-1.5 border-t border-slate-100/50 pt-3 dark:border-slate-800/50">
+      <div className="mb-4 flex flex-col gap-1.5 border-t border-secondary/20 pt-3">
         {user.email && (
           <a
             href={`mailto:${user.email}`}
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-2 rounded-lg bg-indigo-50/30 px-2.5 py-2 text-[11px] font-bold text-slate-600 transition-all hover:bg-indigo-500/10 hover:text-indigo-600 dark:bg-slate-800/30 dark:text-slate-400 dark:hover:text-indigo-400"
+            className="flex items-center gap-2 rounded-lg bg-secondary/10 px-2.5 py-2 text-[11px] font-bold text-muted-foreground transition-all hover:bg-primary/10 hover:text-primary"
           >
-            <Mail size={13} className="text-indigo-500" />
+            <Mail size={13} className="text-muted-foreground" />
             <span className="truncate">{user.email}</span>
           </a>
         )}
@@ -156,16 +156,16 @@ function UserCard({ user, onClick }: { user: User; onClick: () => void }) {
           <a
             href={`tel:${user.phone}`}
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-2 rounded-lg bg-emerald-50/30 px-2.5 py-2 text-[11px] font-bold text-slate-600 transition-all hover:bg-emerald-500/10 hover:text-emerald-600 dark:bg-slate-800/30 dark:text-slate-400 dark:hover:text-emerald-400"
+            className="flex items-center gap-2 rounded-lg bg-success/10 px-2.5 py-2 text-[11px] font-bold text-muted-foreground transition-all hover:bg-success/20 hover:text-success"
           >
-            <Phone size={13} className="text-emerald-500" />
+            <Phone size={13} className="text-success" />
             <span className="truncate">{user.phone}</span>
           </a>
         )}
       </div>
 
       {/* Footer Badges */}
-      <div className="flex flex-wrap items-center gap-1.5 border-t border-slate-100/50 pt-3 dark:border-slate-800/50">
+      <div className="flex flex-wrap items-center gap-1.5 border-t border-secondary/20 pt-3">
         {user.accessLevel && (
           <span className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${accessStyle(user.accessLevel)}`}>
             {user.accessLevel}
@@ -184,7 +184,7 @@ function UserCard({ user, onClick }: { user: User; onClick: () => void }) {
   );
 }
 
-/* ── UserTableRow ─────────────────────────────────────────────────────── */
+/* â”€â”€ UserTableRow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function UserTableRow({
   user,
   index,
@@ -202,9 +202,9 @@ function UserTableRow({
   return (
     <tr
       onClick={onClick}
-      className="group cursor-pointer border-b border-slate-100/50 transition-colors hover:bg-indigo-50/20 dark:border-slate-800/50 dark:hover:bg-slate-800/25"
+      className="group cursor-pointer border-b border-secondary/15 transition-colors hover:bg-primary/5"
     >
-      <td className="px-6 py-4 font-mono text-[11px] font-bold text-slate-400">{String(index + 1).padStart(2, "0")}</td>
+      <td className="px-6 py-4 font-mono text-[11px] font-bold text-muted-foreground">{String(index + 1).padStart(2, "0")}</td>
       <td className="px-6 py-4">
         <div className="flex items-center gap-3">
           <div
@@ -213,22 +213,22 @@ function UserTableRow({
             {initials}
           </div>
           <div>
-            <p className="text-sm font-extrabold text-slate-800 tracking-tight dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+            <p className="text-sm font-extrabold text-foreground tracking-tight group-hover:text-primary transition-colors">
               {user.userName || "Unnamed"}
             </p>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">{user.department || "—"}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">{user.department || "â€”"}</p>
           </div>
         </div>
       </td>
       <td className="px-6 py-4">
         <div className="flex flex-col gap-1">
           {user.email && (
-            <span className="flex items-center gap-1.5 text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
-              <Mail size={12} className="text-indigo-500" /> {user.email}
+            <span className="flex items-center gap-1.5 text-[11px] font-bold text-primary">
+              <Mail size={12} className="text-muted-foreground" /> {user.email}
             </span>
           )}
           {user.phone && (
-            <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
               <Phone size={12} className="text-emerald-500" /> {user.phone}
             </span>
           )}
@@ -236,7 +236,7 @@ function UserTableRow({
       </td>
       <td className="px-6 py-4">
         {type === "management" ? (
-          <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{user.department || "—"}</span>
+          <span className="text-xs font-semibold text-muted-foreground">{user.department || "â€”"}</span>
         ) : (
           <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-700 dark:text-sky-300">
             {user.region || "Unassigned"}
@@ -249,17 +249,17 @@ function UserTableRow({
             {user.accessLevel || "N/A"}
           </span>
         ) : (
-          <span className="text-sm font-black text-slate-800 dark:text-slate-200">{user.sites || "0"}</span>
+          <span className="text-sm font-black text-foreground">{user.sites || "0"}</span>
         )}
       </td>
       <td className="px-6 py-4">
         <OnboardBadge status={user.reonOnboarding || "Pending"} />
       </td>
       {type === "management" && (
-        <td className="max-w-[240px] truncate px-6 py-4 text-xs font-medium text-slate-500 dark:text-slate-400">{user.roles || "—"}</td>
+        <td className="max-w-[240px] truncate px-6 py-4 text-xs font-medium text-muted-foreground">{user.roles || "â€”"}</td>
       )}
       <td className="px-6 py-4 text-right">
-        <button className="rounded-lg bg-slate-100 p-1.5 text-slate-400 opacity-0 transition-all hover:bg-indigo-50 hover:text-indigo-600 group-hover:opacity-100 dark:bg-slate-800 dark:hover:bg-slate-700">
+        <button className="rounded-lg bg-secondary/15 p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100">
           <Eye size={14} />
         </button>
       </td>
@@ -267,7 +267,7 @@ function UserTableRow({
   );
 }
 
-/* ── main component ────────────────────────────────────────────────────── */
+/* â”€â”€ main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const UsersView = () => {
   const [search, setSearch] = useState("");
   const [view, setView] = useState<"cards" | "table">("cards");
@@ -376,15 +376,15 @@ const UsersView = () => {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="overflow-hidden rounded-2xl border border-white/40 bg-white/40 shadow-sm backdrop-blur-xl dark:border-slate-800/60 dark:bg-slate-900/40"
+      className="glass-section"
     >
       {/* section header */}
-      <div className="flex flex-col gap-3 border-b border-slate-100/50 bg-gradient-to-r from-slate-50/50 to-white/50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800/50 dark:from-slate-900/30 dark:to-slate-900/10">
+      <div className="flex flex-col gap-3 border-b border-secondary/15 bg-card/30 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-base font-extrabold text-slate-800 tracking-tight dark:text-slate-200">{title}</h3>
-          <p className="mt-0.5 text-xs font-semibold text-slate-400">{desc}</p>
+          <h3 className="text-base font-extrabold text-foreground tracking-tight">{title}</h3>
+          <p className="mt-0.5 text-xs font-semibold text-muted-foreground">{desc}</p>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/5 px-3 py-1 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-bold text-primary">
           <Sparkles size={11} className="animate-pulse" />
           {users.length} members
         </span>
@@ -399,7 +399,7 @@ const UsersView = () => {
             ))}
           </AnimatePresence>
           {users.length === 0 && (
-            <div className="col-span-full py-16 text-center text-sm font-semibold text-slate-400">No users match the current search.</div>
+            <div className="col-span-full py-16 text-center text-sm font-semibold text-muted-foreground">No users match the current search.</div>
           )}
         </div>
       ) : (
@@ -407,9 +407,9 @@ const UsersView = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-100/50 bg-slate-50/50 dark:border-slate-800/50 dark:bg-slate-900/30">
+              <tr className="border-b border-secondary/15 bg-card/25">
                 {["#", "Member Name", "Contact Matrix", type === "management" ? "Management Department" : "Primary Region", type === "management" ? "Access Clear" : "Assigned Sites", "REON", ...(type === "management" ? ["Roles Scope"] : []), ""].map((h) => (
-                  <th key={h} className="whitespace-nowrap px-6 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  <th key={h} className="whitespace-nowrap px-6 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     {h}
                   </th>
                 ))}
@@ -421,7 +421,7 @@ const UsersView = () => {
               ))}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={type === "management" ? 8 : 7} className="py-16 text-center text-sm font-semibold text-slate-400">
+                  <td colSpan={type === "management" ? 8 : 7} className="py-16 text-center text-sm font-semibold text-muted-foreground">
                     No users match the current search.
                   </td>
                 </tr>
@@ -443,26 +443,26 @@ const UsersView = () => {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {isSyncing && (
-            <Badge variant="outline" className="gap-1.5 border-indigo-200 bg-indigo-50/80 text-indigo-600 dark:border-indigo-800/30 dark:bg-indigo-900/30 dark:text-indigo-400">
-              <Cloud size={12} className="animate-bounce text-indigo-500" /> Active Sync
+            <Badge variant="outline" className="gap-1.5 border-primary/20 bg-primary/10 text-primary">
+              <Cloud size={12} className="animate-bounce text-primary" /> Active Sync
             </Badge>
           )}
           {isError && (
-            <Badge variant="outline" className="border-rose-200 bg-rose-50 text-rose-600 dark:border-rose-800/30 dark:bg-rose-900/30 dark:text-rose-400">
+            <Badge variant="outline" className="border-destructive/20 bg-destructive/10 text-destructive">
               Local Mode Enabled
             </Badge>
           )}
           
           {/* Frosted View toggle controls */}
-          <div className="flex items-center rounded-xl border border-slate-200 bg-slate-100/60 p-1 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="flex items-center rounded-xl border border-secondary/20 bg-card/40 p-1 backdrop-blur-md">
             {(["cards", "table"] as const).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
                 className={`rounded-lg px-3 py-1.5 text-xs font-bold capitalize transition-all ${
                   view === v
-                    ? "bg-white text-slate-800 shadow-sm dark:bg-slate-800 dark:text-white"
-                    : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {v}
@@ -473,7 +473,7 @@ const UsersView = () => {
           {canEdit && (
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-indigo-700 hover:shadow-indigo-500/20 active:scale-95"
+              className="primary-button flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold shadow-md transition-all hover:shadow-primary/20 active:scale-95"
             >
               <UserPlus size={14} />
               Add Member
@@ -482,12 +482,12 @@ const UsersView = () => {
 
           {/* Elegant Frosted Search Bar */}
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search team member…"
+              placeholder="Search team memberâ€¦"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-9 w-60 rounded-xl border-slate-200 bg-white/60 pl-9 text-xs font-semibold shadow-sm placeholder:text-slate-400 backdrop-blur-md focus:border-indigo-400 focus:ring-indigo-100 dark:border-slate-800 dark:bg-slate-900/60 dark:placeholder:text-slate-500"
+              className="glass-input h-9 w-60 rounded-xl pl-9 text-xs font-semibold"
             />
           </div>
         </div>

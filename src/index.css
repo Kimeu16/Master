@@ -7,57 +7,56 @@
 
 @layer base {
   :root {
-    /* World-Class Enterprise Palette: Crisp, elite, highly optimized contrast */
-    --background: 215 32% 98%;
-    --foreground: 224 47% 11%;
+    /* Light Mode — pure crisp white, deep navy text, strong contrast */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 224 47% 11%;
+    --card-foreground: 222 47% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 224 47% 11%;
+    --popover-foreground: 222 47% 10%;
 
-    /* Upgraded Cobalt-Indigo gradient core */
     --primary: 224 86% 53%;
-    --primary-foreground: 210 20% 98%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 215 25% 95%;
-    --secondary-foreground: 224 47% 11%;
+    --secondary: 220 20% 94%;
+    --secondary-foreground: 222 47% 10%;
 
-    --muted: 215 20% 94%;
-    --muted-foreground: 219 16% 46%;
+    --muted: 220 18% 92%;
+    --muted-foreground: 220 13% 44%;
 
-    /* Deep Emerald/Teal Operations accent */
-    --accent: 172 80% 32%;
-    --accent-foreground: 210 20% 98%;
+    --accent: 172 80% 30%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 348 84% 54%;
-    --destructive-foreground: 210 20% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 218 20% 90%;
-    --input: 218 20% 90%;
+    --border: 220 16% 88%;
+    --input: 220 16% 88%;
     --ring: 224 86% 53%;
 
-    --radius: 0.75rem; /* Smoother, more modern rounded corners */
+    --radius: 0.75rem;
 
-    --sidebar-background: 215 32% 98.5%;
-    --sidebar-foreground: 224 47% 11%;
+    --sidebar-background: 220 24% 98%;
+    --sidebar-foreground: 222 47% 10%;
     --sidebar-primary: 224 86% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 25% 94%;
-    --sidebar-accent-foreground: 224 47% 11%;
-    --sidebar-border: 218 16% 91%;
+    --sidebar-accent: 220 20% 93%;
+    --sidebar-accent-foreground: 222 47% 10%;
+    --sidebar-border: 220 16% 88%;
     --sidebar-ring: 224 86% 53%;
 
-    --success: 152 76% 30%;
-    --success-foreground: 210 20% 98%;
-    --warning: 38 92% 46%;
-    --warning-foreground: 210 20% 98%;
-    --info: 200 95% 44%;
-    --info-foreground: 210 20% 98%;
+    --success: 152 76% 28%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 40%;
+    --warning-foreground: 0 0% 100%;
+    --info: 200 95% 40%;
+    --info-foreground: 0 0% 100%;
   }
 
   .dark {
+    /* Dark Mode — deep navy, proper dark theme */
     --background: 222 47% 6%;
     --foreground: 210 20% 98%;
 
@@ -109,15 +108,16 @@
   }
   body {
     @apply bg-background text-foreground font-body antialiased;
-    /* Soft premium mesh background effect */
+    /* Light mode — pure white with subtle blue tint */
     background-image: 
-      radial-gradient(at 100% 0%, hsla(224, 86%, 53%, 0.05) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, hsla(172, 80%, 32%, 0.03) 0px, transparent 50%),
-      linear-gradient(180deg, hsl(215 32% 98%) 0%, hsl(215 24% 96%) 100%);
+      radial-gradient(at 100% 0%, hsla(224, 86%, 53%, 0.06) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(172, 80%, 32%, 0.04) 0px, transparent 50%),
+      linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 20% 97%) 100%);
     background-attachment: fixed;
     min-height: 100vh;
   }
   .dark body {
+    /* Dark mode — deep navy gradient */
     background-image: 
       radial-gradient(at 100% 0%, hsla(224, 86%, 58%, 0.08) 0px, transparent 50%),
       radial-gradient(at 0% 100%, hsla(172, 80%, 40%, 0.04) 0px, transparent 50%),
@@ -131,11 +131,17 @@
 @layer components {
   /* High-end Acrylic Glass Panels - inspired by Microsoft Fluent and Apple design */
   .glass {
-    @apply bg-white/75 backdrop-blur-xl border border-white/60 shadow-[0_4px_30px_rgba(0,0,0,0.03)];
+    @apply bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-slate-200/60 dark:border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.04)] dark:shadow-2xl;
   }
   
+  /* Theme-aware dark panel: deep navy in dark mode, crisp white-tinted in light mode */
   .glass-dark {
-    @apply bg-zinc-950/80 backdrop-blur-xl border border-white/5 shadow-2xl;
+    @apply bg-slate-800/90 dark:bg-zinc-950/80 backdrop-blur-xl border border-slate-700/50 dark:border-white/5 shadow-2xl;
+  }
+
+  /* Sidebar: always dark regardless of theme (brand consistency) */
+  .sidebar-panel {
+    @apply bg-slate-900 dark:bg-zinc-950/90 backdrop-blur-xl border-r border-slate-800/60 dark:border-white/5;
   }
 
   /* Microsoft-Fluent card with ambient light shading and elegant scaling transition */
@@ -167,6 +173,31 @@
 
   .surface-panel {
     @apply bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border border-white/70 dark:border-white/5 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.01),0_16px_36px_rgba(15,23,42,0.02)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.15)];
+  }
+
+  /* Acrylic Glass Card — premium translucent card surface */
+  .glass-card {
+    @apply bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border border-white/60 dark:border-white/[0.06] rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.25)] transition-all duration-300;
+  }
+
+  /* Acrylic Glass Input — frosted text input */
+  .glass-input {
+    @apply bg-white/60 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-700/60 text-foreground placeholder:text-muted-foreground/60 shadow-sm backdrop-blur-md transition-all duration-200 focus:border-primary/40 focus:ring-2 focus:ring-primary/15 focus:outline-none;
+  }
+
+  /* Acrylic Glass Section — full-width frosted section wrapper */
+  .glass-section {
+    @apply bg-white/70 dark:bg-slate-900/40 backdrop-blur-xl border border-white/60 dark:border-white/[0.06] rounded-2xl shadow-[0_1px_8px_rgba(0,0,0,0.03)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.2)] overflow-hidden;
+  }
+
+  /* Acrylic Glass Toolbar — thin frosted action bar */
+  .glass-toolbar {
+    @apply bg-white/70 dark:bg-slate-900/50 backdrop-blur-xl border border-white/60 dark:border-white/[0.06] rounded-2xl shadow-[0_1px_6px_rgba(0,0,0,0.03)] dark:shadow-[0_2px_16px_rgba(0,0,0,0.2)];
+  }
+
+  /* Acrylic Glass Panel — dropdown / floating panel */
+  .glass-panel {
+    @apply bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-white/70 dark:border-white/[0.08] rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.35)];
   }
 
   /* State-of-the-art Interactive Buttons with click compression */

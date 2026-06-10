@@ -55,12 +55,52 @@ const setupDb = async () => {
       }
     };
 
+    const ensureColumnType = async (tableName: string, columnName: string, definition: string) => {
+      const [rows] = await pool.query(
+        `
+          SELECT DATA_TYPE, CHARACTER_MAXIMUM_LENGTH
+          FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?
+        `,
+        [databaseName, tableName, columnName]
+      );
+      const [column] = rows as Array<{ DATA_TYPE: string; CHARACTER_MAXIMUM_LENGTH: number | null }>;
+
+      if (!column) {
+        await pool.query(`ALTER TABLE \`${tableName}\` ADD COLUMN \`${columnName}\` ${definition}`);
+        console.log(`Added ${tableName}.${columnName}.`);
+        return;
+      }
+
+      const currentType = column.DATA_TYPE?.toLowerCase() ?? '';
+      const desiredType = definition.trim().split(/\s+/)[0].toLowerCase();
+      if (!currentType.includes(desiredType)) {
+        const cleanDefinition = definition.replace(/PRIMARY\s+KEY/i, '');
+        await pool.query(`ALTER TABLE \`${tableName}\` MODIFY COLUMN \`${columnName}\` ${cleanDefinition}`);
+        console.log(`Upgraded ${tableName}.${columnName} to ${cleanDefinition.trim()}.`);
+      }
+    };
+
     for (const tableName of ['pm_checklists', 'fueling_checklists', 'cm_checklists']) {
       await ensureColumn(tableName, 'response', 'VARCHAR(255)');
       await ensureColumn(tableName, 'comments', 'TEXT');
     }
 
-    await ensureColumn('users', 'rbac_role', "ENUM('Read-Only', 'CRUD', 'Admin') DEFAULT 'Read-Only'");
+    await ensureColumnType('sites', 'no', 'VARCHAR(50) PRIMARY KEY');
+    await ensureColumnType('sites', 'ip_address', 'VARCHAR(45)');
+    await ensureColumnType('sites', 'latitude', 'DECIMAL(10,7)');
+    await ensureColumnType('sites', 'longitude', 'DECIMAL(10,7)');
+    await ensureColumnType('sites', 'on_air_date', 'DATE');
+    await ensureColumnType('sites', 'dc_meter_installation_date', 'DATE');
+    await ensureColumnType('sites', 'priority', 'TINYINT');
+
+    await ensureColumnType('users', 'no', 'VARCHAR(50) PRIMARY KEY');
+    await ensureColumnType('users', 'user_name', 'VARCHAR(100)');
+    await ensureColumnType('users', 'email', 'VARCHAR(100)');
+    await ensureColumnType('users', 'phone', 'VARCHAR(50)');
+    await ensureColumnType('users', 'access_level', 'VARCHAR(100)');
+    await ensureColumnType('users', 'region', 'VARCHAR(100)');
+    await ensureColumnType('users', 'rbac_role', "ENUM('Read-Only', 'CRUD', 'Admin') DEFAULT 'Read-Only'");
 
     console.log('Seeding initial RBAC roles for users...');
     await pool.query(`

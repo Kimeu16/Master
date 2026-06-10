@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { User as UserType } from "@/types/site";
 import { X, User, Edit3, Check, RotateCcw, Shield, MapPin, Briefcase, Mail, Phone, Calendar, Bookmark, HelpCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -39,9 +39,9 @@ function getInitials(name: string) {
 }
 
 const Section = ({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) => (
-  <div className="mb-6 rounded-2xl border border-white/20 bg-white/40 p-5 shadow-sm dark:border-slate-800/40 dark:bg-slate-900/40">
-    <h4 className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-      <Icon size={14} className="text-indigo-500" />
+  <div className="glass-card rounded-2xl p-5">
+    <h4 className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-foreground">
+      <Icon size={14} className="text-primary" />
       {title}
     </h4>
     <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">{children}</div>
@@ -58,16 +58,16 @@ export function UserDetailModal({ user, onClose, onSave, onDelete }: UserDetailM
 
   const renderField = (label: string, value: string, fieldName: keyof UserType) => (
     <div className="space-y-1.5">
-      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</span>
+      <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
       {isEditing ? (
         <Input
           value={formData[fieldName] || ""}
           onChange={(e) => setFormData({ ...formData, [fieldName]: e.target.value })}
-          className="h-9 w-full rounded-xl border-slate-200 bg-white px-3 text-xs font-semibold shadow-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+          className="h-9 w-full rounded-xl border-secondary/30 bg-white/50 dark:bg-primary/30 px-3 text-xs font-semibold shadow-sm focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
         />
       ) : (
-        <p className="min-h-[20px] text-xs font-bold text-slate-800 dark:text-slate-200">
-          {value || <span className="font-medium italic text-slate-400 dark:text-slate-600">Not Assigned</span>}
+        <p className="min-h-[20px] text-xs font-bold text-foreground">
+          {value || <span className="font-medium italic text-muted-foreground">Not Assigned</span>}
         </p>
       )}
     </div>
@@ -81,37 +81,37 @@ export function UserDetailModal({ user, onClose, onSave, onDelete }: UserDetailM
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-xl" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/30 p-4 backdrop-blur-xl" onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-white/40 bg-white/75 shadow-2xl backdrop-blur-2xl dark:border-slate-800/80 dark:bg-slate-900/75"
+        className="glass-panel relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Fluent Top Gradient Glow */}
-        <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${gradient}`} />
+        <div className={`absolute inset-x-0 top-0 h-1 bg-primary`} />
 
         {/* Modal Header */}
-        <div className="flex shrink-0 flex-col gap-4 border-b border-slate-100/50 bg-white/40 p-6 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800/50 dark:bg-slate-900/40">
+        <div className="flex shrink-0 flex-col gap-4 border-b border-secondary/20 bg-white/30 dark:bg-primary/30 backdrop-blur-sm p-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-4">
             <div
-              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} text-lg font-black text-white shadow-md ring-4 ring-white/60 dark:ring-slate-800`}
+              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} text-lg font-black text-white shadow-md ring-4 ring-white/60 dark:ring-secondary/30`}
             >
               {initials}
             </div>
             <div className="min-w-0">
-              <h3 className="truncate text-xl font-black tracking-tight text-slate-800 dark:text-white">{user.userName}</h3>
+              <h3 className="truncate text-xl font-black tracking-tight text-foreground">{user.userName}</h3>
               <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                 <Badge
                   variant="outline"
-                  className="h-5 border-indigo-500/20 bg-indigo-500/5 text-[9px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400"
+                  className="h-5 border-primary/30 bg-primary/10 text-[9px] font-black uppercase tracking-wider text-primary"
                 >
                   {user.accessLevel || "Staff Node"}
                 </Badge>
                 <Badge
                   variant="outline"
-                  className="h-5 border-sky-500/20 bg-sky-500/5 text-[9px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400"
+                  className="h-5 border-secondary/30 bg-secondary/10 text-[9px] font-black uppercase tracking-wider text-muted-foreground"
                 >
                   {user.region || "Global Coverage"}
                 </Badge>
@@ -122,11 +122,11 @@ export function UserDetailModal({ user, onClose, onSave, onDelete }: UserDetailM
           {/* Modal Header Action Panel */}
           <div className="flex items-center gap-2">
             {isDeleting ? (
-               <div className="flex items-center gap-2 rounded-xl bg-rose-50/80 px-3 py-1.5 border border-rose-200 dark:bg-rose-900/20 dark:border-rose-800/30">
+               <div className="flex items-center gap-2 rounded-xl glass-card px-3 py-1.5 border-rose-500/30">
                  <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 mr-2 max-w-[200px] leading-tight">Are you sure you want to delete this user? Once done action cannot be undone.</span>
                  <button
                    onClick={() => setIsDeleting(false)}
-                   className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                   className="control-button"
                  >
                    Cancel
                  </button>
@@ -144,7 +144,7 @@ export function UserDetailModal({ user, onClose, onSave, onDelete }: UserDetailM
                     setFormData(user);
                     setIsEditing(false);
                   }}
-                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-600 shadow-sm transition-all hover:bg-slate-50 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                  className="control-button"
                 >
                   <RotateCcw size={13} /> Cancel
                 </button>

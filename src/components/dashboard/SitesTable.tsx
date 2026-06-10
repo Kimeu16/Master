@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, ReactNode } from "react";
+import { useState, useMemo, useEffect, useRef, memo, ReactNode } from "react";
 import { Site } from "@/types/site";
 import { useSites } from "@/hooks/useSites";
 import { updateSite } from "@/lib/googleSheets";
@@ -34,7 +34,18 @@ import SiteDetailModal from "./SiteDetailModal";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
-/* ── COLUMN PROFILE PRESETS ──────────────────────────────────────────── */
+function useDebouncedValue<T>(value: T, delay = 200) {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedValue(value), delay);
+    return () => window.clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+/* ── COLUMN PROFILE PRESETS ────────────────────────────────────────── */
 type ColumnProfileId = "all" | "network" | "power" | "field";
 
 const COLUMN_PROFILES: Record<ColumnProfileId, { label: string; icon: string; keys: (keyof Site)[] }> = {
@@ -97,7 +108,7 @@ type SortConfig = {
 } | null;
 
 /* ── CAPACITY BAR COMPONENT ────────────────────────────────────────── */
-const CapacityBar = ({ value, max }: { value: string; max: string }) => {
+const CapacityBar = memo(({ value, max }: { value: string; max: string }) => {
   const numVal = parseFloat(value?.replace(/[^0-9.]/g, "") || "");
   const numMax = parseFloat(max?.replace(/[^0-9.]/g, "") || "");
   if (isNaN(numVal) || isNaN(numMax) || numMax === 0) {
@@ -123,10 +134,10 @@ const CapacityBar = ({ value, max }: { value: string; max: string }) => {
       </div>
     </div>
   );
-};
+});
 
 /* ── COORDINATE PIN COMPONENT ──────────────────────────────────────── */
-const CoordinatePin = ({ lat, lng }: { lat: string; lng: string }) => {
+const CoordinatePin = memo(({ lat, lng }: { lat: string; lng: string }) => {
   if (!lat || !lng || lat === "N/A" || lng === "N/A") {
     return <span className="text-slate-400 dark:text-slate-500 italic font-semibold">-</span>;
   }
@@ -143,7 +154,7 @@ const CoordinatePin = ({ lat, lng }: { lat: string; lng: string }) => {
       <ExternalLink size={8} className="opacity-50 ml-0.5" />
     </a>
   );
-};
+});
 
 /* ── ENGINEER AVATAR COMPONENT ─────────────────────────────────────── */
 const getGradient = (name: string) => {
@@ -170,7 +181,7 @@ const getInitials = (name: string) => {
     .join("");
 };
 
-const EngineerAvatar = ({ name, email, phone }: { name: string; email: string; phone: string }) => {
+const EngineerAvatar = memo(({ name, email, phone }: { name: string; email: string; phone: string }) => {
   if (!name || name === "N/A") return <span className="text-slate-400 dark:text-slate-500 font-semibold italic">N/A</span>;
   const gradient = getGradient(name);
   const initials = getInitials(name);
@@ -184,7 +195,7 @@ const EngineerAvatar = ({ name, email, phone }: { name: string; email: string; p
         {initials}
       </div>
       <div className="flex flex-col min-w-0">
-        <span className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate group-hover/avatar:text-indigo-650 dark:group-hover/avatar:text-indigo-400 transition-colors">
+        <span className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate group-hover/avatar:text-primary transition-colors">
           {name}
         </span>
         <div className="flex items-center gap-1.5 opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-200 h-3">
@@ -192,7 +203,7 @@ const EngineerAvatar = ({ name, email, phone }: { name: string; email: string; p
             <a 
               href={`mailto:${email}`} 
               onClick={e => e.stopPropagation()} 
-              className="text-[9px] text-indigo-500 hover:text-indigo-650 dark:text-indigo-400 font-bold hover:underline flex items-center gap-0.5"
+              className="text-[9px] text-indigo-500 hover:text-primary font-bold hover:underline flex items-center gap-0.5"
             >
               <Mail size={8} /> Email
             </a>
@@ -201,7 +212,7 @@ const EngineerAvatar = ({ name, email, phone }: { name: string; email: string; p
             <a 
               href={`tel:${phone}`} 
               onClick={e => e.stopPropagation()} 
-              className="text-[9px] text-emerald-500 hover:text-emerald-650 dark:text-emerald-400 font-bold hover:underline flex items-center gap-0.5"
+              className="text-[9px] text-emerald-500 hover:text-success font-bold hover:underline flex items-center gap-0.5"
             >
               <Phone size={8} /> Call
             </a>
@@ -210,10 +221,10 @@ const EngineerAvatar = ({ name, email, phone }: { name: string; email: string; p
       </div>
     </div>
   );
-};
+});
 
-/* ── KPI CARD SPOTLIGHT COMPONENT ───────────────────────────────────── */
-const KPICard = ({ 
+/* ── KPI CARD SPOTLIGHT COMPONENT ──────────────────────────────────── */
+const KPICard = memo(({ 
   title, 
   value, 
   active, 
@@ -250,10 +261,10 @@ const KPICard = ({
       {icon}
     </div>
   </motion.div>
-);
+));
 
-/* ── SITE CARD GRID VIEW COMPONENT ──────────────────────────────────── */
-const SiteCard = ({ site, onClick }: { site: Site; onClick: () => void }) => {
+/* ── SITE CARD GRID VIEW COMPONENT ─────────────────────────────────── */
+const SiteCard = memo(({ site, onClick }: { site: Site; onClick: () => void }) => {
   const isP1 = site.priority?.replace(".0", "") === "1";
   const isP2 = site.priority?.replace(".0", "") === "2";
   const gradient = isP1 
@@ -266,12 +277,12 @@ const SiteCard = ({ site, onClick }: { site: Site; onClick: () => void }) => {
     if (!comments) return { label: "Unknown", color: "bg-slate-400", bg: "bg-slate-50 border-slate-200/60 text-slate-500" };
     const c = comments.toLowerCase();
     if (c.includes("working") && !c.includes("not working")) {
-      return { label: "Working", color: "bg-emerald-500", bg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-750 dark:bg-emerald-500/5 dark:text-emerald-400 dark:border-emerald-500/10" };
+      return { label: "Working", color: "bg-emerald-500", bg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:bg-emerald-500/5 dark:text-emerald-400 dark:border-emerald-500/10" };
     }
     if (c.includes("not working") || c.includes("faulty")) {
-      return { label: "At Risk", color: "bg-rose-500", bg: "bg-rose-500/10 border-rose-500/20 text-rose-600 dark:bg-rose-500/5 dark:text-rose-450 dark:border-rose-500/10" };
+      return { label: "At Risk", color: "bg-rose-500", bg: "bg-rose-500/10 border-rose-500/20 text-rose-700 dark:bg-rose-500/5 dark:text-rose-400 dark:border-rose-500/10" };
     }
-    return { label: "Monitoring", color: "bg-amber-500", bg: "bg-amber-500/10 border-amber-500/20 text-amber-705 dark:bg-amber-500/5 dark:text-amber-400 dark:border-amber-500/10" };
+    return { label: "Monitoring", color: "bg-amber-500", bg: "bg-amber-500/10 border-amber-500/20 text-amber-700 dark:bg-amber-500/5 dark:text-amber-400 dark:border-amber-500/10" };
   };
 
   const status = getCardStatus(site.comments);
@@ -282,13 +293,13 @@ const SiteCard = ({ site, onClick }: { site: Site; onClick: () => void }) => {
       whileHover={{ y: -4, scale: 1.015, boxShadow: "0 20px 40px -15px rgba(0,0,0,0.06)" }}
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
       onClick={onClick}
-      className="group relative cursor-pointer overflow-hidden rounded-3xl border border-white/50 bg-white/70 p-6 shadow-[0_4px_24px_rgba(0,0,0,0.02)] backdrop-blur-xl transition-all duration-350 hover:border-indigo-500/35 hover:shadow-[0_20px_50px_rgba(99,102,241,0.06)] dark:border-slate-800/60 dark:bg-slate-900/60"
+      className="glass-card group relative cursor-pointer overflow-hidden rounded-3xl p-6 transition-all duration-300 hover:border-primary/30 hover:shadow-[0_20px_50px_rgba(8,3,63,0.08)]"
     >
       <div className={cn("absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r", gradient)} />
       
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="min-w-0 flex-1">
-          <h4 className="text-sm font-black text-slate-850 dark:text-slate-200 truncate group-hover:text-indigo-605 transition-colors uppercase tracking-wide">
+          <h4 className="text-sm font-black text-slate-800 dark:text-slate-200 truncate group-hover:text-primary transition-colors uppercase tracking-wide">
             {site.siteName}
           </h4>
           <div className="flex items-center gap-2 mt-1">
@@ -309,14 +320,14 @@ const SiteCard = ({ site, onClick }: { site: Site; onClick: () => void }) => {
       </div>
 
       <div className="flex flex-wrap gap-1.5 mb-4">
-        <span className="font-mono text-[9px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg px-2.5 py-0.5 border border-slate-200/50 dark:border-slate-700/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
+        <span className="rounded-lg border border-secondary/20 bg-card/50 px-2.5 py-0.5 font-mono text-[9px] font-extrabold text-muted-foreground shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] backdrop-blur-sm">
           {site.ipAddress || "0.0.0.0"}
         </span>
-        <span className="text-[9px] font-black bg-indigo-500/10 dark:bg-indigo-500/5 text-indigo-600 dark:text-indigo-450 rounded-lg px-2.5 py-0.5 border border-indigo-500/10 dark:border-indigo-500/5 uppercase tracking-wider">
+        <span className="text-[9px] font-black bg-indigo-500/10 dark:bg-indigo-500/5 text-indigo-600 dark:text-indigo-400 rounded-lg px-2.5 py-0.5 border border-indigo-500/10 dark:border-indigo-500/5 uppercase tracking-wider">
           {site.region}
         </span>
         {site.reonIntegration === "Integrated" && (
-          <span className="text-[9px] font-black bg-emerald-500/10 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-450 rounded-lg px-2.5 py-0.5 border border-emerald-500/10 dark:border-emerald-500/5 uppercase tracking-wider">
+          <span className="text-[9px] font-black bg-emerald-500/10 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 rounded-lg px-2.5 py-0.5 border border-emerald-500/10 dark:border-emerald-500/5 uppercase tracking-wider">
             REON
           </span>
         )}
@@ -367,17 +378,17 @@ const SiteCard = ({ site, onClick }: { site: Site; onClick: () => void }) => {
             phone={site.fieldEngineerPhone} 
           />
         </div>
-        <button className="h-8 w-8 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/20 hover:bg-indigo-650 hover:text-white dark:hover:bg-indigo-600 dark:hover:text-white text-indigo-600 flex items-center justify-center shadow-sm active:scale-95 transition-all" aria-label="Open site details">
+        <button className="h-8 w-8 rounded-xl bg-indigo-50/50 hover:bg-primary hover:text-primary-foreground text-indigo-600 flex items-center justify-center shadow-sm active:scale-95 transition-all" aria-label="Open site details">
           <Eye size={14} />
         </button>
       </div>
     </motion.div>
   );
-};
+});
 
-/* ── MAIN SITES TABLE MODULE ────────────────────────────────────────── */
+/* ── MAIN SITES TABLE MODULE ───────────────────────────────────────── */
 const SitesTable = () => {
-  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [page, setPage] = useState(0);
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
   const [regionFilter, setRegionFilter] = useState("");
@@ -388,7 +399,25 @@ const SitesTable = () => {
   const [kpiFilter, setKpiFilter] = useState<"all" | "critical" | "at-risk" | "integrated">("all");
   const [columnProfile, setColumnProfile] = useState<ColumnProfileId>("all");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [rawColumnFilters, setRawColumnFilters] = useState<Record<string, string>>({});
   const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  const search = useDebouncedValue(searchInput, 180);
+  const columnFilters = useDebouncedValue(rawColumnFilters, 220);
+
+  const clearAllFilters = () => {
+    setSearchInput("");
+    setRegionFilter("");
+    setRawColumnFilters({});
+    setKpiFilter("all");
+    setPage(0);
+  };
+
+  const activeFilterCount = useMemo(() => {
+    const columnCount = Object.values(rawColumnFilters).filter(Boolean).length;
+    return [searchInput, regionFilter, kpiFilter !== "all" ? "active" : "", columnCount ? String(columnCount) : ""]
+      .filter(Boolean).length;
+  }, [searchInput, regionFilter, kpiFilter, rawColumnFilters]);
 
   /* close profile menu on outside click */
   useEffect(() => {
@@ -470,6 +499,11 @@ const SitesTable = () => {
     return Array.from(r).sort();
   }, [sitesData]);
 
+  const siteTypeOptions = useMemo(() => {
+    const types = new Set(sitesData.map((s) => s.siteType).filter(Boolean));
+    return Array.from(types).sort();
+  }, [sitesData]);
+
   const filteredData = useMemo(() => {
     let data = sitesData;
 
@@ -501,6 +535,18 @@ const SitesTable = () => {
     if (regionFilter) {
       data = data.filter((s) => s.region === regionFilter);
     }
+
+    // Apply column-level filters
+    Object.entries(columnFilters).forEach(([key, filterValue]) => {
+      if (filterValue && filterValue.trim()) {
+        const lowerFilter = filterValue.toLowerCase();
+        data = data.filter(site => {
+          const cellValue = String(site[key as keyof Site] || "").toLowerCase();
+          return cellValue.includes(lowerFilter);
+        });
+      }
+    });
+
     if (sortConfig) {
       data = [...data].sort((a, b) => {
         const aVal = String(a[sortConfig.key] || "");
@@ -511,7 +557,11 @@ const SitesTable = () => {
       });
     }
     return data;
-  }, [search, sortConfig, regionFilter, sitesData, kpiFilter]);
+  }, [search, sortConfig, regionFilter, sitesData, kpiFilter, columnFilters]);
+
+  useEffect(() => {
+    setPage(0);
+  }, [search, regionFilter, kpiFilter, columnFilters]);
 
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
   const safeTotalPages = Math.max(1, totalPages);
@@ -533,11 +583,11 @@ const SitesTable = () => {
   };
 
   const SortIcon = ({ column }: { column: keyof Site }) => {
-    if (sortConfig?.key !== column) return <ChevronUp size={12} className="text-slate-405/50 transition-colors group-hover:text-slate-300" />;
+    if (sortConfig?.key !== column) return <ChevronUp size={12} className="text-slate-400 dark:text-slate-500 transition-colors group-hover:text-slate-600 dark:group-hover:text-slate-300" />;
     return sortConfig.direction === "asc" ? (
-      <ChevronUp size={12} className="text-indigo-400 font-bold animate-bounce" />
+      <ChevronUp size={12} className="text-primary font-bold animate-bounce" />
     ) : (
-      <ChevronDown size={12} className="text-indigo-400 font-bold animate-bounce" />
+      <ChevronDown size={12} className="text-primary font-bold animate-bounce" />
     );
   };
 
@@ -546,33 +596,33 @@ const SitesTable = () => {
     switch (p) {
       case "1":
         return (
-          <Badge className="bg-rose-500/10 hover:bg-rose-500/15 text-rose-600 border border-rose-500/20 font-extrabold text-[9px] px-2.5 py-0.5 rounded-full tracking-wider shadow-sm">
+          <Badge className="bg-rose-500/10 hover:bg-rose-500/15 text-rose-700 dark:text-rose-450 border border-rose-500/20 font-extrabold text-[9px] px-2.5 py-0.5 rounded-full tracking-wider shadow-sm">
             CRITICAL P1
           </Badge>
         );
       case "2":
         return (
-          <Badge className="bg-amber-500/10 hover:bg-amber-500/15 text-amber-700 border border-amber-500/20 font-extrabold text-[9px] px-2.5 py-0.5 rounded-full tracking-wider shadow-sm">
+          <Badge className="bg-amber-500/10 hover:bg-amber-500/15 text-amber-705 dark:text-amber-400 border border-amber-500/20 font-extrabold text-[9px] px-2.5 py-0.5 rounded-full tracking-wider shadow-sm">
             HIGH P2
           </Badge>
         );
       case "3":
         return (
-          <Badge className="bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-700 border border-emerald-500/20 font-extrabold text-[9px] px-2.5 py-0.5 rounded-full tracking-wider shadow-sm">
+          <Badge className="bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-705 dark:text-emerald-400 border border-emerald-500/20 font-extrabold text-[9px] px-2.5 py-0.5 rounded-full tracking-wider shadow-sm">
             NORMAL P3
           </Badge>
         );
       default:
-        return <Badge variant="outline" className="text-[9px] border-slate-200 text-slate-400 font-semibold px-2.5 py-0.5 rounded-full">N/A</Badge>;
+        return <Badge variant="outline" className="text-[9px] border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 font-semibold px-2.5 py-0.5 rounded-full">N/A</Badge>;
     }
   };
 
   const getStatusBadge = (comments: string) => {
-    if (!comments) return <Badge variant="outline" className="text-[9px] border-slate-205 text-slate-400 font-semibold px-2 py-0.5 rounded-full">Unknown</Badge>;
+    if (!comments) return <Badge variant="outline" className="text-[9px] border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 font-semibold px-2 py-0.5 rounded-full">Unknown</Badge>;
     const c = comments.toLowerCase();
     if (c.includes("working") && !c.includes("not working")) {
       return (
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 text-[10px] font-black text-emerald-700 shadow-sm dark:bg-emerald-500/5 dark:text-emerald-450">
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 text-[10px] font-black text-emerald-700 shadow-sm dark:bg-emerald-500/5 dark:text-emerald-400">
           <span className="relative flex h-1.5 w-1.5">
             <span className="pulse-glow absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-600"></span>
@@ -583,7 +633,7 @@ const SitesTable = () => {
     }
     if (c.includes("not working") || c.includes("faulty")) {
       return (
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 text-[10px] font-black text-rose-600 shadow-sm dark:bg-rose-500/5 dark:text-rose-450">
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 text-[10px] font-black text-rose-700 shadow-sm dark:bg-rose-500/5 dark:text-rose-400">
           <span className="relative flex h-1.5 w-1.5">
             <span className="pulse-glow absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-600"></span>
@@ -593,12 +643,126 @@ const SitesTable = () => {
       );
     }
     return (
-      <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 text-[10px] font-black text-amber-700 shadow-sm dark:bg-amber-500/5 dark:text-amber-400">
+      <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 text-[10px] font-black text-amber-700 dark:text-amber-400 shadow-sm dark:bg-amber-500/5">
         <span className="relative flex h-1.5 w-1.5">
           <span className="pulse-glow absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
           <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-600"></span>
         </span>
         Monitoring
+      </div>
+    );
+  };
+
+  const renderFilterInput = (colKey: keyof Site) => {
+    const filterValue = rawColumnFilters[colKey as string] || "";
+    const setFilterValue = (value: string) => {
+      setRawColumnFilters((prev) => ({
+        ...prev,
+        [colKey]: value,
+      }));
+    };
+
+    const clearFilter = () => setFilterValue("");
+
+    if (colKey === "priority") {
+      return (
+        <div className="relative">
+          <select
+            value={filterValue}
+            onChange={(e) => setFilterValue(e.target.value)}
+            className="w-full h-7 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-205 text-[10px] px-2 pr-8 outline-none transition-all hover:border-slate-300 dark:hover:border-slate-700 focus:border-primary focus:ring-1 focus:ring-primary/30"
+          >
+            <option value="" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">All Priorities</option>
+            <option value="1" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">P1</option>
+            <option value="2" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">P2</option>
+            <option value="3" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">P3</option>
+          </select>
+          {filterValue && (
+            <button
+              onClick={clearFilter}
+              type="button"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              aria-label="Clear priority filter"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    if (colKey === "reonIntegration") {
+      return (
+        <div className="relative">
+          <select
+            value={filterValue}
+            onChange={(e) => setFilterValue(e.target.value)}
+            className="w-full h-7 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-205 text-[10px] px-2 pr-8 outline-none transition-all hover:border-slate-300 dark:hover:border-slate-700 focus:border-primary focus:ring-1 focus:ring-primary/30"
+          >
+            <option value="" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">All REON Status</option>
+            <option value="Integrated" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Integrated</option>
+            <option value="Legacy" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Legacy</option>
+          </select>
+          {filterValue && (
+            <button
+              onClick={clearFilter}
+              type="button"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              aria-label="Clear integration filter"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    if (colKey === "siteType") {
+      return (
+        <div className="relative">
+          <select
+            value={filterValue}
+            onChange={(e) => setFilterValue(e.target.value)}
+            className="w-full h-7 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-205 text-[10px] px-2 pr-8 outline-none transition-all hover:border-slate-300 dark:hover:border-slate-700 focus:border-primary focus:ring-1 focus:ring-primary/30"
+          >
+            <option value="" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">All Site Types</option>
+            {siteTypeOptions.map((type) => (
+              <option key={type} value={type} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">{type}</option>
+            ))}
+          </select>
+          {filterValue && (
+            <button
+              onClick={clearFilter}
+              type="button"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+              aria-label="Clear site type filter"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Filter"
+          value={filterValue}
+          onChange={(e) => setFilterValue(e.target.value)}
+          className="w-full h-7 px-2 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-[10px] placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-primary focus:ring-1 focus:ring-primary/30 outline-none transition-all"
+        />
+        {filterValue && (
+          <button
+            onClick={clearFilter}
+            type="button"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+            aria-label="Clear filter"
+          >
+            ×
+          </button>
+        )}
       </div>
     );
   };
@@ -615,7 +779,7 @@ const SitesTable = () => {
             className={cn(
               "text-[9px] font-black rounded-full border px-2 py-0.5 tracking-wider shadow-sm",
               site.reonIntegration === "Integrated" 
-                ? "bg-indigo-500/10 text-indigo-650 border-indigo-500/20" 
+                ? "bg-indigo-500/10 text-primary border-indigo-500/20" 
                 : "bg-slate-100 text-slate-400 border-slate-200/50 opacity-60"
             )}
           >
@@ -627,7 +791,7 @@ const SitesTable = () => {
       case "latitude":
         return <CoordinatePin lat={site.latitude} lng={site.longitude} />;
       case "longitude":
-        return <span className="font-mono text-slate-450 dark:text-slate-400">{site.longitude || <span className="opacity-25">-</span>}</span>;
+        return <span className="font-mono text-slate-400 dark:text-slate-450">{site.longitude || <span className="opacity-25">-</span>}</span>;
       case "rectifierCapacity":
         return <CapacityBar value={site.rectifierCapacity} max={site.rectifierMaxCapacity} />;
       case "generatorTankCapacity":
@@ -651,7 +815,7 @@ const SitesTable = () => {
       case "fieldEngineerPhone":
       case "secondFieldEngineerPhone":
         return site[colKey] && site[colKey] !== "N/A" ? (
-          <a href={`tel:${site[colKey]}`} className="font-semibold text-slate-600 dark:text-slate-400 hover:underline">{site[colKey]}</a>
+          <a href={`tel:${site[colKey]}`} className="font-semibold text-slate-650 dark:text-slate-400 hover:underline">{site[colKey]}</a>
         ) : <span className="opacity-25">-</span>;
       case "ipAddress":
         return site.ipAddress ? (
@@ -733,7 +897,7 @@ const SitesTable = () => {
                 Inventory Operations Hub
               </Badge>
               {isSyncing && (
-                <Badge variant="outline" className="gap-2 border-indigo-500/30 bg-indigo-500/10 text-indigo-305 text-[9px] font-bold py-1">
+                <Badge variant="outline" className="gap-2 border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-[9px] font-bold py-1">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-400" />
                   Syncing Live Data
                 </Badge>
@@ -772,7 +936,7 @@ const SitesTable = () => {
             active={kpiFilter === "at-risk"} 
             onClick={() => { setKpiFilter("at-risk"); setPage(0); }} 
             icon={<Activity size={16} />}
-            color="from-amber-450 to-orange-550"
+            color="from-amber-500 to-orange-500"
           />
           <KPICard 
             title="REON Integrated" 
@@ -780,7 +944,7 @@ const SitesTable = () => {
             active={kpiFilter === "integrated"} 
             onClick={() => { setKpiFilter("integrated"); setPage(0); }} 
             icon={<Wifi size={16} />}
-            color="from-emerald-450 to-teal-555"
+            color="from-emerald-500 to-teal-500"
           />
         </div>
       </div>
@@ -794,9 +958,9 @@ const SitesTable = () => {
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
             <Input
               placeholder="Search across 40+ site parameters (e.g. location, IP, region, engineer...)"
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-              className="h-10 rounded-xl border-slate-205 bg-white/95 dark:bg-slate-950/95 pl-10 pr-4 text-xs font-semibold shadow-sm transition-all focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-400 dark:border-slate-800"
+              value={searchInput}
+              onChange={(e) => { setSearchInput(e.target.value); setPage(0); }}
+              className="h-10 rounded-xl border-slate-200 bg-white/95 dark:bg-slate-950/95 pl-10 pr-4 text-xs font-semibold shadow-sm transition-all focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-400 dark:border-slate-800"
             />
           </div>
 
@@ -833,12 +997,12 @@ const SitesTable = () => {
 
             {/* Sync Notifications badges */}
             {!hasScriptUrl && (
-              <Badge variant="outline" className="flex items-center gap-1.5 border-rose-200 bg-rose-50/50 dark:border-rose-900/30 dark:bg-rose-950/10 px-3 py-1.5 text-[10px] font-extrabold text-rose-600 dark:text-rose-400 rounded-xl shadow-sm">
+              <Badge variant="outline" className="flex items-center gap-1.5 border-rose-205 bg-rose-50/50 dark:border-rose-900/30 dark:bg-rose-950/10 px-3 py-1.5 text-[10px] font-extrabold text-rose-600 dark:text-rose-400 rounded-xl shadow-sm">
                 <AlertTriangle size={12} /> Local Offline
               </Badge>
             )}
             {Object.keys(localOverrides).length > 0 && (
-              <Badge variant="outline" className="border-amber-205 bg-amber-50/50 dark:border-amber-900/30 dark:bg-amber-950/10 px-3 py-1.5 text-[10px] font-extrabold text-amber-700 dark:text-amber-400 rounded-xl shadow-sm">
+              <Badge variant="outline" className="border-amber-200 bg-amber-50/50 dark:border-amber-900/30 dark:bg-amber-950/10 px-3 py-1.5 text-[10px] font-extrabold text-amber-700 dark:text-amber-400 rounded-xl shadow-sm">
                 {Object.keys(localOverrides).length} Unsaved
               </Badge>
             )}
@@ -849,7 +1013,7 @@ const SitesTable = () => {
               <select
                 value={regionFilter}
                 onChange={(e) => { setRegionFilter(e.target.value); setPage(0); }}
-                className="border-none bg-transparent p-0 pr-6 text-[11px] font-extrabold text-slate-700 dark:text-slate-355 focus:ring-0 cursor-pointer outline-none"
+                className="border-none bg-transparent p-0 pr-6 text-[11px] font-extrabold text-slate-700 dark:text-slate-300 focus:ring-0 cursor-pointer outline-none"
               >
                 <option value="" className="dark:bg-slate-900">All Regions</option>
                 {regions.map((r) => (
@@ -900,13 +1064,13 @@ const SitesTable = () => {
                     <div className="p-1.5">
                       {(Object.entries(COLUMN_PROFILES) as [ColumnProfileId, typeof COLUMN_PROFILES["all"]][]).map(([id, profile]) => (
                         <button
-                          key={id}
-                          id={`profile-${id}`}
-                          onClick={() => { setColumnProfile(id); setProfileMenuOpen(false); }}
-                          className={cn(
-                            "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60",
-                            columnProfile === id && "bg-indigo-50/70 dark:bg-indigo-950/40"
-                          )}
+                           key={id}
+                           id={`profile-${id}`}
+                           onClick={() => { setColumnProfile(id); setProfileMenuOpen(false); }}
+                           className={cn(
+                             "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60",
+                             columnProfile === id && "bg-indigo-50/70 dark:bg-indigo-950/40"
+                           )}
                         >
                           <span className="text-sm">{profile.icon}</span>
                           <div className="min-w-0 flex-1">
@@ -931,7 +1095,7 @@ const SitesTable = () => {
               </AnimatePresence>
             </div>
 
-            <button className="control-button h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-[11px] font-extrabold text-slate-700 dark:text-slate-305 shadow-sm transition-all hover:border-slate-305 active:scale-95 flex items-center" aria-label="Export sites list">
+            <button className="control-button h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-[11px] font-extrabold text-slate-700 dark:text-slate-300 shadow-sm transition-all hover:border-slate-300 active:scale-95 flex items-center" aria-label="Export sites list">
               <Download size={13} className="mr-1.5 text-slate-400" /> Export
             </button>
           </div>
@@ -956,7 +1120,7 @@ const SitesTable = () => {
               
               {pageData.length === 0 && !isLoading && (
                 <div className="col-span-full py-16 text-center">
-                  <div className="mx-auto max-w-sm rounded-2xl border border-slate-200 dark:border-slate-850 bg-white/70 dark:bg-slate-900/70 p-8 shadow-[0_4px_24px_rgba(0,0,0,0.02)] backdrop-blur-xl">
+                  <div className="mx-auto max-w-sm rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-8 shadow-[0_4px_24px_rgba(0,0,0,0.02)] backdrop-blur-xl">
                     <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No matching assets found</p>
                     <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Adjust your filters, KPIs, or search keywords to view other records.</p>
                   </div>
@@ -975,16 +1139,16 @@ const SitesTable = () => {
               <div className="w-full overflow-auto custom-scrollbar">
                 <table className="w-full text-xs border-separate border-spacing-0">
                   <thead className="sticky top-0 z-30">
-                    <tr className="bg-slate-900 dark:bg-slate-950 text-slate-100">
+                    <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
                       {columns.map((col) => (
                         <th
                           key={col.key}
                           onClick={() => handleSort(col.key)}
                           className={cn(
-                            "group cursor-pointer whitespace-nowrap border-b border-slate-805 px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.12em] text-slate-300 dark:text-slate-400 transition-colors hover:bg-slate-800 dark:hover:bg-slate-900 hover:text-white",
+                            "group cursor-pointer whitespace-nowrap border-b border-slate-200 dark:border-slate-800 px-5 py-4 text-left text-[10px] font-black uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100/60 dark:hover:bg-slate-800/60 hover:text-slate-800 dark:hover:text-slate-200",
                             col.width || "w-40",
-                            col.key === "no" && "sticky left-0 z-40 bg-slate-900 border-r border-slate-800/50 shadow-[4px_0_14px_-8px_rgba(0,0,0,0.35)]",
-                            col.key === "siteName" && "sticky left-[80px] z-40 bg-slate-900 border-r border-slate-800/50 shadow-[4px_0_24px_-10px_rgba(0,0,0,0.4)]",
+                            col.key === "no" && "sticky left-0 z-40 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-[4px_0_14px_-8px_rgba(0,0,0,0.08)] dark:shadow-[4px_0_14px_-8px_rgba(0,0,0,0.4)]",
+                            col.key === "siteName" && "sticky left-[80px] z-40 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 shadow-[4px_0_24px_-10px_rgba(0,0,0,0.12)] dark:shadow-[4px_0_24px_-10px_rgba(0,0,0,0.5)]",
                           )}
                         >
                           <div className="flex items-center justify-between gap-1.5">
@@ -993,7 +1157,23 @@ const SitesTable = () => {
                           </div>
                         </th>
                       ))}
-                      <th className="sticky right-0 z-30 w-16 border-b border-slate-800 bg-slate-900 dark:bg-slate-950 shadow-[-4px_0_24px_-10px_rgba(0,0,0,0.4)]"></th>
+                      <th className="sticky right-0 z-30 w-16 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 shadow-[-4px_0_24px_-10px_rgba(0,0,0,0.12)] dark:shadow-[-4px_0_24px_-10px_rgba(0,0,0,0.5)]"></th>
+                    </tr>
+                    <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90">
+                      {columns.map((col) => (
+                        <th
+                          key={`filter-${col.key}`}
+                          className={cn(
+                            "px-3 py-2 text-left",
+                            col.width || "w-40",
+                            col.key === "no" && "sticky left-0 z-40 bg-slate-50/95 dark:bg-slate-900/95 border-r border-slate-200 dark:border-slate-800 shadow-[4px_0_10px_-6px_rgba(0,0,0,0.06)] dark:shadow-[4px_0_10px_-6px_rgba(0,0,0,0.3)]",
+                            col.key === "siteName" && "sticky left-[80px] z-20 bg-slate-50/95 dark:bg-slate-900/95 border-r border-slate-200 dark:border-slate-800 shadow-[4px_0_15px_-8px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_15px_-8px_rgba(0,0,0,0.4)]",
+                          )}
+                        >
+                          {renderFilterInput(col.key)}
+                        </th>
+                      ))}
+                      <th className="sticky right-0 z-30 w-16 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 shadow-[-4px_0_15px_-8px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_15px_-8px_rgba(0,0,0,0.4)]"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
@@ -1005,10 +1185,10 @@ const SitesTable = () => {
                       >
                         {columns.map((col) => (
                           <td key={`${site.no}-${col.key}`} className={cn(
-                            "overflow-hidden text-ellipsis whitespace-nowrap bg-white dark:bg-slate-900 px-5 py-3.5 align-middle text-xs font-semibold border-b border-slate-100 dark:border-slate-800/40 transition-colors group-hover:bg-indigo-50/5 dark:group-hover:bg-indigo-950/5",
+                            "overflow-hidden text-ellipsis whitespace-nowrap bg-white dark:bg-slate-900 px-5 py-3.5 align-middle text-xs font-semibold border-b border-slate-100 dark:border-slate-800/40 backdrop-blur-md transition-colors group-hover:bg-indigo-50/5 dark:group-hover:bg-indigo-950/5",
                             col.key === "no" && "sticky left-0 z-20 text-slate-400 dark:text-slate-500 font-mono tracking-tighter border-r border-slate-100/60 dark:border-slate-800/60 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm group-hover:bg-indigo-50/80 dark:group-hover:bg-indigo-950/40",
                             col.key === "siteName" && "sticky left-[80px] z-20 font-extrabold text-slate-800 dark:text-slate-200 shadow-[4px_0_24px_-10px_rgba(15,23,42,0.06)] bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm group-hover:bg-indigo-50/80 dark:group-hover:bg-indigo-950/40 border-r border-slate-100/60 dark:border-slate-800/60 uppercase tracking-wide",
-                            col.key !== "no" && col.key !== "siteName" && "text-slate-600 dark:text-slate-300",
+                            col.key !== "no" && col.key !== "siteName" && "text-slate-700 dark:text-slate-300",
                           )}>
                             {renderCellContent(site, col.key)}
                           </td>
@@ -1025,8 +1205,8 @@ const SitesTable = () => {
                       <tr>
                         <td colSpan={columns.length + 1} className="px-6 py-16 text-center">
                           <div className="mx-auto max-w-sm rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 p-8 shadow-inner">
-                            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No matching assets found</p>
-                            <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-405 leading-relaxed">Adjust your search keyword or region selection to broaden the result set.</p>
+                            <p className="text-sm font-bold text-slate-800 dark:text-slate-205">No matching assets found</p>
+                            <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Adjust your search keyword or region selection to broaden the result set.</p>
                           </div>
                         </td>
                       </tr>
@@ -1073,7 +1253,7 @@ const SitesTable = () => {
       <div className="mt-4 flex shrink-0 flex-col gap-3 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900 p-3.5 shadow-[0_4px_30px_rgba(0,0,0,0.01)] sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-bold text-slate-400">
-            Showing assets <span className="text-slate-805 dark:text-slate-200 font-extrabold">{rangeStart}-{rangeEnd}</span> of <span className="text-slate-805 dark:text-slate-200 font-extrabold">{filteredData.length}</span> records
+            Showing assets <span className="text-slate-800 dark:text-slate-200 font-extrabold">{rangeStart}-{rangeEnd}</span> of <span className="text-slate-800 dark:text-slate-200 font-extrabold">{filteredData.length}</span> records
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -1095,7 +1275,7 @@ const SitesTable = () => {
                   "h-9 w-9 rounded-xl text-xs font-black transition-all hover:scale-105 active:scale-90",
                   page === i 
                     ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-indigo-500/10" 
-                    : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-805 dark:hover:text-slate-200"
+                    : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200"
                 )}
               >
                 {i + 1}
@@ -1106,7 +1286,7 @@ const SitesTable = () => {
           <button
             onClick={(e) => { e.stopPropagation(); setPage(Math.min(safeTotalPages - 1, page + 1)); }}
             disabled={page >= safeTotalPages - 1}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-805 bg-white dark:bg-slate-900 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-35 hover:border-slate-300 dark:hover:border-slate-700 active:scale-90"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-35 hover:border-slate-300 dark:hover:border-slate-700 active:scale-90"
             aria-label="Next Page"
           >
             <ChevronRight size={15} />
