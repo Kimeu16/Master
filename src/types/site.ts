@@ -56,6 +56,7 @@ export interface User {
   region: string;
   sites: string;
   roles: string;
+  rbacRole?: string;
 }
 
 export interface EscalationEntry {

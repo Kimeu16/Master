@@ -176,23 +176,7 @@ const Sidebar = ({ activeView, onViewChange, collapsed, onCollapsedChange, class
 
       {/* Sidebar Footer block */}
       <div className="border-t border-white/10 p-4">
-        {!collapsed && (
-          <div className="mb-4">
-            <p className="mb-2 px-1 text-[9px] font-black uppercase tracking-widest text-white/40">Simulate Role</p>
-            <select
-              value={role}
-              onChange={(e) => {
-                const val = e.target.value as "Read-Only" | "CRUD" | "Admin";
-                setRole(val);
-              }}
-              className="w-full rounded-lg border border-white/15 bg-white/8 px-2 py-1.5 text-xs font-bold text-white shadow-sm backdrop-blur-md outline-none focus:border-white/30"
-            >
-              <option value="Read-Only">Read-Only User</option>
-              <option value="CRUD">Employee</option>
-              <option value="Admin">Administrator</option>
-            </select>
-          </div>
-        )}
+
         {!collapsed && (
           <button onClick={signOut} className="mb-2.5 flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-xs font-black text-white/60 transition-all duration-200 hover:bg-white/8 hover:text-white">
             <LogOut size={17} className="flex-shrink-0" />

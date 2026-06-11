@@ -280,24 +280,11 @@ const UsersView = () => {
 
   const { data: remoteUsersData, isLoading, isError } = useUsers();
 
-  const [localOverrides, setLocalOverrides] = useState<Record<string, Partial<User>>>(() => {
-    const saved = localStorage.getItem("user_overrides");
-    if (!saved) return {};
-    try { return JSON.parse(saved); } catch { return {}; }
-  });
-
   const usersData = useMemo(() => {
-    const baseData = remoteUsersData || [];
-    return baseData.map((user) => {
-      const override = localOverrides[user.no];
-      return override ? { ...user, ...override } : user;
-    });
-  }, [remoteUsersData, localOverrides]);
+    return remoteUsersData || [];
+  }, [remoteUsersData]);
 
   const handleSaveUser = async (updatedUser: User) => {
-    const newOverrides = { ...localOverrides, [updatedUser.no]: updatedUser };
-    setLocalOverrides(newOverrides);
-    localStorage.setItem("user_overrides", JSON.stringify(newOverrides));
     setIsSyncing(true);
     try {
       await api.put(`/users/${updatedUser.no}`, updatedUser);

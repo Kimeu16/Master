@@ -15,23 +15,22 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [role, setRoleState] = useState<Role>('Read-Only');
-
-  useEffect(() => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     try {
-      const savedAuth = localStorage.getItem('auth_token');
-      if (savedAuth) {
-        setIsAuthenticated(true);
-      }
-      const savedRole = localStorage.getItem('rbac_role') as Role;
-      if (savedRole && ['Read-Only', 'CRUD', 'Admin'].includes(savedRole)) {
-        setRoleState(savedRole);
-      }
-    } catch (e) {
-      console.error('Failed to parse auth state from localStorage', e);
+      return !!localStorage.getItem('auth_token');
+    } catch {
+      return false;
     }
-  }, []);
+  });
+  
+  const [role, setRoleState] = useState<Role>(() => {
+    try {
+      const savedRole = localStorage.getItem('rbac_role') as Role;
+      return savedRole && ['Read-Only', 'CRUD', 'Admin'].includes(savedRole) ? savedRole : 'Read-Only';
+    } catch {
+      return 'Read-Only';
+    }
+  });
 
   const setRole = (newRole: Role) => {
     setRoleState(newRole);

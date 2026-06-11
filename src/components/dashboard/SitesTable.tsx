@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef, memo, ReactNode } from "react";
 import { Site } from "@/types/site";
 import { useSites } from "@/hooks/useSites";
-import { updateSite } from "@/lib/googleSheets";
+import { api } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -394,7 +394,6 @@ const SitesTable = () => {
   const [regionFilter, setRegionFilter] = useState("");
   const [selectedSite, setSelectedSite] = useState<Site | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [hasScriptUrl, setHasScriptUrl] = useState(() => !!localStorage.getItem("google_apps_script_url"));
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [kpiFilter, setKpiFilter] = useState<"all" | "critical" | "at-risk" | "integrated">("all");
   const [columnProfile, setColumnProfile] = useState<ColumnProfileId>("all");
@@ -434,37 +433,10 @@ const SitesTable = () => {
   const queryClient = useQueryClient();
   const normalizeId = (id: string) => id?.replace(".0", "").trim() || "";
 
-  const [localOverrides, setLocalOverrides] = useState<Record<string, Partial<Site>>>(() => {
-    const saved = localStorage.getItem("site_overrides");
-    if (!saved) return {};
-    try {
-      const parsed = JSON.parse(saved);
-      const normalized: Record<string, Partial<Site>> = {};
-      Object.entries(parsed).forEach(([key, value]) => {
-        normalized[normalizeId(key)] = value as Partial<Site>;
-      });
-      return normalized;
-    } catch (e) {
-      return {};
-    }
-  });
-
-  useEffect(() => {
-    setHasScriptUrl(!!localStorage.getItem("google_apps_script_url"));
-  }, [localOverrides]);
-
   const handleSaveSite = async (updatedSite: Site) => {
-    const siteId = normalizeId(updatedSite.no);
-    const newOverrides = {
-      ...localOverrides,
-      [siteId]: updatedSite
-    };
-    setLocalOverrides(newOverrides);
-    localStorage.setItem("site_overrides", JSON.stringify(newOverrides));
-
     setIsSyncing(true);
     try {
-      await updateSite(updatedSite.no, updatedSite);
+      await api.put(`/sites/${normalizeId(updatedSite.no)}`, updatedSite);
       queryClient.invalidateQueries({ queryKey: ["sites"] });
     } catch (err) {
       console.error("Cloud sync failed:", err);
@@ -474,13 +446,8 @@ const SitesTable = () => {
   };
 
   const sitesData = useMemo(() => {
-    const baseData = remoteSitesData || [];
-    return baseData.map(site => {
-      const siteId = normalizeId(site.no);
-      const override = localOverrides[siteId];
-      return override ? { ...site, ...override } : site;
-    });
-  }, [remoteSitesData, localOverrides]);
+    return remoteSitesData || [];
+  }, [remoteSitesData]);
 
   const kpiStats = useMemo(() => {
     const data = sitesData || [];
@@ -670,7 +637,7 @@ const SitesTable = () => {
           <select
             value={filterValue}
             onChange={(e) => setFilterValue(e.target.value)}
-            className="w-full h-7 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-205 text-[10px] px-2 pr-8 outline-none transition-all hover:border-slate-300 dark:hover:border-slate-700 focus:border-primary focus:ring-1 focus:ring-primary/30"
+            className="w-full h-7 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-[10px] px-2 pr-8 outline-none transition-all hover:border-slate-300 dark:hover:border-slate-700 focus:border-primary focus:ring-1 focus:ring-primary/30"
           >
             <option value="" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">All Priorities</option>
             <option value="1" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">P1</option>
@@ -697,7 +664,7 @@ const SitesTable = () => {
           <select
             value={filterValue}
             onChange={(e) => setFilterValue(e.target.value)}
-            className="w-full h-7 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-205 text-[10px] px-2 pr-8 outline-none transition-all hover:border-slate-300 dark:hover:border-slate-700 focus:border-primary focus:ring-1 focus:ring-primary/30"
+            className="w-full h-7 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-[10px] px-2 pr-8 outline-none transition-all hover:border-slate-300 dark:hover:border-slate-700 focus:border-primary focus:ring-1 focus:ring-primary/30"
           >
             <option value="" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">All REON Status</option>
             <option value="Integrated" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Integrated</option>
@@ -723,7 +690,7 @@ const SitesTable = () => {
           <select
             value={filterValue}
             onChange={(e) => setFilterValue(e.target.value)}
-            className="w-full h-7 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-205 text-[10px] px-2 pr-8 outline-none transition-all hover:border-slate-300 dark:hover:border-slate-700 focus:border-primary focus:ring-1 focus:ring-primary/30"
+            className="w-full h-7 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-[10px] px-2 pr-8 outline-none transition-all hover:border-slate-300 dark:hover:border-slate-700 focus:border-primary focus:ring-1 focus:ring-primary/30"
           >
             <option value="" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">All Site Types</option>
             {siteTypeOptions.map((type) => (
@@ -995,17 +962,7 @@ const SitesTable = () => {
               </button>
             </div>
 
-            {/* Sync Notifications badges */}
-            {!hasScriptUrl && (
-              <Badge variant="outline" className="flex items-center gap-1.5 border-rose-205 bg-rose-50/50 dark:border-rose-900/30 dark:bg-rose-950/10 px-3 py-1.5 text-[10px] font-extrabold text-rose-600 dark:text-rose-400 rounded-xl shadow-sm">
-                <AlertTriangle size={12} /> Local Offline
-              </Badge>
-            )}
-            {Object.keys(localOverrides).length > 0 && (
-              <Badge variant="outline" className="border-amber-200 bg-amber-50/50 dark:border-amber-900/30 dark:bg-amber-950/10 px-3 py-1.5 text-[10px] font-extrabold text-amber-700 dark:text-amber-400 rounded-xl shadow-sm">
-                {Object.keys(localOverrides).length} Unsaved
-              </Badge>
-            )}
+
 
             {/* Dropdown Filters */}
             <div className="relative flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 px-3 py-2 shadow-sm transition-all hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-md">
@@ -1173,7 +1130,7 @@ const SitesTable = () => {
                           {renderFilterInput(col.key)}
                         </th>
                       ))}
-                      <th className="sticky right-0 z-30 w-16 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 shadow-[-4px_0_15px_-8px_rgba(0,0,0,0.1)] dark:shadow-[4px_0_15px_-8px_rgba(0,0,0,0.4)]"></th>
+                      <th className="sticky right-0 z-30 w-16 border-b border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 shadow-[-4px_0_15px_-8px_rgba(0,0,0,0.1)] dark:shadow-[-4px_0_15px_-8px_rgba(0,0,0,0.4)]"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">

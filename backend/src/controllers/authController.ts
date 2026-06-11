@@ -8,35 +8,44 @@ import pool from '../database/db';
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_fallback_key';
 
 let transporter: nodemailer.Transporter;
-nodemailer.createTestAccount().then(account => {
-  transporter = nodemailer.createTransport({
-    host: account.smtp.host,
-    port: account.smtp.port,
-    secure: account.smtp.secure,
-    auth: { user: account.user, pass: account.pass }
-  });
-  console.log("Ethereal Email account created for testing. Emails will be logged here.");
-});
+
+const setupTransporter = async () => {
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
+    console.log("SMTP configured for real email delivery via", process.env.SMTP_HOST);
+  } else {
+    // Fallback to testing account
+    const account = await nodemailer.createTestAccount();
+    transporter = nodemailer.createTransport({
+      host: account.smtp.host,
+      port: account.smtp.port,
+      secure: account.smtp.secure,
+      auth: { user: account.user, pass: account.pass }
+    });
+    console.log("Ethereal Email account created for testing. No real emails will be sent.");
+  }
+};
+
+setupTransporter();
 
 export const login = async (req: Request, res: Response) => {
   const { username, password } = req.body;
   try {
     const [rows]: any = await pool.query('SELECT * FROM users WHERE user_name = ?', [username]);
     if (rows.length === 0) {
-      // Simulate admin if it doesn't exist yet to not lock user out
-      if (username === 'admin' && password === 'admin') {
-         const token = jwt.sign({ no: 'admin_mock', role: 'Admin' }, JWT_SECRET, { expiresIn: '1d' });
-         return res.json({ token, user: { user_name: 'admin', role: 'Admin' } });
-      }
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     const user = rows[0];
     if (!user.password_hash) {
-      if (username === 'admin' && password === 'admin') {
-         const token = jwt.sign({ no: user.no, role: 'Admin' }, JWT_SECRET, { expiresIn: '1d' });
-         return res.json({ token, user });
-      }
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
@@ -64,15 +73,18 @@ export const forgotPassword = async (req: Request, res: Response) => {
       const origin = req.headers.origin || 'http://localhost:8080';
       const resetUrl = `${origin}/reset-password?token=${resetToken}`;
       
+      const fromAddress = process.env.SMTP_FROM || '"AlanDick Ops" <noreply@alandick.com>';
       const info = await transporter.sendMail({
-        from: '"AlanDick Ops" <noreply@alandick.com>',
+        from: fromAddress,
         to: email,
         subject: "Password Reset Request",
         text: `You requested a password reset. Click here to reset your password: ${resetUrl}`,
         html: `<p>You requested a password reset. <a href="${resetUrl}">Click here to reset your password</a></p>`
       });
 
-      console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+      if (!process.env.SMTP_HOST) {
+        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+      }
     }
     
     // Always return generic response
@@ -103,25 +115,3 @@ export const resetPassword = async (req: Request, res: Response) => {
   }
 };
 
-export const register = async (req: Request, res: Response) => {
-  const { username, email, password, phone } = req.body;
-  try {
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(password, salt);
-    const no = crypto.randomUUID();
-    
-    await pool.query(
-      `INSERT INTO users (no, user_name, email, phone, password_hash, rbac_role) VALUES (?, ?, ?, ?, ?, 'Read-Only')`,
-      [no, username, email, phone, hash]
-    );
-
-    const token = jwt.sign({ no, role: 'Read-Only' }, JWT_SECRET, { expiresIn: '1d' });
-    res.status(201).json({ token, user: { no, user_name: username, email, rbac_role: 'Read-Only' } });
-  } catch (error: any) {
-    if (error.code === 'ER_DUP_ENTRY') {
-      return res.status(400).json({ error: 'This email is already in use.' });
-    }
-    console.error("Registration error:", error);
-    res.status(500).json({ error: 'Server error' });
-  }
-};

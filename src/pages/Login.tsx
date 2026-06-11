@@ -37,9 +37,8 @@ const Login = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [selectedRole, setSelectedRole] = useState<Role>("Admin");
-  const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("password");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -59,7 +58,7 @@ const Login = () => {
       
       if (response.ok) {
         setError("");
-        signIn(data.token, data.user.rbac_role || selectedRole);
+        signIn(data.token, data.user.rbac_role);
         const from = location.state?.from?.pathname || "/dashboard";
         navigate(from, { replace: true });
       } else {
@@ -209,13 +208,6 @@ const Login = () => {
                 className="primary-button rounded-xl px-10 py-3 text-xs font-bold tracking-widest min-w-[220px] disabled:opacity-50"
               >
                 {isLoading ? "Signing In..." : "Sign In"}
-              </button>
-              <button 
-                type="button" 
-                onClick={() => navigate("/signup")}
-                className="text-xs text-muted-foreground hover:text-primary transition-colors"
-              >
-                Don't have an account? Sign Up
               </button>
             </div>
           </form>

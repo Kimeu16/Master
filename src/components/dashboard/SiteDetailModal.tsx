@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Site } from "@/types/site";
 import { X, Radio, Edit3, Check, RotateCcw, Shield, Zap, Sun, Users, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -269,21 +270,21 @@ const Field = ({
   onChange: (value: string) => void;
   readOnly?: boolean;
 }) => (
-  <div className="rounded-xl border border-slate-100/80 bg-white/60 p-3.5 shadow-sm transition-all hover:bg-white hover:shadow-md hover:border-slate-200/60 duration-300">
-    <span className="block text-[10px] uppercase font-black text-slate-400 tracking-wider mb-1.5">{label}</span>
+  <div className="rounded-xl border border-slate-100/80 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 p-3.5 shadow-sm transition-all hover:bg-white dark:hover:bg-slate-800 hover:shadow-md hover:border-slate-200/60 dark:hover:border-slate-700 duration-300">
+    <span className="block text-[10px] uppercase font-black text-slate-400 dark:text-slate-500 tracking-wider mb-1.5">{label}</span>
     {isEditing ? (
       <Input
         value={formData[fieldName] || ""}
         onChange={(e) => onChange(e.target.value)}
         disabled={readOnly}
         className={cn(
-          "h-9 rounded-lg border-slate-200 bg-white/95 text-xs font-bold transition-all focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10",
-          readOnly && "opacity-50 cursor-not-allowed bg-slate-100"
+          "h-9 rounded-lg border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10",
+          readOnly && "opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-900"
         )}
       />
     ) : (
-      <p className="text-xs text-slate-700 font-extrabold leading-relaxed">
-        {value || <span className="text-slate-400 font-medium italic">N/A</span>}
+      <p className="text-xs text-slate-700 dark:text-slate-300 font-extrabold leading-relaxed">
+        {value || <span className="text-slate-400 dark:text-slate-500 font-medium italic">N/A</span>}
       </p>
     )}
   </div>
@@ -320,18 +321,18 @@ const SiteDetailModal = ({ site, onClose, onSave }: SiteDetailModalProps) => {
     { id: "operations", label: "Personnel & Ops", icon: Users },
   ];
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-md" onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96, y: 15 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/60 bg-white/80 backdrop-blur-xl shadow-[0_24px_64px_-16px_rgba(15,23,42,0.15)]"
+        className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/60 dark:border-slate-800 bg-white/80 dark:bg-slate-950/90 backdrop-blur-xl shadow-[0_24px_64px_-16px_rgba(15,23,42,0.15)] dark:shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex shrink-0 flex-col gap-4 border-b border-slate-100/60 bg-white/40 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex shrink-0 flex-col gap-4 border-b border-slate-100/60 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/40 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 text-indigo-650 shadow-[inset_0_1px_3px_rgba(99,102,241,0.1)] border border-indigo-500/10">
               <Radio size={22} className="animate-pulse text-indigo-600" />
@@ -370,15 +371,15 @@ const SiteDetailModal = ({ site, onClose, onSave }: SiteDetailModalProps) => {
                 </button>
               )
             )}
-            <div className="w-px h-6 bg-slate-200 mx-1.5" />
-            <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 transition-colors active:scale-90">
+            <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-1.5" />
+            <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 transition-colors active:scale-90">
               <X size={18} />
             </button>
           </div>
         </div>
 
         {/* Dynamic Fluent Tab Selector */}
-        <div className="flex border-b border-slate-100/60 overflow-x-auto custom-scrollbar bg-slate-50/40 px-5 shrink-0">
+        <div className="flex border-b border-slate-100/60 dark:border-slate-800/80 overflow-x-auto custom-scrollbar bg-slate-50/40 dark:bg-slate-900/20 px-5 shrink-0">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -388,10 +389,10 @@ const SiteDetailModal = ({ site, onClose, onSave }: SiteDetailModalProps) => {
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
                   "relative flex items-center gap-2 py-4 px-4 text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
-                  isActive ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
+                  isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
                 )}
               >
-                <Icon size={13} className={isActive ? "text-indigo-600" : "text-slate-450"} />
+                <Icon size={13} className={isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 dark:text-slate-500"} />
                 {tab.label}
                 {isActive && (
                   <motion.span
@@ -406,7 +407,7 @@ const SiteDetailModal = ({ site, onClose, onSave }: SiteDetailModalProps) => {
         </div>
 
         {/* Modal Scrollable Panels */}
-        <div className="custom-scrollbar flex-1 overflow-y-auto bg-gradient-to-b from-transparent to-slate-50/30 p-6">
+        <div className="custom-scrollbar flex-1 overflow-y-auto bg-gradient-to-b from-transparent to-slate-50/30 dark:to-slate-900/30 p-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -417,9 +418,9 @@ const SiteDetailModal = ({ site, onClose, onSave }: SiteDetailModalProps) => {
             >
               {activeTab === "general" && (
                 <div className="space-y-6">
-                  <div className="flex items-center gap-2 border-b border-slate-100/60 pb-3">
-                    <Radio size={16} className="text-indigo-600" />
-                    <h4 className="text-xs font-black text-slate-700 uppercase tracking-widest">General specifications</h4>
+                  <div className="flex items-center gap-2 border-b border-slate-100/60 dark:border-slate-800/80 pb-3">
+                    <Radio size={16} className="text-indigo-600 dark:text-indigo-400" />
+                    <h4 className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">General specifications</h4>
                   </div>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <Field label="UID / No" value={formData.no?.replace(".0", "")} fieldName="no" isEditing={isEditing} formData={formData} onChange={(v) => updateField("no", v)} readOnly />
@@ -436,9 +437,9 @@ const SiteDetailModal = ({ site, onClose, onSave }: SiteDetailModalProps) => {
 
               {activeTab === "logistics" && (
                 <div className="space-y-6">
-                  <div className="flex items-center gap-2 border-b border-slate-100/60 pb-3">
-                    <Shield size={16} className="text-indigo-600" />
-                    <h4 className="text-xs font-black text-slate-700 uppercase tracking-widest">Logistics & Security footprint</h4>
+                  <div className="flex items-center gap-2 border-b border-slate-100/60 dark:border-slate-800/80 pb-3">
+                    <Shield size={16} className="text-indigo-600 dark:text-indigo-400" />
+                    <h4 className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Logistics & Security footprint</h4>
                   </div>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <Field label="Geographic Latitude" value={formData.latitude} fieldName="latitude" isEditing={isEditing} formData={formData} onChange={(v) => updateField("latitude", v)} />
@@ -452,9 +453,9 @@ const SiteDetailModal = ({ site, onClose, onSave }: SiteDetailModalProps) => {
 
               {activeTab === "power" && (
                 <div className="space-y-6">
-                  <div className="flex items-center gap-2 border-b border-slate-100/60 pb-3">
-                    <Zap size={16} className="text-indigo-600" />
-                    <h4 className="text-xs font-black text-slate-700 uppercase tracking-widest">Power & Electrical Infrastructure</h4>
+                  <div className="flex items-center gap-2 border-b border-slate-100/60 dark:border-slate-800/80 pb-3">
+                    <Zap size={16} className="text-indigo-600 dark:text-indigo-400" />
+                    <h4 className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Power & Electrical Infrastructure</h4>
                   </div>
                   <PowerFlowSchematic site={formData} mode="power" />
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -473,9 +474,9 @@ const SiteDetailModal = ({ site, onClose, onSave }: SiteDetailModalProps) => {
 
               {activeTab === "solar" && (
                 <div className="space-y-6">
-                  <div className="flex items-center gap-2 border-b border-slate-100/60 pb-3">
-                    <Sun size={16} className="text-indigo-600" />
-                    <h4 className="text-xs font-black text-slate-700 uppercase tracking-widest">DC Metering & Solar Analytics</h4>
+                  <div className="flex items-center gap-2 border-b border-slate-100/60 dark:border-slate-800/80 pb-3">
+                    <Sun size={16} className="text-indigo-600 dark:text-indigo-400" />
+                    <h4 className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">DC Metering & Solar Analytics</h4>
                   </div>
                   <PowerFlowSchematic site={formData} mode="solar" />
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -495,9 +496,9 @@ const SiteDetailModal = ({ site, onClose, onSave }: SiteDetailModalProps) => {
 
               {activeTab === "operations" && (
                 <div className="space-y-6">
-                  <div className="flex items-center gap-2 border-b border-slate-100/60 pb-3">
-                    <Users size={16} className="text-indigo-600" />
-                    <h4 className="text-xs font-black text-slate-700 uppercase tracking-widest">Field Personnel & Operation states</h4>
+                  <div className="flex items-center gap-2 border-b border-slate-100/60 dark:border-slate-800/80 pb-3">
+                    <Users size={16} className="text-indigo-600 dark:text-indigo-400" />
+                    <h4 className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">Field Personnel & Operation states</h4>
                   </div>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <Field label="Primary Field Engineer" value={formData.fieldEngineer} fieldName="fieldEngineer" isEditing={isEditing} formData={formData} onChange={(v) => updateField("fieldEngineer", v)} />
@@ -512,16 +513,16 @@ const SiteDetailModal = ({ site, onClose, onSave }: SiteDetailModalProps) => {
                   </div>
                   
                   <div className="mt-4">
-                    <span className="block text-[10px] uppercase font-black text-slate-400 tracking-wider mb-2">Operational Notes & Remarks</span>
+                    <span className="block text-[10px] uppercase font-black text-slate-400 dark:text-slate-500 tracking-wider mb-2">Operational Notes & Remarks</span>
                     {isEditing ? (
                        <textarea
                          value={formData.comments || ""}
                          onChange={(e) => updateField("comments", e.target.value)}
-                         className="min-h-[100px] w-full rounded-xl border border-slate-250 bg-white p-4 text-xs font-bold transition-all focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 shadow-inner"
+                         className="min-h-[100px] w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 text-xs font-bold text-slate-800 dark:text-slate-200 transition-all focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 shadow-inner"
                          placeholder="Enter detailed observations or ongoing maintenance snags..."
                        />
                     ) : (
-                      <p className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-4 text-xs font-bold italic leading-relaxed text-slate-600 shadow-inner">
+                      <p className="rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 p-4 text-xs font-bold italic leading-relaxed text-slate-600 dark:text-slate-400 shadow-inner">
                         {formData.comments || "No active operational remarks have been logged for this node asset."}
                       </p>
                     )}
@@ -532,7 +533,8 @@ const SiteDetailModal = ({ site, onClose, onSave }: SiteDetailModalProps) => {
           </AnimatePresence>
         </div>
       </motion.div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

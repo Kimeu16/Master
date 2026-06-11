@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { getSites, getEscalations, getPMChecklist, getRevisionSummary } from "@/lib/googleSheets";
 import { api } from "@/lib/api";
 
 export const useSites = () => {
     return useQuery({
         queryKey: ["sites"],
-        queryFn: getSites,
+        queryFn: () => api.get("/sites"),
         staleTime: 1000 * 60 * 5,
     });
 };
@@ -21,7 +20,7 @@ export const useUsers = () => {
 export const useEscalations = () => {
     return useQuery({
         queryKey: ["escalations"],
-        queryFn: getEscalations,
+        queryFn: () => api.get("/escalations"),
         staleTime: 1000 * 60 * 5,
     });
 };
@@ -29,7 +28,7 @@ export const useEscalations = () => {
 export const usePMChecklist = () => {
     return useQuery({
         queryKey: ["pm_checklist"],
-        queryFn: getPMChecklist,
+        queryFn: () => api.get("/pm-checklists"),
         staleTime: 1000 * 60 * 15,
     });
 };
@@ -37,7 +36,7 @@ export const usePMChecklist = () => {
 export const useRevisionSummary = () => {
     return useQuery({
         queryKey: ["revision_summary"],
-        queryFn: getRevisionSummary,
+        queryFn: () => api.get("/revision-summaries"),
         staleTime: 1000 * 60 * 15,
     });
 };

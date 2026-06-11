@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { User as UserType } from "@/types/site";
 import { X, User, Edit3, Check, RotateCcw, Shield, MapPin, Briefcase, Mail, Phone, Calendar, Bookmark, HelpCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -195,6 +195,24 @@ export function UserDetailModal({ user, onClose, onSave, onDelete }: UserDetailM
           </Section>
 
           <Section title="Corporate Access Node" icon={Shield}>
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">System Permissions</span>
+              {isEditing ? (
+                <select
+                  value={formData.rbacRole || "Read-Only"}
+                  onChange={(e) => setFormData({ ...formData, rbacRole: e.target.value as any })}
+                  className="h-9 w-full rounded-xl border-secondary/30 bg-white/50 dark:bg-primary/30 px-3 text-xs font-semibold shadow-sm focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
+                >
+                  <option value="Read-Only">Read-Only (Default)</option>
+                  <option value="CRUD">CRUD (Editor)</option>
+                  <option value="Admin">Admin (Full Access)</option>
+                </select>
+              ) : (
+                <p className="min-h-[20px] text-xs font-bold text-foreground">
+                  {formData.rbacRole || "Read-Only"}
+                </p>
+              )}
+            </div>
             {renderField("Operational Group", formData.department, "department")}
             {renderField("Active Access Group", formData.accessGroup, "accessGroup")}
             {renderField("Clearance Tier", formData.accessLevel, "accessLevel")}

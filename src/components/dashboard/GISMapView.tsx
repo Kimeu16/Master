@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { CircleDot, Loader2, LocateFixed, MapPin, Radio, Search, ShieldAlert, Wifi } from "lucide-react";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Popup, useMap, LayersControl, Polygon, ZoomControl, GeoJSON } from "react-leaflet";
@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { useSites } from "@/hooks/useSites";
 import { cn } from "@/lib/utils";
 import { IconUtils, GeomUtils, ThemeUtils } from "@/lib/mapUtils";
+import { api } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import kenyaMask from "@/data/kenyaMask.json";
 import kenyaGeoJSON from "@/data/kenya.json";
 import type { Site } from "@/types/site";
@@ -28,9 +31,20 @@ const KENYA_BOUNDS = {
 };
 
 const parseCoordinate = (value: string) => {
-  const normalized = value?.trim().replace(",", ".");
+  if (!value) return Number.NaN;
+  const str = value.toString().trim().toUpperCase();
+  
+  // Determine sign based on S or W suffix before removing them
+  let sign = 1;
+  if (str.includes("S") || str.includes("W")) {
+    sign = -1;
+  }
+  
+  // Keep only digits, dot, and minus
+  const normalized = str.replace(",", ".").replace(/[^\d.-]/g, "");
+  
   const coordinate = Number.parseFloat(normalized);
-  return Number.isFinite(coordinate) ? coordinate : Number.NaN;
+  return Number.isFinite(coordinate) ? coordinate * sign : Number.NaN;
 };
 
 const getSiteStatus = (site: Site): PlottedSite["status"] => {
@@ -356,13 +370,37 @@ const GISMapView = () => {
   const [region, setRegion] = useState("all");
   const [status, setStatus] = useState<"all" | PlottedSite["status"]>("all");
   const [selectedSite, setSelectedSite] = useState<Site | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const queryClient = useQueryClient();
   const isDark = useIsDarkMode();
+
+  const handleSaveSite = async (updatedSite: Site) => {
+    setIsSyncing(true);
+    try {
+      const normalizeId = (id: string) => id?.replace(".0", "").trim() || "";
+      await api.put(`/sites/${normalizeId(updatedSite.no)}`, updatedSite);
+      queryClient.invalidateQueries({ queryKey: ["sites"] });
+      toast.success("Site updated successfully. The map has been refreshed.");
+    } catch (err: any) {
+      console.error("Cloud sync failed:", err);
+      toast.error("Failed to update site.");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const plottedSites = useMemo<PlottedSite[]>(() => {
     return sites
       .map((site) => {
-        const lat = parseCoordinate(site.latitude);
-        const lng = parseCoordinate(site.longitude);
+        let lat = parseCoordinate(site.latitude);
+        let lng = parseCoordinate(site.longitude);
+
+        // Auto-correct swapped coordinates (Kenya lat is ~0, lng is ~37)
+        if (Math.abs(lat) > 20 && Math.abs(lng) < 10) {
+          const temp = lat;
+          lat = lng;
+          lng = temp;
+        }
 
         return {
           ...site,
@@ -619,6 +657,7 @@ const GISMapView = () => {
         <SiteDetailModal
           site={sites.find((site) => site.no === selectedSite.no) || selectedSite}
           onClose={() => setSelectedSite(null)}
+          onSave={handleSaveSite}
         />
       )}
     </div>
