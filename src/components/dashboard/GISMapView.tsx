@@ -43,7 +43,7 @@ const getSiteStatus = (site: Site): PlottedSite["status"] => {
   }
 
   if (comments.includes("alarm") || comments.includes("issue") || routerStatus.includes("down") || priority === "2") {
-    return "warning";
+    return "warning";w
   }
 
   return "operational";
