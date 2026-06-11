@@ -56,7 +56,7 @@ const shutdownMySQL = () => {
   try {
     execFileSync(MYSQLADMIN, [
       "--user=root",
-      `--password=${process.env.DB_PASSWORD || "858303Aa."}`,
+      `--password=${process.env.DB_PASSWORD || ""}`,
       "--host=127.0.0.1",
       `--port=${PORT}`,
       "shutdown",
@@ -122,7 +122,7 @@ if (await isPortOpen(PORT)) {
       if (!mysqld.killed) {
         execFileSync(MYSQLADMIN, [
           "--user=root",
-          `--password=${process.env.DB_PASSWORD || "858303Aa."}`,
+          `--password=${process.env.DB_PASSWORD || ""}`,
           "--host=127.0.0.1",
           `--port=${PORT}`,
           "shutdown",

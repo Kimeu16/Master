@@ -61,7 +61,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
       await pool.query('UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE no = ?', [resetToken, expires, user.no]);
 
-      const resetUrl = `http://localhost:5173/reset-password?token=${resetToken}`;
+      const origin = req.headers.origin || 'http://localhost:8080';
+      const resetUrl = `${origin}/reset-password?token=${resetToken}`;
       
       const info = await transporter.sendMail({
         from: '"AlanDick Ops" <noreply@alandick.com>',
@@ -98,6 +99,29 @@ export const resetPassword = async (req: Request, res: Response) => {
 
     res.json({ message: 'Password successfully reset' });
   } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const register = async (req: Request, res: Response) => {
+  const { username, email, password, phone } = req.body;
+  try {
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(password, salt);
+    const no = crypto.randomUUID();
+    
+    await pool.query(
+      `INSERT INTO users (no, user_name, email, phone, password_hash, rbac_role) VALUES (?, ?, ?, ?, ?, 'Read-Only')`,
+      [no, username, email, phone, hash]
+    );
+
+    const token = jwt.sign({ no, role: 'Read-Only' }, JWT_SECRET, { expiresIn: '1d' });
+    res.status(201).json({ token, user: { no, user_name: username, email, rbac_role: 'Read-Only' } });
+  } catch (error: any) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ error: 'This email is already in use.' });
+    }
+    console.error("Registration error:", error);
     res.status(500).json({ error: 'Server error' });
   }
 };

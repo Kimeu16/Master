@@ -29,7 +29,10 @@ export const createUser = async (req: Request, res: Response) => {
   try {
     const newUser = await userService.createUser(req.body);
     res.status(201).json(newUser);
-  } catch (error) {
+  } catch (error: any) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ error: 'This email is already in use.' });
+    }
     console.error('Error creating user:', error);
     res.status(500).json({ error: 'Failed to create user' });
   }
@@ -43,7 +46,10 @@ export const updateUser = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'User not found' });
     }
     res.json(updatedUser);
-  } catch (error) {
+  } catch (error: any) {
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ error: 'This email is already in use.' });
+    }
     console.error('Error updating user:', error);
     res.status(500).json({ error: 'Failed to update user' });
   }

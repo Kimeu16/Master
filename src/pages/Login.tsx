@@ -202,13 +202,20 @@ const Login = () => {
             </div>
 
             {/* Submit Button */}
-            <div className="pt-6 flex justify-center">
+            <div className="pt-6 flex flex-col gap-4 items-center">
               <button
                 type="submit"
                 disabled={isLoading}
                 className="primary-button rounded-xl px-10 py-3 text-xs font-bold tracking-widest min-w-[220px] disabled:opacity-50"
               >
                 {isLoading ? "Signing In..." : "Sign In"}
+              </button>
+              <button 
+                type="button" 
+                onClick={() => navigate("/signup")}
+                className="text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                Don't have an account? Sign Up
               </button>
             </div>
           </form>

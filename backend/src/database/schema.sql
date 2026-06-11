@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS users (
     rbac_role ENUM('Read-Only', 'CRUD', 'Admin') DEFAULT 'Read-Only',
     password_hash VARCHAR(255) NULL,
     reset_token VARCHAR(255) NULL,
-    reset_token_expires BIGINT NULL
+    reset_token_expires BIGINT NULL,
+    UNIQUE KEY unique_email (email)
 );
 
 CREATE TABLE IF NOT EXISTS escalations (

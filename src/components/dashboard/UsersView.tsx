@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useUsers } from "@/hooks/useSites";
 import { api } from "@/lib/api";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ import { User } from "@/types/site";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 /* â”€â”€ avatar gradient palette â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const AVATAR_GRADIENTS = [
@@ -301,8 +302,11 @@ const UsersView = () => {
     try {
       await api.put(`/users/${updatedUser.no}`, updatedUser);
       queryClient.invalidateQueries({ queryKey: ["users"] });
-    } catch (err) {
+      toast.success("User updated successfully");
+    } catch (err: any) {
       console.error("Cloud sync failed:", err);
+      const msg = err.response?.data?.error || "Failed to update user";
+      toast.error(msg);
     } finally {
       setIsSyncing(false);
     }
@@ -314,8 +318,11 @@ const UsersView = () => {
       await api.post("/users", newUser);
       queryClient.invalidateQueries({ queryKey: ["users"] });
       setShowAddModal(false);
-    } catch (err) {
+      toast.success("User added successfully");
+    } catch (err: any) {
       console.error("Add failed:", err);
+      const msg = err.response?.data?.error || "Failed to create user";
+      toast.error(msg);
     } finally {
       setIsSyncing(false);
     }
