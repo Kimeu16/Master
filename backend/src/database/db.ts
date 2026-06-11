@@ -1,6 +1,5 @@
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
-import path from 'path';
 
 dotenv.config();
 
@@ -14,5 +13,27 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
 });
+
+export const waitForDatabaseConnection = async (retries = 20, delayMs = 1000) => {
+  let attempt = 0;
+  while (attempt < retries) {
+    try {
+      await pool.query('SELECT 1');
+      return;
+    } catch (error) {
+      attempt += 1;
+      if (attempt >= retries) {
+        throw error;
+      }
+      console.warn(`Database connection attempt ${attempt} failed. Retrying in ${delayMs}ms...`);
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+};
+
+export const isDatabaseHealthy = async () => {
+  await pool.query('SELECT 1');
+  return true;
+};
 
 export default pool;

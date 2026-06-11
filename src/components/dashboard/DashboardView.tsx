@@ -152,8 +152,8 @@ const DashboardView = () => {
         )}
       </AnimatePresence>
 
-      {/* Immersive Executive mesh-gradient banner */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 text-white shadow-xl shadow-indigo-950/10">
+      {/* Immersive Executive mesh-gradient banner — always dark for brand impact */}
+      <section className="relative overflow-hidden rounded-2xl text-white bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-2xl border border-slate-700/30">
         <div className="pointer-events-none absolute right-[-10%] top-[-20%] h-[350px] w-[350px] rounded-full bg-primary/20 blur-[80px]" />
         <div className="pointer-events-none absolute left-[40%] bottom-[-30%] h-[300px] w-[300px] rounded-full bg-accent/20 blur-[80px]" />
 

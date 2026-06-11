@@ -1,5 +1,6 @@
 import pool from '../database/db';
 import { mapKeysToCamelCase, mapKeysToSnakeCase } from '../utils/caseConverter';
+import crypto from 'crypto';
 
 export const getAllUsers = async () => {
   const [rows] = await pool.query('SELECT * FROM users');
@@ -14,6 +15,9 @@ export const getUserById = async (no: string) => {
 };
 
 export const createUser = async (userData: any) => {
+  if (!userData.no) {
+    userData.no = crypto.randomUUID();
+  }
   const snakeData = mapKeysToSnakeCase(userData);
   const keys = Object.keys(snakeData);
   const columns = keys.join(', ');

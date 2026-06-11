@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+﻿import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useSites } from "@/hooks/useSites";
 import {
@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-/* ── vendor colour map ──────────────────────────────────────────────── */
+/* â”€â”€ vendor colour map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const VENDOR_GRADIENTS = [
   "from-indigo-500 via-purple-500 to-pink-500",
   "from-blue-500 via-cyan-500 to-teal-500",
@@ -36,7 +36,7 @@ function getVendorInitial(name: string) {
   return name.replace(/[^a-zA-Z]/g, "")[0]?.toUpperCase() ?? "S";
 }
 
-/* ── SecurityVendorCard ─────────────────────────────────────────────── */
+/* â”€â”€ SecurityVendorCard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function SecurityVendorCard({
   company,
   maxSites,
@@ -53,25 +53,25 @@ function SecurityVendorCard({
       layout
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="group relative overflow-hidden rounded-3xl border border-white/40 bg-white/60 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/20 hover:shadow-[0_20px_40px_rgba(79,70,229,0.06)] dark:border-slate-800/60 dark:bg-slate-900/60"
+      className="glass-card group relative overflow-hidden p-5 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)]"
     >
       <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${gradient} opacity-80 group-hover:opacity-100 transition-opacity`} />
       
       <div className="mb-4 flex items-center gap-3">
         <div
-          className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-base font-black text-white shadow-md ring-2 ring-white/60 dark:ring-slate-850`}
+          className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-base font-black text-white shadow-md ring-2 ring-white/60 dark:ring-secondary/30`}
         >
           {initial}
         </div>
         <div className="min-w-0 flex-1">
-          <h4 className="truncate text-sm font-extrabold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 transition-colors">
+          <h4 className="truncate text-sm font-extrabold text-foreground group-hover:text-primary transition-colors">
             {company.name}
           </h4>
-          <p className="mt-0.5 truncate text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+          <p className="mt-0.5 truncate text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
             {company.coverage}
           </p>
         </div>
-        <span className="shrink-0 rounded-full border border-slate-200 bg-white/90 px-2.5 py-0.5 text-[10px] font-black text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
+        <span className="shrink-0 rounded-full border border-secondary/20 bg-card/50 px-2.5 py-0.5 text-[10px] font-black text-foreground">
           {company.sites} sites
         </span>
       </div>
@@ -79,10 +79,10 @@ function SecurityVendorCard({
       {/* Elegant Density gauge track */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Coverage Footprint</span>
-          <span className="text-[10px] font-black text-slate-600 dark:text-slate-400">{Math.round(pct)}% Share</span>
+          <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Coverage Footprint</span>
+          <span className="text-[10px] font-black text-muted-foreground">{Math.round(pct)}% Share</span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-900">
+        <div className="h-2 overflow-hidden rounded-full bg-secondary/10">
           <div
             className={`h-full rounded-full bg-gradient-to-r ${gradient} transition-all duration-700`}
             style={{ width: `${pct}%` }}
@@ -93,21 +93,21 @@ function SecurityVendorCard({
   );
 }
 
-/* ── ProtocolStep ───────────────────────────────────────────────────── */
+/* â”€â”€ ProtocolStep â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function ProtocolStep({ step, label, color }: { step: number; label: string; color: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-slate-100/10 p-2.5 transition-all hover:bg-indigo-50/20 dark:hover:bg-slate-800/20">
+    <div className="flex items-center gap-3 rounded-2xl border border-secondary/10 p-2.5 transition-all hover:bg-primary/10">
       <div
         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl ${color} text-[10px] font-black text-white shadow-md`}
       >
         {step}
       </div>
-      <span className="text-[12px] font-bold text-slate-600 dark:text-slate-305">{label}</span>
+      <span className="text-[12px] font-bold text-foreground">{label}</span>
     </div>
   );
 }
 
-/* ── main component ─────────────────────────────────────────────────── */
+/* â”€â”€ main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const SecurityView = () => {
   const { data: sitesData } = useSites();
 
@@ -143,16 +143,16 @@ const SecurityView = () => {
   const maxSites = Math.max(...securityCompanies.map((c) => c.sites), 1);
 
   const statItems = [
-    { label: "Secured Nodes", value: assignedSecurity, icon: ShieldCheck, gradient: "from-emerald-400 via-teal-500 to-cyan-600", bg: "bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
-    { label: "Active Digital Locks", value: electronicLocks, icon: LockKeyhole, gradient: "from-indigo-500 via-purple-500 to-pink-500", bg: "bg-indigo-500/10", text: "text-indigo-600 dark:text-indigo-400" },
-    { label: "Active Guard Agencies", value: securityCompanies.length, icon: Building2, gradient: "from-blue-500 via-cyan-500 to-teal-500", bg: "bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
+    { label: "Secured Nodes", value: assignedSecurity, icon: ShieldCheck, gradient: "from-emerald-400 via-teal-500 to-cyan-600", bg: "bg-emerald-500/10", text: "text-emerald-600" },
+    { label: "Active Digital Locks", value: electronicLocks, icon: LockKeyhole, gradient: "from-indigo-500 via-purple-500 to-pink-500", bg: "bg-primary/10", text: "text-primary" },
+    { label: "Active Guard Agencies", value: securityCompanies.length, icon: Building2, gradient: "from-blue-500 via-cyan-500 to-teal-500", bg: "bg-secondary/10", text: "text-muted-foreground" },
   ];
 
   const alertTypes = [
-    { label: "High Voltage Perimeter Fence Breach", icon: Radio, color: "text-rose-600 dark:text-rose-400", bg: "border-rose-500/20 bg-rose-500/5", dot: "bg-rose-500 animate-ping" },
-    { label: "Site Access Control Main Gate Alert", icon: Bell, color: "text-red-600 dark:text-red-400", bg: "border-red-500/20 bg-red-500/5", dot: "bg-red-400 animate-pulse" },
-    { label: "Unauthorized Shelter Access Warning", icon: Fingerprint, color: "text-amber-600 dark:text-amber-400", bg: "border-amber-500/20 bg-amber-500/5", dot: "bg-amber-500 animate-bounce" },
-    { label: "NOC Routine Guard Patrol Check-in", icon: Eye, color: "text-indigo-600 dark:text-indigo-400", bg: "border-indigo-500/20 bg-indigo-500/5", dot: "bg-indigo-500" },
+    { label: "High Voltage Perimeter Fence Breach", icon: Radio, color: "text-rose-600", bg: "border-rose-500/20 bg-rose-500/5", dot: "bg-rose-500 animate-ping" },
+    { label: "Site Access Control Main Gate Alert", icon: Bell, color: "text-red-600", bg: "border-red-500/20 bg-red-500/5", dot: "bg-red-400 animate-pulse" },
+    { label: "Unauthorized Shelter Access Warning", icon: Fingerprint, color: "text-amber-600", bg: "border-amber-500/20 bg-amber-500/5", dot: "bg-amber-500 animate-bounce" },
+    { label: "NOC Routine Guard Patrol Check-in", icon: Eye, color: "text-primary", bg: "border-primary/20 bg-primary/5", dot: "bg-primary" },
   ];
 
   const protocolSteps = [
@@ -167,12 +167,12 @@ const SecurityView = () => {
       {/* Page Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Security & Surveillance</h2>
-          <p className="mt-1 text-sm font-semibold text-slate-400">
+          <h2 className="text-3xl font-extrabold tracking-tight text-foreground">Security & Surveillance</h2>
+          <p className="mt-1 text-sm font-semibold text-muted-foreground">
             Physical site security, electronic door access governance, and intrusion monitoring.
           </p>
         </div>
-        <Badge variant="outline" className="w-fit gap-1.5 border-emerald-500/20 bg-emerald-500/5 text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-450">
+        <Badge variant="outline" className="w-fit gap-1.5 border-emerald-500/20 bg-emerald-500/5 text-[10px] font-black uppercase tracking-wider text-emerald-600">
           <span className="h-1.5 w-1.5 animate-ping rounded-full bg-emerald-400" />
           Active Monitor
         </Badge>
@@ -188,16 +188,16 @@ const SecurityView = () => {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="group relative overflow-hidden rounded-2xl border border-white/40 bg-white/60 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] backdrop-blur-xl transition-all duration-300 hover:shadow-[0_15px_30px_rgba(0,0,0,0.05)] dark:border-slate-800/60 dark:bg-slate-900/60"
+              className="glass-card group relative overflow-hidden p-5 transition-all duration-300 hover:shadow-[0_15px_30px_rgba(0,0,0,0.05)]"
             >
               <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${item.gradient}`} />
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{item.label}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{item.label}</span>
                 <div className={`rounded-xl ${item.bg} p-2 ${item.text}`}>
                   <Icon size={16} className="transition-transform group-hover:scale-110" />
                 </div>
               </div>
-              <p className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">{item.value}</p>
+              <p className="text-3xl font-black tracking-tight text-foreground">{item.value}</p>
             </motion.div>
           );
         })}
@@ -207,17 +207,17 @@ const SecurityView = () => {
       <motion.section
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="overflow-hidden rounded-3xl border border-white/40 bg-white/40 shadow-sm backdrop-blur-xl dark:border-slate-800/60 dark:bg-slate-900/40"
+        className="glass-section"
       >
-        <div className="flex flex-col gap-3 border-b border-slate-100/50 bg-gradient-to-r from-slate-50/50 to-white/50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800/50 dark:from-slate-900/30 dark:to-slate-900/10">
+        <div className="flex flex-col gap-3 border-b border-secondary/15 bg-card/30 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="flex items-center gap-2 text-base font-extrabold text-slate-800 dark:text-slate-200">
-              <Building2 size={16} className="text-indigo-500" />
+            <h3 className="flex items-center gap-2 text-base font-extrabold text-foreground">
+              <Building2 size={16} className="text-primary" />
               Security Provider Performance Matrix
             </h3>
-            <p className="mt-0.5 text-xs font-semibold text-slate-400">Assigned vendor boundaries and density statistics per site network.</p>
+            <p className="mt-0.5 text-xs font-semibold text-muted-foreground">Assigned vendor boundaries and density statistics per site network.</p>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/5 px-3 py-1 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-bold text-primary">
             <Sparkles size={11} className="animate-pulse" />
             {securityCompanies.length} contractors
           </span>
@@ -236,15 +236,15 @@ const SecurityView = () => {
         <motion.section
           initial={{ opacity: 0, x: -15 }}
           animate={{ opacity: 1, x: 0 }}
-          className="rounded-3xl border border-white/40 bg-white/40 p-6 shadow-sm backdrop-blur-xl dark:border-slate-800/60 dark:bg-slate-900/40"
+          className="glass-section p-6"
         >
           <div className="mb-6 flex items-center gap-3">
-            <div className="rounded-2xl bg-indigo-500/10 p-2.5">
-              <KeyRound size={18} className="text-indigo-500" />
+            <div className="rounded-2xl bg-primary/10 p-2.5">
+              <KeyRound size={18} className="text-primary" />
             </div>
             <div>
-              <h3 className="text-base font-extrabold text-slate-800 tracking-tight dark:text-slate-200">Electronic Keyless Protocols</h3>
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Cryptographic double check validation.</p>
+              <h3 className="text-base font-extrabold text-foreground tracking-tight">Electronic Keyless Protocols</h3>
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Cryptographic double check validation.</p>
             </div>
           </div>
           <div className="space-y-2 pl-1">
@@ -252,9 +252,9 @@ const SecurityView = () => {
               <ProtocolStep key={step.label} step={i + 1} label={step.label} color={step.color} />
             ))}
           </div>
-          <div className="mt-5 flex items-center gap-3.5 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3.5">
-            <LockOpen size={16} className="shrink-0 text-indigo-500 animate-pulse" />
-            <p className="text-xs font-semibold leading-relaxed text-indigo-800 dark:text-indigo-300">
+          <div className="mt-5 flex items-center gap-3.5 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3.5">
+            <LockOpen size={16} className="shrink-0 text-primary animate-pulse" />
+            <p className="text-xs font-semibold leading-relaxed text-muted-foreground">
               {electronicLocks} active nodes are currently secured with keyless smart-lock verification registers.
             </p>
           </div>
@@ -264,15 +264,15 @@ const SecurityView = () => {
         <motion.section
           initial={{ opacity: 0, x: 15 }}
           animate={{ opacity: 1, x: 0 }}
-          className="rounded-3xl border border-white/40 bg-white/40 p-6 shadow-sm backdrop-blur-xl dark:border-slate-800/60 dark:bg-slate-900/40"
+          className="glass-section p-6"
         >
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-2xl bg-rose-500/10 p-2.5">
               <ShieldCheck size={18} className="text-rose-500 animate-pulse" />
             </div>
             <div>
-              <h3 className="text-base font-extrabold text-slate-800 tracking-tight dark:text-slate-200">Intrusion Alert Classes</h3>
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Categorized critical security threat levels.</p>
+              <h3 className="text-base font-extrabold text-foreground tracking-tight">Intrusion Alert Classes</h3>
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Categorized critical security threat levels.</p>
             </div>
           </div>
           <div className="space-y-2.5">
@@ -293,7 +293,7 @@ const SecurityView = () => {
 
           <div className="mt-5 flex items-start gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3.5">
             <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-600" />
-            <p className="text-[11px] font-semibold leading-relaxed text-amber-800 dark:text-amber-305">
+            <p className="text-[11px] font-semibold leading-relaxed text-amber-800">
               Warning: Any alarm event that is not acknowledged inside 3 minutes automatically raises an escalation level in accordance with the SLA matrix.
             </p>
           </div>

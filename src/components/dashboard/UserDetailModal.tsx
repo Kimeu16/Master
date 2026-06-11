@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { User as UserType } from "@/types/site";
 import { X, User, Edit3, Check, RotateCcw, Shield, MapPin, Briefcase, Mail, Phone, Calendar, Bookmark, HelpCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ interface UserDetailModalProps {
   user: UserType;
   onClose: () => void;
   onSave?: (updatedUser: UserType) => void;
+  onDelete?: (userId: string) => void;
 }
 
 const AVATAR_GRADIENTS = [
@@ -37,35 +38,36 @@ function getInitials(name: string) {
     .join("");
 }
 
-export function UserDetailModal({ user, onClose, onSave }: UserDetailModalProps) {
+const Section = ({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) => (
+  <div className="glass-card rounded-2xl p-5">
+    <h4 className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-foreground">
+      <Icon size={14} className="text-primary" />
+      {title}
+    </h4>
+    <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">{children}</div>
+  </div>
+);
+
+export function UserDetailModal({ user, onClose, onSave, onDelete }: UserDetailModalProps) {
   const { canEdit } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState<UserType>(user);
   const gradient = getGradient(user.userName || "U");
   const initials = getInitials(user.userName || "U");
 
-  const Section = ({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) => (
-    <div className="mb-6 rounded-2xl border border-white/20 bg-white/40 p-5 shadow-sm dark:border-slate-800/40 dark:bg-slate-900/40">
-      <h4 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
-        <Icon size={14} className="text-indigo-500" />
-        {title}
-      </h4>
-      <div className="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">{children}</div>
-    </div>
-  );
-
-  const Field = ({ label, value, fieldName }: { label: string; value: string; fieldName: keyof UserType }) => (
+  const renderField = (label: string, value: string, fieldName: keyof UserType) => (
     <div className="space-y-1.5">
-      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">{label}</span>
+      <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
       {isEditing ? (
         <Input
           value={formData[fieldName] || ""}
           onChange={(e) => setFormData({ ...formData, [fieldName]: e.target.value })}
-          className="h-9 w-full rounded-xl border-slate-200 bg-white px-3 text-xs font-semibold shadow-sm focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
+          className="h-9 w-full rounded-xl border-secondary/30 bg-white/50 dark:bg-primary/30 px-3 text-xs font-semibold shadow-sm focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
         />
       ) : (
-        <p className="min-h-[20px] text-xs font-bold text-slate-800 dark:text-slate-200">
-          {value || <span className="font-medium italic text-slate-400 dark:text-slate-600">Not Assigned</span>}
+        <p className="min-h-[20px] text-xs font-bold text-foreground">
+          {value || <span className="font-medium italic text-muted-foreground">Not Assigned</span>}
         </p>
       )}
     </div>
@@ -79,37 +81,37 @@ export function UserDetailModal({ user, onClose, onSave }: UserDetailModalProps)
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-xl" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-primary/30 p-4 backdrop-blur-xl" onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-white/40 bg-white/75 shadow-2xl backdrop-blur-2xl dark:border-slate-800/80 dark:bg-slate-900/75"
+        className="glass-panel relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Fluent Top Gradient Glow */}
-        <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${gradient}`} />
+        <div className={`absolute inset-x-0 top-0 h-1 bg-primary`} />
 
         {/* Modal Header */}
-        <div className="flex shrink-0 flex-col gap-4 border-b border-slate-100/50 bg-white/40 p-6 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800/50 dark:bg-slate-900/40">
+        <div className="flex shrink-0 flex-col gap-4 border-b border-secondary/20 bg-white/30 dark:bg-primary/30 backdrop-blur-sm p-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-4">
             <div
-              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} text-lg font-black text-white shadow-md ring-4 ring-white/60 dark:ring-slate-800`}
+              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} text-lg font-black text-white shadow-md ring-4 ring-white/60 dark:ring-secondary/30`}
             >
               {initials}
             </div>
             <div className="min-w-0">
-              <h3 className="truncate text-xl font-black tracking-tight text-slate-800 dark:text-white">{user.userName}</h3>
+              <h3 className="truncate text-xl font-black tracking-tight text-foreground">{user.userName}</h3>
               <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                 <Badge
                   variant="outline"
-                  className="h-5 border-indigo-500/20 bg-indigo-500/5 text-[9px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400"
+                  className="h-5 border-primary/30 bg-primary/10 text-[9px] font-black uppercase tracking-wider text-primary"
                 >
                   {user.accessLevel || "Staff Node"}
                 </Badge>
                 <Badge
                   variant="outline"
-                  className="h-5 border-sky-500/20 bg-sky-500/5 text-[9px] font-black uppercase tracking-wider text-sky-600 dark:text-sky-400"
+                  className="h-5 border-secondary/30 bg-secondary/10 text-[9px] font-black uppercase tracking-wider text-muted-foreground"
                 >
                   {user.region || "Global Coverage"}
                 </Badge>
@@ -119,14 +121,30 @@ export function UserDetailModal({ user, onClose, onSave }: UserDetailModalProps)
           
           {/* Modal Header Action Panel */}
           <div className="flex items-center gap-2">
-            {isEditing ? (
+            {isDeleting ? (
+               <div className="flex items-center gap-2 rounded-xl glass-card px-3 py-1.5 border-rose-500/30">
+                 <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 mr-2 max-w-[200px] leading-tight">Are you sure you want to delete this user? Once done action cannot be undone.</span>
+                 <button
+                   onClick={() => setIsDeleting(false)}
+                   className="control-button"
+                 >
+                   Cancel
+                 </button>
+                 <button
+                   onClick={() => onDelete && onDelete(user.no)}
+                   className="flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-md transition-all hover:bg-rose-700 hover:shadow-rose-500/20 active:scale-95"
+                 >
+                   Confirm Delete
+                 </button>
+               </div>
+            ) : isEditing ? (
               <>
                 <button
                   onClick={() => {
                     setFormData(user);
                     setIsEditing(false);
                   }}
-                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-600 shadow-sm transition-all hover:bg-slate-50 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                  className="control-button"
                 >
                   <RotateCcw size={13} /> Cancel
                 </button>
@@ -139,13 +157,21 @@ export function UserDetailModal({ user, onClose, onSave }: UserDetailModalProps)
               </>
             ) : (
               canEdit && (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-indigo-500/5 hover:text-indigo-600 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                >
-                  <Edit3 size={14} />
-                  Edit Profile
-                </button>
+                <>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:bg-indigo-500/5 hover:text-indigo-600 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                  >
+                    <Edit3 size={14} />
+                    Edit Profile
+                  </button>
+                  <button
+                    onClick={() => setIsDeleting(true)}
+                    className="flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-600 shadow-sm transition-all hover:bg-rose-100 hover:text-rose-700 active:scale-95 dark:border-rose-900/30 dark:bg-rose-900/20 dark:text-rose-400 dark:hover:bg-rose-900/40"
+                  >
+                    Delete Member
+                  </button>
+                </>
               )
             )}
             <div className="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-800" />
@@ -162,26 +188,26 @@ export function UserDetailModal({ user, onClose, onSave }: UserDetailModalProps)
         <div className="custom-scrollbar flex-1 overflow-y-auto bg-gradient-to-b from-white/20 to-slate-50/20 p-6 dark:to-slate-950/20">
           
           <Section title="Basic Profile Metrics" icon={User}>
-            <Field label="Staff Member ID" value={formData.no?.replace(".0", "")} fieldName="no" />
-            <Field label="Full Signature Name" value={formData.userName} fieldName="userName" />
-            <Field label="Primary Email Route" value={formData.email} fieldName="email" />
-            <Field label="Mobile Phone Matrix" value={formData.phone} fieldName="phone" />
+            {renderField("Staff Member ID", formData.no?.replace(".0", ""), "no")}
+            {renderField("Full Signature Name", formData.userName, "userName")}
+            {renderField("Primary Email Route", formData.email, "email")}
+            {renderField("Mobile Phone Matrix", formData.phone, "phone")}
           </Section>
 
           <Section title="Corporate Access Node" icon={Shield}>
-            <Field label="Operational Group" value={formData.department} fieldName="department" />
-            <Field label="Active Access Group" value={formData.accessGroup} fieldName="accessGroup" />
-            <Field label="Clearance Tier" value={formData.accessLevel} fieldName="accessLevel" />
-            <Field label="Assigned Region" value={formData.region} fieldName="region" />
+            {renderField("Operational Group", formData.department, "department")}
+            {renderField("Active Access Group", formData.accessGroup, "accessGroup")}
+            {renderField("Clearance Tier", formData.accessLevel, "accessLevel")}
+            {renderField("Assigned Region", formData.region, "region")}
           </Section>
 
           <Section title="Operational Scopes" icon={Briefcase}>
-            <Field label="REON Status" value={formData.reonOnboarding} fieldName="reonOnboarding" />
-            <Field label="Total Assigned Sites" value={formData.sites} fieldName="sites" />
+            {renderField("REON Status", formData.reonOnboarding, "reonOnboarding")}
+            {renderField("Total Assigned Sites", formData.sites, "sites")}
             
             {/* Roles textarea block */}
             <div className="col-span-full mt-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Detailed Scope of Responsibilities
               </span>
               {isEditing ? (

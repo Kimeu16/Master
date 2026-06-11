@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+﻿import { motion } from "framer-motion";
 import { LucideIcon, TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,38 +15,38 @@ interface StatsCardProps {
 const StatsCard = ({ title, value, icon: Icon, trend, trendValue, variant = "default", className }: StatsCardProps) => {
   const variants = {
     default: {
-      bg: "bg-primary/8 border-primary/20",
+      bg: "bg-primary/10 border-primary/20",
       icon: "text-primary",
       border: "hover:border-primary/25",
-      bar: "from-primary to-indigo-500",
+      bar: "from-primary to-secondary",
       glow: "rgba(37,99,235,0.04)",
     },
     accent: {
-      bg: "bg-accent/8 border-accent/20",
+      bg: "bg-accent/10 border-accent/20",
       icon: "text-accent",
       border: "hover:border-accent/25",
-      bar: "from-accent to-teal-600",
+      bar: "from-accent to-secondary",
       glow: "rgba(13,148,136,0.04)",
     },
     success: {
-      bg: "bg-success/8 border-success/20",
+      bg: "bg-success/10 border-success/20",
       icon: "text-success",
       border: "hover:border-success/25",
-      bar: "from-success to-emerald-600",
+      bar: "from-success to-secondary",
       glow: "rgba(16,185,129,0.04)",
     },
     warning: {
-      bg: "bg-warning/8 border-warning/20",
+      bg: "bg-warning/10 border-warning/20",
       icon: "text-warning",
       border: "hover:border-warning/25",
-      bar: "from-warning to-amber-500",
+      bar: "from-warning to-secondary",
       glow: "rgba(245,158,11,0.04)",
     },
     info: {
-      bg: "bg-info/8 border-info/20",
+      bg: "bg-info/10 border-info/20",
       icon: "text-info",
       border: "hover:border-info/25",
-      bar: "from-info to-sky-500",
+      bar: "from-info to-secondary",
       glow: "rgba(14,165,233,0.04)",
     },
   };
@@ -58,7 +58,7 @@ const StatsCard = ({ title, value, icon: Icon, trend, trendValue, variant = "def
       whileHover={{ y: -4, scale: 1.015, boxShadow: "0 20px 40px -15px rgba(0,0,0,0.06)" }}
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
       className={cn(
-        "premium-card group relative flex min-h-[160px] flex-col overflow-hidden p-5 border border-slate-100",
+        "premium-card group relative flex min-h-[160px] flex-col overflow-hidden p-5",
         style.border,
         className
       )}

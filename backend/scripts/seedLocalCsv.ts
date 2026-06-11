@@ -78,7 +78,48 @@ const mapHeaders = (row: Record<string, string>, headerMap: Record<string, strin
     if (appKey === "no" || appKey === "priority") {
       value = value.replace(".0", "");
     }
-    mapped[appKey] = value;
+    const isNulled = value === "" || value.toLowerCase() === "n/a" || value.toLowerCase() === "null";
+    
+    if (isNulled) {
+      mapped[appKey] = null as any;
+    } else if (appKey === "latitude" || appKey === "longitude") {
+      const cleaned = value.replace(/[^0-9.\-+]/g, '');
+      let num = parseFloat(cleaned);
+      if (value.toUpperCase().includes('S') || value.toUpperCase().includes('W')) {
+        num = -num;
+      }
+      mapped[appKey] = isNaN(num) ? null : num as any;
+    } else if (appKey === "onAirDate" || appKey === "dcMeterInstallationDate") {
+      const isDateNulled = value.toLowerCase() === "tba" || value.toLowerCase() === "tbd" || value.toLowerCase() === "pending" || value.toLowerCase() === "tbc" || value.toLowerCase() === "n/a";
+      if (isDateNulled) {
+        mapped[appKey] = null as any;
+      } else if (/^\d+$/.test(value)) {
+        const serial = parseInt(value);
+        const date = new Date((serial - 25569) * 86400 * 1000);
+        if (!isNaN(date.getTime())) {
+          mapped[appKey] = date.toISOString().split('T')[0];
+        } else {
+          mapped[appKey] = null as any;
+        }
+      } else {
+        const parts = value.split('/');
+        if (parts.length === 3) {
+          mapped[appKey] = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        } else {
+          const d = new Date(value);
+          if (!isNaN(d.getTime())) {
+            mapped[appKey] = d.toISOString().split('T')[0];
+          } else {
+            mapped[appKey] = null as any;
+          }
+        }
+      }
+    } else if (appKey === "priority") {
+      const parsed = parseInt(value);
+      mapped[appKey] = isNaN(parsed) ? null : parsed as any;
+    } else {
+      mapped[appKey] = value;
+    }
   }
   return mapped;
 };

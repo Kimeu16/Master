@@ -3,6 +3,7 @@ import cors from "cors";
 import { logger } from "./middleware/logger";
 import { errorHandler } from "./middleware/errorHandler";
 import { validateBody } from "./middleware/validator";
+import { isDatabaseHealthy } from "./database/db";
 
 import siteRoutes from "./routes/siteRoutes";
 import userRoutes from "./routes/userRoutes";
@@ -10,6 +11,7 @@ import escalationRoutes from "./routes/escalationRoutes";
 import pmChecklistRoutes from "./routes/pmChecklistRoutes";
 import revisionSummaryRoutes from "./routes/revisionSummaryRoutes";
 import { createTableCrudRouter } from "./routes/tableCrudRoutes";
+import authRoutes from "./routes/authRoutes";
 
 const app = express();
 
@@ -28,9 +30,15 @@ app.use("/api/work-order-checklists", createTableCrudRouter("work_order_checklis
 app.use("/api/wo-approval-workflows", createTableCrudRouter("wo_approval_workflows", "WO approval workflows"));
 app.use("/api/excel-sheet-rows", createTableCrudRouter("excel_sheet_rows", "Excel sheet rows", "id"));
 app.use("/api/revision-summaries", revisionSummaryRoutes);
+app.use("/api/auth", authRoutes);
 
-app.get("/api/health", (req: express.Request, res: express.Response) => {
-  res.json({ status: "ok" });
+app.get("/api/health", async (req: express.Request, res: express.Response) => {
+  try {
+    await isDatabaseHealthy();
+    res.json({ status: "ok", database: "ok" });
+  } catch (error: any) {
+    res.status(503).json({ status: "fail", database: "unavailable", error: error?.message || 'Database unreachable' });
+  }
 });
 
 app.get("/", (req: express.Request, res: express.Response) => {
@@ -39,13 +47,8 @@ app.get("/", (req: express.Request, res: express.Response) => {
   });
 });
 
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something broke!' });
-});
-
 app.use((req: express.Request, res: express.Response) => {
-  res.status(404).json({ error: 'Route not found' });
+  res.status(404).json({ error: 'Route not found', path: req.originalUrl });
 });
 
 app.use(errorHandler);
